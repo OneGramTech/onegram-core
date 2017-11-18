@@ -8,8 +8,8 @@ RUN groupadd --gid $gid -r onegram && useradd --uid $uid --create-home --system 
 
 RUN apt-get update \
 	&& apt-get install -y --no-install-recommends \
-		gcc-4.9 \
-		g++-4.9 \
+		gcc-5 \
+		g++-5 \
 		cmake \
 		make \
 		ninja-build \
