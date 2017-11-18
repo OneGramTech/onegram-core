@@ -53,14 +53,18 @@ RUN apt-get update \
 
 COPY . /src
 
+# Use BUILD=Release for production builds
+ARG BUILD=Debug
+# Use TARGET=witness_node to only build witness_node
+ARG TARGET=
+
 RUN cd /src \
-	# && cmake -DCMAKE_BUILD_TYPE=Debug . \
-	&& cmake -G Ninja -DCMAKE_BUILD_TYPE=Debug . \
-	# && make -j `nproc` \
-	# && ninja witness_node \
-	&& ninja \
-	&& cp ./programs/witness_node/witness_node /usr/local/bin/ \
-	&& cp ./programs/cli_wallet/cli_wallet /usr/local/bin/ \
+	&& cmake -G Ninja -DCMAKE_BUILD_TYPE=$BUILD . \
+	&& ninja $TARGET \
+
+	&& cp ./programs/${TARGET:-witness_node}/${TARGET:-witness_node} /usr/local/bin/ \
+	&& cp -n ./programs/${TARGET:-cli_wallet}/${TARGET:-cli_wallet} /usr/local/bin/ \
+
 	&& mkdir -p /var/onegram/data \
 	&& chown onegram:onegram /var/onegram/data
 
