@@ -1,2 +1,2 @@
 #!/bin/sh
-witness_node --data-dir /var/onegram/data
+witness_node --data-dir /var/onegram/data $@
