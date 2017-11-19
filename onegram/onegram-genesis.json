@@ -232,11 +232,6 @@
     "extensions": []
   },
   "initial_accounts": [{
-      "name": "init0",
-      "owner_key": "BTS6MRyAjQq8ud7hVNYcfnVPJqcVpscN5So8BhtHuGYqET5GDW5CV",
-      "active_key": "BTS6MRyAjQq8ud7hVNYcfnVPJqcVpscN5So8BhtHuGYqET5GDW5CV",
-      "is_lifetime_member": true
-    },{
       "name": "init1",
       "owner_key": "BTS6MRyAjQq8ud7hVNYcfnVPJqcVpscN5So8BhtHuGYqET5GDW5CV",
       "active_key": "BTS6MRyAjQq8ud7hVNYcfnVPJqcVpscN5So8BhtHuGYqET5GDW5CV",
@@ -287,6 +282,11 @@
       "active_key": "BTS6MRyAjQq8ud7hVNYcfnVPJqcVpscN5So8BhtHuGYqET5GDW5CV",
       "is_lifetime_member": true
     },{
+      "name": "init11",
+      "owner_key": "BTS6MRyAjQq8ud7hVNYcfnVPJqcVpscN5So8BhtHuGYqET5GDW5CV",
+      "active_key": "BTS6MRyAjQq8ud7hVNYcfnVPJqcVpscN5So8BhtHuGYqET5GDW5CV",
+      "is_lifetime_member": true
+    },{
       "name": "nathan",
       "owner_key": "BTS6MRyAjQq8ud7hVNYcfnVPJqcVpscN5So8BhtHuGYqET5GDW5CV",
       "active_key": "BTS6MRyAjQq8ud7hVNYcfnVPJqcVpscN5So8BhtHuGYqET5GDW5CV",
@@ -303,9 +303,6 @@
   "initial_vesting_balances": [],
   "initial_active_witnesses": 11,
   "initial_witness_candidates": [{
-      "owner_name": "init0",
-      "block_signing_key": "BTS6MRyAjQq8ud7hVNYcfnVPJqcVpscN5So8BhtHuGYqET5GDW5CV"
-    },{
       "owner_name": "init1",
       "block_signing_key": "BTS6MRyAjQq8ud7hVNYcfnVPJqcVpscN5So8BhtHuGYqET5GDW5CV"
     },{
@@ -335,11 +332,12 @@
     },{
       "owner_name": "init10",
       "block_signing_key": "BTS6MRyAjQq8ud7hVNYcfnVPJqcVpscN5So8BhtHuGYqET5GDW5CV"
+    },{
+      "owner_name": "init11",
+      "block_signing_key": "BTS6MRyAjQq8ud7hVNYcfnVPJqcVpscN5So8BhtHuGYqET5GDW5CV"
     }
   ],
   "initial_committee_candidates": [{
-      "owner_name": "init0"
-    },{
       "owner_name": "init1"
     },{
       "owner_name": "init2"
@@ -359,6 +357,8 @@
       "owner_name": "init9"
     },{
       "owner_name": "init10"
+    },{
+      "owner_name": "init11"
     }
   ],
   "initial_worker_candidates": [],
