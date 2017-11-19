@@ -77,7 +77,7 @@ COPY onegram/onegram_witness /usr/local/bin/
 
 WORKDIR /home/onegram
 
-EXPOSE 11010 11011
+EXPOSE 8540 11011
 
 USER onegram
 
