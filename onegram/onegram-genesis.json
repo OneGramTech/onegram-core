@@ -296,7 +296,7 @@
   "initial_assets": [],
   "initial_balances": [{
       "owner": "BTSFAbAx7yuxt725qSZvfwWqkdCwp9ZnUama",
-      "asset_symbol": "BTS",
+      "asset_symbol": "OGC",
       "amount": "12400786000000"
     }
   ],
