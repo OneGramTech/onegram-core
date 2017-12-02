@@ -42,4 +42,6 @@ object_database/*
 *.pyc
 *.pyo
 
-.idea/
+.idea
+build
+cmake-build-debug
