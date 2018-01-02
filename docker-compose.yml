@@ -18,6 +18,7 @@ services:
     image: onegram-demo
     build:
       context: .
+      dockerfile: Dockerfile-OGC
     networks:
       - private
     ports:
