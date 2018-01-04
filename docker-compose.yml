@@ -18,10 +18,23 @@ services:
     image: onegram-demo
     build:
       context: .
+      dockerfile: Dockerfile-OGC
     networks:
       - private
     ports:
       - 8540:8540
+    restart: unless-stopped
+
+  rpc:
+    hostname: rpc
+    image: onegram-demo
+    depends_on:
+      - seed-node-1
+    command: onegram_witness --seed-node seed-node-1:8540 --rpc-endpoint=0.0.0.0:11011
+    networks:
+      - private
+    ports:
+      - 11011:11011
     restart: unless-stopped
 
   witness-1:
@@ -141,5 +154,5 @@ services:
       - "/var/run/docker.sock:/var/run/docker.sock"
     networks:
       - private
-    # ports:
-    #   - 9000:9000
+    ports:
+      - 9000:9000
