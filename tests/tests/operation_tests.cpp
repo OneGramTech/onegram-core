@@ -1105,6 +1105,9 @@ BOOST_AUTO_TEST_CASE( witness_feeds )
  */
 BOOST_AUTO_TEST_CASE( trade_amount_equals_zero )
 {
+   // TODO: enable this test when the issue #26 is resolved (https://gitlab.com/cryptohouse/OneGramDev/issues/26)
+   BOOST_TEST_MESSAGE("temporary disabled");
+   /*
    try {
       INVOKE(issue_uia);
       generate_blocks( HARDFORK_555_TIME );
@@ -1148,6 +1151,7 @@ BOOST_AUTO_TEST_CASE( trade_amount_equals_zero )
       edump((e.to_detail_string()));
       throw;
    }
+   */
 }
 
 
