@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2015 Cryptonomex, Inc., and contributors.
+ * Copyright (c) 2017 Cryptonomex, Inc., and contributors.
  *
  * The MIT License
  *
@@ -81,6 +81,7 @@ struct order_book
 
 struct market_ticker
 {
+   time_point_sec             time;
    string                     base;
    string                     quote;
    double                     latest;
@@ -93,6 +94,7 @@ struct market_ticker
 
 struct market_volume
 {
+   time_point_sec             time;
    string                     base;
    string                     quote;
    double                     base_volume;
@@ -101,10 +103,13 @@ struct market_volume
 
 struct market_trade
 {
+   int64_t                    sequence = 0;
    fc::time_point_sec         date;
    double                     price;
    double                     amount;
    double                     value;
+   account_id_type            side1_account_id = GRAPHENE_NULL_ACCOUNT;
+   account_id_type            side2_account_id = GRAPHENE_NULL_ACCOUNT;
 };
 
 /**
@@ -159,6 +164,14 @@ class database_api
       optional<block_header> get_block_header(uint32_t block_num)const;
 
       /**
+      * @brief Retrieve multiple block header by block numbers
+      * @param block_num vector containing heights of the block whose header should be returned
+      * @return array of headers of the referenced blocks, or null if no matching block was found
+      */
+      map<uint32_t, optional<block_header>> get_block_header_batch(const vector<uint32_t> block_nums)const;
+
+
+      /**
        * @brief Retrieve a full, signed block
        * @param block_num Height of the block to be returned
        * @return the referenced block, or null if no matching block was found
@@ -211,6 +224,15 @@ class database_api
       //////////
 
       vector<vector<account_id_type>> get_key_references( vector<public_key_type> key )const;
+
+     /**
+      * Determine whether a textual representation of a public key
+      * (in Base-58 format) is *currently* linked
+      * to any *registered* (i.e. non-stealth) account on the blockchain
+      * @param public_key Public key
+      * @return Whether a public key is known
+      */
+     bool is_public_key_registered(string public_key) const;
 
       //////////////
       // Accounts //
@@ -349,6 +371,15 @@ class database_api
       vector<force_settlement_object> get_settle_orders(asset_id_type a, uint32_t limit)const;
 
       /**
+       * @brief Get collateral_bid_objects for a given asset
+       * @param a ID of asset
+       * @param limit Maximum number of objects to retrieve
+       * @param start skip that many results
+       * @return The settle orders, ordered from earliest settlement date to latest
+       */
+      vector<collateral_bid_object> get_collateral_bids(const asset_id_type asset, uint32_t limit, uint32_t start)const;
+
+      /**
        *  @return all open margin positions for a given account id.
        */
       vector<call_order_object> get_margin_positions( const account_id_type& id )const;
@@ -398,16 +429,28 @@ class database_api
       order_book get_order_book( const string& base, const string& quote, unsigned limit = 50 )const;
 
       /**
-       * @brief Returns recent trades for the market assetA:assetB
-       * Note: Currentlt, timezone offsets are not supported. The time must be UTC.
+       * @brief Returns recent trades for the market assetA:assetB, ordered by time, most recent first. The range is [stop, start)
+       * Note: Currently, timezone offsets are not supported. The time must be UTC.
        * @param a String name of the first asset
        * @param b String name of the second asset
-       * @param stop Stop time as a UNIX timestamp
+       * @param stop Stop time as a UNIX timestamp, the earliest trade to retrieve
        * @param limit Number of trasactions to retrieve, capped at 100
-       * @param start Start time as a UNIX timestamp
+       * @param start Start time as a UNIX timestamp, the latest trade to retrieve
        * @return Recent transactions in the market
        */
       vector<market_trade> get_trade_history( const string& base, const string& quote, fc::time_point_sec start, fc::time_point_sec stop, unsigned limit = 100 )const;
+
+      /**
+       * @brief Returns trades for the market assetA:assetB, ordered by time, most recent first. The range is [stop, start)
+       * Note: Currently, timezone offsets are not supported. The time must be UTC.
+       * @param a String name of the first asset
+       * @param b String name of the second asset
+       * @param stop Stop time as a UNIX timestamp, the earliest trade to retrieve
+       * @param limit Number of trasactions to retrieve, capped at 100
+       * @param start Start sequence as an Integer, the latest trade to retrieve
+       * @return Transactions in the market
+       */
+      vector<market_trade> get_trade_history_by_sequence( const string& base, const string& quote, int64_t start, fc::time_point_sec stop, unsigned limit = 100 )const;
 
 
 
@@ -472,13 +515,35 @@ class database_api
        */
       map<string, committee_member_id_type> lookup_committee_member_accounts(const string& lower_bound_name, uint32_t limit)const;
 
+      /**
+       * @brief Get the total number of committee registered with the blockchain
+      */
+      uint64_t get_committee_count()const;
 
-      /// WORKERS
+
+      ///////////////////////
+      // Worker proposals  //
+      ///////////////////////
 
       /**
-       * Return the worker objects associated with this account.
+       * @brief Get all workers
+       * @return All the workers
+       *
+      */
+      vector<worker_object> get_all_workers()const;
+
+      /**
+       * @brief Get the workers owned by a given account
+       * @param account The ID of the account whose worker should be retrieved
+       * @return The worker object, or null if the account does not have a worker
        */
-      vector<worker_object> get_workers_by_account(account_id_type account)const;
+      vector<optional<worker_object>> get_workers_by_account(account_id_type account)const;
+
+      /**
+       * @brief Get the total number of workers registered with the blockchain
+      */
+      uint64_t get_worker_count()const;
+
 
 
       ///////////
@@ -563,9 +628,10 @@ class database_api
 
 FC_REFLECT( graphene::app::order, (price)(quote)(base) );
 FC_REFLECT( graphene::app::order_book, (base)(quote)(bids)(asks) );
-FC_REFLECT( graphene::app::market_ticker, (base)(quote)(latest)(lowest_ask)(highest_bid)(percent_change)(base_volume)(quote_volume) );
-FC_REFLECT( graphene::app::market_volume, (base)(quote)(base_volume)(quote_volume) );
-FC_REFLECT( graphene::app::market_trade, (date)(price)(amount)(value) );
+FC_REFLECT( graphene::app::market_ticker,
+            (time)(base)(quote)(latest)(lowest_ask)(highest_bid)(percent_change)(base_volume)(quote_volume) );
+FC_REFLECT( graphene::app::market_volume, (time)(base)(quote)(base_volume)(quote_volume) );
+FC_REFLECT( graphene::app::market_trade, (sequence)(date)(price)(amount)(value)(side1_account_id)(side2_account_id) );
 
 FC_API(graphene::app::database_api,
    // Objects
@@ -579,6 +645,7 @@ FC_API(graphene::app::database_api,
 
    // Blocks and transactions
    (get_block_header)
+   (get_block_header_batch)
    (get_block)
    (get_transaction)
    (get_recent_transaction_by_id)
@@ -592,6 +659,7 @@ FC_API(graphene::app::database_api,
 
    // Keys
    (get_key_references)
+   (is_public_key_registered)
 
    // Accounts
    (get_accounts)
@@ -620,11 +688,13 @@ FC_API(graphene::app::database_api,
    (get_call_orders)
    (get_settle_orders)
    (get_margin_positions)
+   (get_collateral_bids)
    (subscribe_to_market)
    (unsubscribe_from_market)
    (get_ticker)
    (get_24_volume)
    (get_trade_history)
+   (get_trade_history_by_sequence)
 
    // Witnesses
    (get_witnesses)
@@ -636,9 +706,13 @@ FC_API(graphene::app::database_api,
    (get_committee_members)
    (get_committee_member_by_account)
    (lookup_committee_member_accounts)
+   (get_committee_count)
 
    // workers
+   (get_all_workers)
    (get_workers_by_account)
+   (get_worker_count)
+
    // Votes
    (lookup_vote_ids)
 
