@@ -87,6 +87,9 @@ BOOST_FIXTURE_TEST_CASE( update_account_keys, database_fixture )
       // transfer from committee account to Sam account
       transfer(committee_account_object, sam_account_object, core.amount(100000));
 
+      // upgrade to life time member
+      upgrade_to_lifetime_member(sam_account_object);
+
       const int num_keys = 5;
       vector< private_key_type > numbered_private_keys;
       vector< vector< public_key_type > > numbered_key_id;
@@ -99,7 +102,7 @@ BOOST_FIXTURE_TEST_CASE( update_account_keys, database_fixture )
          private_key_type privkey = generate_private_key(
             std::string("key_") + std::to_string(i));
          public_key_type pubkey = privkey.get_public_key();
-         address addr( pubkey );
+         //address addr( pubkey ); TODO: what was the intention of this? can be removed?
 
          numbered_private_keys.push_back( privkey );
          numbered_key_id[0].push_back( pubkey );
@@ -134,7 +137,8 @@ BOOST_FIXTURE_TEST_CASE( update_account_keys, database_fixture )
       generate_block( skip_flags );
 
       std::cout << "update_account_keys:  this test will take a few minutes...\n";
-      for( int use_addresses=0; use_addresses<2; use_addresses++ )
+      // TODO: what was the intention of this? numbered_key_id[1] is empty - see above
+      for( int use_addresses=0; use_addresses<1; use_addresses++ )
       {
          vector< public_key_type > key_ids = numbered_key_id[ use_addresses ];
          for( int num_owner_keys=1; num_owner_keys<=2; num_owner_keys++ )

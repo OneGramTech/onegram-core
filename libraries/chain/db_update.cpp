@@ -162,8 +162,8 @@ void database::clear_expired_transactions()
    //Transactions must have expired by at least two forking windows in order to be removed.
    auto& transaction_idx = static_cast<transaction_index&>(get_mutable_index(implementation_ids, impl_transaction_object_type));
    const auto& dedupe_index = transaction_idx.indices().get<by_expiration>();
-   while( (!dedupe_index.empty()) && (head_block_time() > dedupe_index.rbegin()->trx.expiration) )
-      transaction_idx.remove(*dedupe_index.rbegin());
+   while( (!dedupe_index.empty()) && (head_block_time() > dedupe_index.begin()->trx.expiration) )
+      transaction_idx.remove(*dedupe_index.begin());
 } FC_CAPTURE_AND_RETHROW() }
 
 void database::clear_expired_proposals()
@@ -272,7 +272,7 @@ void database::clear_expired_orders()
             if( canceler.fee.amount > order.deferred_fee )
             {
                // Cap auto-cancel fees at deferred_fee; see #549
-               wlog( "At block ${b}, fee for clearing expired order ${oid} was capped at deferred_fee ${fee}", ("b", head_block_num())("oid", order.id)("fee", order.deferred_fee) );
+               //wlog( "At block ${b}, fee for clearing expired order ${oid} was capped at deferred_fee ${fee}", ("b", head_block_num())("oid", order.id)("fee", order.deferred_fee) );
                canceler.fee = asset( order.deferred_fee, asset_id_type() );
             }
             // we know the fee for this op is set correctly since it is set by the chain.
