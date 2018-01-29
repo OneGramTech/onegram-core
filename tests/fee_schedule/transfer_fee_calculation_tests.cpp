@@ -86,7 +86,7 @@ BOOST_AUTO_TEST_CASE(when_percentage_is_0_calculated_fee_is_flat_fee)
 
 BOOST_AUTO_TEST_CASE(when_percentage_and_transfer_amount_are_not_0_calculated_fee_is_percentage_fee)
 {
-    uint64_t flat_fee = 1000;
+    uint64_t min_fee = 1000;
     uint16_t percentage = GRAPHENE_1_PERCENT / 10; // 0.1%
     uint64_t max_fee = 300 * GRAPHENE_BLOCKCHAIN_PRECISION;
     uint64_t amount = 1000 * GRAPHENE_BLOCKCHAIN_PRECISION;
@@ -95,7 +95,7 @@ BOOST_AUTO_TEST_CASE(when_percentage_and_transfer_amount_are_not_0_calculated_fe
 
     // set fee parameter
     transfer_operation::fee_parameters_type transfer_fee;
-    transfer_fee.fee = flat_fee;
+    transfer_fee.fee = min_fee;
     transfer_fee.percentage = percentage;
     transfer_fee.percentage_max_fee = max_fee;
     schedule.parameters.insert(transfer_fee); // overwrite default value
@@ -106,6 +106,56 @@ BOOST_AUTO_TEST_CASE(when_percentage_and_transfer_amount_are_not_0_calculated_fe
     auto calculatedFee = schedule.calculate_fee(operation, price::unit_price());
 
     uint64_t expected_fee = amount * percentage / GRAPHENE_100_PERCENT;
+    BOOST_CHECK_EQUAL(calculatedFee.amount.value, expected_fee);
+}
+
+BOOST_AUTO_TEST_CASE(when_calculated_percentage_fee_is_more_than_max_fee_return_max_fee)
+{
+    uint64_t min_fee = 1000;
+    uint16_t percentage = GRAPHENE_1_PERCENT;
+    uint64_t max_fee = 300 * GRAPHENE_BLOCKCHAIN_PRECISION;
+    uint64_t amount = 100000 * GRAPHENE_BLOCKCHAIN_PRECISION;
+
+    fee_schedule schedule;
+
+    // set fee parameter
+    transfer_operation::fee_parameters_type transfer_fee;
+    transfer_fee.fee = min_fee;
+    transfer_fee.percentage = percentage;
+    transfer_fee.percentage_max_fee = max_fee;
+    schedule.parameters.insert(transfer_fee); // overwrite default value
+
+    // calculate operation fee with given input parameters
+    auto operation = transfer_operation();
+    operation.amount = asset(amount);
+    auto calculatedFee = schedule.calculate_fee(operation, price::unit_price());
+
+    uint64_t expected_fee = max_fee;
+    BOOST_CHECK_EQUAL(calculatedFee.amount.value, expected_fee);
+}
+
+BOOST_AUTO_TEST_CASE(when_calculated_percentage_fee_is_less_than_min_fee_return_min_fee)
+{
+    uint64_t min_fee = 10000000;
+    uint16_t percentage = GRAPHENE_1_PERCENT / 100; // 0.0001
+    uint64_t max_fee = 300 * GRAPHENE_BLOCKCHAIN_PRECISION;
+    uint64_t amount = 10 * GRAPHENE_BLOCKCHAIN_PRECISION;
+
+    fee_schedule schedule;
+
+    // set fee parameter
+    transfer_operation::fee_parameters_type transfer_fee;
+    transfer_fee.fee = min_fee;
+    transfer_fee.percentage = percentage;
+    transfer_fee.percentage_max_fee = max_fee;
+    schedule.parameters.insert(transfer_fee); // overwrite default value
+
+    // calculate operation fee with given input parameters
+    auto operation = transfer_operation();
+    operation.amount = asset(amount);
+    auto calculatedFee = schedule.calculate_fee(operation, price::unit_price());
+
+    uint64_t expected_fee = min_fee;
     BOOST_CHECK_EQUAL(calculatedFee.amount.value, expected_fee);
 }
 
