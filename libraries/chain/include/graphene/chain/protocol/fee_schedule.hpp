@@ -77,6 +77,23 @@ namespace graphene { namespace chain {
       }
    };
 
+   template<>
+   class fee_helper<transfer_operation> {
+   public:
+       const transfer_operation::fee_parameters_type& cget(const flat_set<fee_parameters>& parameters)const
+       {
+          auto itr = parameters.find( transfer_operation::fee_parameters_type() );
+          FC_ASSERT( itr != parameters.end() );
+          return itr->get<transfer_operation::fee_parameters_type>();
+       }
+       typename transfer_operation::fee_parameters_type& get(flat_set<fee_parameters>& parameters)const
+       {
+          auto itr = parameters.find( transfer_operation::fee_parameters_type() );
+          FC_ASSERT( itr != parameters.end() );
+          return itr->get<transfer_operation::fee_parameters_type>();
+       }
+   };
+
    /**
     *  @brief contains all of the parameters necessary to calculate the fee for any operation
     */
