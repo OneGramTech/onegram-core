@@ -43,6 +43,9 @@ share_type transfer_operation::calculate_fee( const fee_parameters_type& schedul
  * @return fee value
  */
 share_type transfer_operation::calculate_flat_or_percentage_fee(const fee_parameters_type &schedule) const {
+   if (schedule.percentage == 0) {
+      return schedule.fee;
+   }
    auto core_fee_amount = fc::uint128(amount.amount.value);
    core_fee_amount *= schedule.percentage;
    core_fee_amount /= GRAPHENE_100_PERCENT;
