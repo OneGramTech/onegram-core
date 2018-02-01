@@ -29,4 +29,8 @@ file(GLOB INTENSE_SOURCES "intense/*.cpp")
 add_executable( intense_test ${INTENSE_SOURCES} ${COMMON_SOURCES} )
 target_link_libraries( intense_test graphene_chain graphene_app graphene_account_history graphene_egenesis_none fc ${PLATFORM_SPECIFIC_LIBS} )
 
+file(GLOB FEE_SCHEDULE_SOURCES "fee_schedule/*.cpp")
+add_executable( fee_schedule_test ${FEE_SCHEDULE_SOURCES} )
+target_link_libraries( fee_schedule_test graphene_chain fc ${PLATFORM_SPECIFIC_LIBS} )
+
 add_subdirectory( generate_empty_blocks )
