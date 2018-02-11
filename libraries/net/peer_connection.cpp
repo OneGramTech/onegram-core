@@ -26,6 +26,7 @@
 #include <graphene/net/config.hpp>
 #include <graphene/chain/config.hpp>
 #include <graphene/chain/protocol/fee_schedule.hpp>
+#include <graphene/chain/protocol/operations_permissions.hpp>
 
 #include <fc/thread/thread.hpp>
 

@@ -49,6 +49,7 @@ namespace graphene { namespace chain {
    struct withdraw_permission_create_operation : public base_operation
    {
       struct fee_parameters_type { uint64_t fee =  GRAPHENE_BLOCKCHAIN_PRECISION; };
+      struct operation_permissions_type { operation_permissions_container_type rules; };
 
       asset             fee;
       /// The account authorizing withdrawals from its balances
@@ -82,6 +83,7 @@ namespace graphene { namespace chain {
    struct withdraw_permission_update_operation : public base_operation
    {
       struct fee_parameters_type { uint64_t fee =  GRAPHENE_BLOCKCHAIN_PRECISION; };
+      struct operation_permissions_type { operation_permissions_container_type rules; };
 
       asset                         fee;
       /// This account pays the fee. Must match permission_to_update->withdraw_from_account
@@ -122,6 +124,7 @@ namespace graphene { namespace chain {
          uint64_t fee = 20*GRAPHENE_BLOCKCHAIN_PRECISION; 
          uint32_t price_per_kbyte = 10;
       };
+      struct operation_permissions_type { operation_permissions_container_type rules; };
 
       /// Paid by withdraw_to_account
       asset                       fee;
@@ -152,6 +155,7 @@ namespace graphene { namespace chain {
    struct withdraw_permission_delete_operation : public base_operation
    {
       struct fee_parameters_type { uint64_t fee = 0; };
+      struct operation_permissions_type { operation_permissions_container_type rules; };
 
       asset                         fee;
       /// Must match withdrawal_permission->withdraw_from_account. This account pays the fee.
@@ -171,6 +175,11 @@ FC_REFLECT( graphene::chain::withdraw_permission_create_operation::fee_parameter
 FC_REFLECT( graphene::chain::withdraw_permission_update_operation::fee_parameters_type, (fee) )
 FC_REFLECT( graphene::chain::withdraw_permission_claim_operation::fee_parameters_type, (fee)(price_per_kbyte) )
 FC_REFLECT( graphene::chain::withdraw_permission_delete_operation::fee_parameters_type, (fee) )
+
+FC_REFLECT( graphene::chain::withdraw_permission_create_operation::operation_permissions_type, (rules) )
+FC_REFLECT( graphene::chain::withdraw_permission_update_operation::operation_permissions_type, (rules) )
+FC_REFLECT( graphene::chain::withdraw_permission_claim_operation::operation_permissions_type, (rules) )
+FC_REFLECT( graphene::chain::withdraw_permission_delete_operation::operation_permissions_type, (rules) )
 
 FC_REFLECT( graphene::chain::withdraw_permission_create_operation, (fee)(withdraw_from_account)(authorized_account)
             (withdrawal_limit)(withdrawal_period_sec)(periods_until_expiration)(period_start_time) )
