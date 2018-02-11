@@ -29,6 +29,7 @@ namespace graphene { namespace chain {
 struct fba_distribute_operation : public base_operation
 {
    struct fee_parameters_type {};
+   struct operation_permissions_type { operation_permissions_container_type rules; };
 
    asset fee;   // always zero
    account_id_type account_id;
@@ -43,5 +44,6 @@ struct fba_distribute_operation : public base_operation
 } }
 
 FC_REFLECT( graphene::chain::fba_distribute_operation::fee_parameters_type,  )
+FC_REFLECT( graphene::chain::fba_distribute_operation::operation_permissions_type, (rules) )
 
 FC_REFLECT( graphene::chain::fba_distribute_operation, (fee)(account_id)(fba_id)(amount) )

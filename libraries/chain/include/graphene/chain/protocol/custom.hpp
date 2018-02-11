@@ -40,6 +40,7 @@ namespace graphene { namespace chain {
          uint64_t fee = GRAPHENE_BLOCKCHAIN_PRECISION; 
          uint32_t price_per_kbyte = 10;
       };
+      struct operation_permissions_type { operation_permissions_container_type rules; };
 
       asset                     fee;
       account_id_type           payer;
@@ -55,4 +56,5 @@ namespace graphene { namespace chain {
 } } // namespace graphene::chain
 
 FC_REFLECT( graphene::chain::custom_operation::fee_parameters_type, (fee)(price_per_kbyte) )
+FC_REFLECT( graphene::chain::custom_operation::operation_permissions_type, (rules) )
 FC_REFLECT( graphene::chain::custom_operation, (fee)(payer)(required_auths)(id)(data) )

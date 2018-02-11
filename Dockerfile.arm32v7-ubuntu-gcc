@@ -1,0 +1,60 @@
+FROM arm32v7/ubuntu:16.04
+LABEL maintainer="Frantisek Horvath <frantisek.horvath@01cryptohouse.com"
+
+ENV DEBIAN_FRONTEND noninteractive
+
+# update system
+RUN apt-get update \
+    && apt-get install -y --no-install-recommends \
+      apt-utils \
+    && apt-get -y upgrade \
+    && apt-get install -y --no-install-recommends \
+      software-properties-common \
+      ca-certificates \
+      lsb-release \
+      curl \
+      libcurl4-openssl-dev \
+      apt-transport-https \
+      gcc-5 \
+      g++-5 \
+      cmake \
+      make \
+      ninja-build \
+      libbz2-dev \
+      libdb++-dev \
+      libdb-dev \
+      libssl-dev \
+      openssl \
+      libreadline-dev \
+      autoconf \
+      libtool \
+      doxygen \
+      uuid-dev \
+      zip \
+      build-essential \
+      python-dev \
+      autotools-dev \
+      libicu-dev \
+      automake \
+      ncurses-dev \
+      nodejs \
+      nodejs-legacy \
+      npm \
+      git \
+      libboost1.58-dev \
+      libboost-thread-dev \
+      libboost-date-time-dev \
+      libboost-system-dev \
+      libboost-filesystem-dev \
+      libboost-program-options-dev \
+      libboost-signals-dev \
+      libboost-serialization-dev \
+      libboost-chrono-dev \
+      libboost-test-dev \
+      libboost-context-dev \
+      libboost-locale-dev \
+      libboost-iostreams-dev \
+      libboost-coroutine-dev 
+
+RUN apt-get clean \
+    && rm -rf /var/lib/apt/lists/* /tmp/* /var/tmp/*
