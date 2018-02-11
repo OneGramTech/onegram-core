@@ -72,6 +72,7 @@ namespace graphene { namespace chain {
           uint64_t fee            = 20 * GRAPHENE_BLOCKCHAIN_PRECISION; 
           uint32_t price_per_kbyte = 10;
        };
+      struct operation_permissions_type { operation_permissions_container_type rules; };
 
        asset              fee;
        account_id_type    fee_paying_account;
@@ -121,6 +122,7 @@ namespace graphene { namespace chain {
          uint64_t fee            = 20 * GRAPHENE_BLOCKCHAIN_PRECISION; 
          uint32_t price_per_kbyte = 10;
       };
+      struct operation_permissions_type { operation_permissions_container_type rules; };
 
       account_id_type            fee_paying_account;
       asset                      fee;
@@ -155,6 +157,7 @@ namespace graphene { namespace chain {
    struct proposal_delete_operation : public base_operation
    {
       struct fee_parameters_type { uint64_t fee =  GRAPHENE_BLOCKCHAIN_PRECISION; };
+      struct operation_permissions_type { operation_permissions_container_type rules; };
 
       account_id_type   fee_paying_account;
       bool              using_owner_authority = false;
@@ -172,6 +175,10 @@ namespace graphene { namespace chain {
 FC_REFLECT( graphene::chain::proposal_create_operation::fee_parameters_type, (fee)(price_per_kbyte) )
 FC_REFLECT( graphene::chain::proposal_update_operation::fee_parameters_type, (fee)(price_per_kbyte) )
 FC_REFLECT( graphene::chain::proposal_delete_operation::fee_parameters_type, (fee) )
+
+FC_REFLECT( graphene::chain::proposal_create_operation::operation_permissions_type, (rules) )
+FC_REFLECT( graphene::chain::proposal_update_operation::operation_permissions_type, (rules) )
+FC_REFLECT( graphene::chain::proposal_delete_operation::operation_permissions_type, (rules) )
 
 FC_REFLECT( graphene::chain::proposal_create_operation, (fee)(fee_paying_account)(expiration_time)
             (proposed_ops)(review_period_seconds)(extensions) )
