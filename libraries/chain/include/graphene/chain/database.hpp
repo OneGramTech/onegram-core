@@ -257,8 +257,9 @@ namespace graphene { namespace chain {
          const dynamic_global_property_object&  get_dynamic_global_properties()const;
          const node_property_object&            get_node_properties()const;
          const fee_schedule&                    current_fee_schedule()const;
+         const operations_permissions&          current_operations_permissions() const;
 
-         time_point_sec   head_block_time()const;
+      time_point_sec   head_block_time()const;
          uint32_t         head_block_num()const;
          block_id_type    head_block_id()const;
          witness_id_type  head_block_witness()const;
@@ -276,7 +277,23 @@ namespace graphene { namespace chain {
          void initialize_indexes();
          void init_genesis(const genesis_state_type& genesis_state = genesis_state_type());
 
-         template<typename EvaluatorType>
+			asset_id_type get_asset_id(const string& symbol) const;
+			account_id_type get_account_id(const string& name) const;
+			void create_initial_accounts(const genesis_state_type& genesis_state, transaction_evaluation_state& genesis_eval_state);
+			void create_blockchain_accounts(const genesis_state_type& genesis_state);
+			const asset_object& create_core_asset(const genesis_state_type& genesis_state);
+			void create_initial_assets
+				(
+					const genesis_state_type& genesis_state,
+					transaction_evaluation_state& genesis_eval_state,
+					const asset_object& core_asset,
+					map<asset_id_type, share_type>& total_supplies,
+					map<asset_id_type, share_type>& total_debts
+				);
+			void create_initial_balances(const genesis_state_type& genesis_state, map<asset_id_type, share_type>& total_supplies);
+			void create_initial_vesting_balances(const genesis_state_type& genesis_state, map<asset_id_type, share_type>& total_supplies);
+
+	   template<typename EvaluatorType>
          void register_evaluator()
          {
             _operation_evaluators[
