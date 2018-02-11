@@ -63,6 +63,7 @@
 #include <graphene/chain/worker_evaluator.hpp>
 
 #include <graphene/chain/protocol/fee_schedule.hpp>
+#include <graphene/chain/protocol/operations_permissions.hpp>
 
 #include <fc/smart_ref_impl.hpp>
 #include <fc/uint128.hpp>
@@ -225,10 +226,10 @@ namespace graphene {
 		void database::create_initial_assets
 		(
 			const genesis_state_type& genesis_state,
-			transaction_evaluation_state genesis_eval_state,
+			transaction_evaluation_state& genesis_eval_state,
 			const asset_object& core_asset,
-			map<asset_id_type, share_type> total_supplies,
-			map<asset_id_type, share_type> total_debts
+			map<asset_id_type, share_type>& total_supplies,
+			map<asset_id_type, share_type>& total_debts
 		)
 		{
 			// Create initial assets
@@ -306,7 +307,7 @@ namespace graphene {
 		void database::create_initial_balances
 		(
 			const genesis_state_type& genesis_state,
-			map<asset_id_type, share_type> total_supplies
+			map<asset_id_type, share_type>& total_supplies
 		)
 		{
 			// Create initial balances
@@ -326,7 +327,7 @@ namespace graphene {
 		void database::create_initial_vesting_balances
 		(
 			const genesis_state_type& genesis_state,
-			map<asset_id_type, share_type> total_supplies
+			map<asset_id_type, share_type>& total_supplies
 		)
 		{
 			// Create initial vesting balances
@@ -358,10 +359,6 @@ namespace graphene {
 
 			auto itr = assets_by_symbol.find(symbol);
 
-			// TODO: This is temporary for handling BTS snapshot
-			if (symbol == "BTS")
-				itr = assets_by_symbol.find(GRAPHENE_SYMBOL);
-
 			FC_ASSERT(itr != assets_by_symbol.end(),
 				"Unable to find asset '${sym}'. Did you forget to add a record for it to initial_assets?",
 				("sym", symbol));
@@ -383,7 +380,7 @@ namespace graphene {
 			return itr->get_id();
 		}
 
-		void database::create_initial_accounts(const genesis_state_type& genesis_state, transaction_evaluation_state genesis_eval_state)
+		void database::create_initial_accounts(const genesis_state_type& genesis_state, transaction_evaluation_state& genesis_eval_state)
 		{
 			// Create initial accounts
 			for (const auto& account : genesis_state.initial_accounts)
@@ -599,6 +596,7 @@ namespace graphene {
 					// Set fees to zero initially, so that genesis initialization needs not pay them
 					// We'll fix it at the end of the function
 					p.parameters.current_fees->zero_all_fees();
+					p.parameters.current_operations_permissions->enable_all_operations();
 				});
 
 				// Create dynamic global properties
@@ -733,10 +731,11 @@ namespace graphene {
 					}
 				});
 
-				// Enable fees
+				// Enable fees and set operations permissions
 				modify(get_global_properties(), [&genesis_state](global_property_object& p)
 				{
 					p.parameters.current_fees = genesis_state.initial_parameters.current_fees;
+					p.parameters.current_operations_permissions = genesis_state.initial_parameters.current_operations_permissions;
 				});
 
 				// Create witness scheduler

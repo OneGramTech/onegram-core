@@ -306,6 +306,16 @@ namespace graphene { namespace chain {
       friend bool operator == ( const extended_private_key_type& p1, const extended_private_key_type& p2);
       friend bool operator != ( const extended_private_key_type& p1, const extended_private_key_type& p2);
    };
+
+   struct operation_permission_type
+   {
+      optional<string> account_name;
+      optional<graphene::chain::object_type> object_type;
+      optional<graphene::db::object_id_type> object_id_type;
+      bool allowed = true;
+   };
+
+   typedef vector<operation_permission_type> operation_permissions_container_type;
 } }  // graphene::chain
 
 namespace fc
@@ -324,6 +334,8 @@ FC_REFLECT( graphene::chain::extended_public_key_type, (key_data) )
 FC_REFLECT( graphene::chain::extended_public_key_type::binary_key, (check)(data) )
 FC_REFLECT( graphene::chain::extended_private_key_type, (key_data) )
 FC_REFLECT( graphene::chain::extended_private_key_type::binary_key, (check)(data) )
+FC_REFLECT( graphene::chain::operation_permission_type, (account_name)(object_type)(object_id_type)(allowed) )
+FC_REFLECT_TYPENAME( graphene::chain::operation_permissions_container_type )
 
 FC_REFLECT_ENUM( graphene::chain::object_type,
                  (null_object_type)
