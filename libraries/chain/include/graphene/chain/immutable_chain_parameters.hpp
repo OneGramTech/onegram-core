@@ -28,6 +28,7 @@
 #include <cstdint>
 
 #include <graphene/chain/config.hpp>
+#include <graphene/chain/feeless_accounts.hpp>
 
 namespace graphene { namespace chain {
 
@@ -37,6 +38,8 @@ struct immutable_chain_parameters
    uint16_t min_witness_count = GRAPHENE_DEFAULT_MIN_WITNESS_COUNT;
    uint32_t num_special_accounts = 0;
    uint32_t num_special_assets = 0;
+
+   feeless_accounts_type feeless_accounts;
 };
 
 } } // graphene::chain
@@ -46,4 +49,5 @@ FC_REFLECT( graphene::chain::immutable_chain_parameters,
    (min_witness_count)
    (num_special_accounts)
    (num_special_assets)
+   (feeless_accounts)
 )

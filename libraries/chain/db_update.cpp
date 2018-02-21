@@ -35,6 +35,7 @@
 #include <graphene/chain/witness_object.hpp>
 
 #include <graphene/chain/protocol/fee_schedule.hpp>
+#include <graphene/chain/chain_property_object.hpp>
 
 #include <fc/uint128.hpp>
 
@@ -268,7 +269,7 @@ void database::clear_expired_orders()
             const limit_order_object& order = *limit_index.begin();
             canceler.fee_paying_account = order.seller;
             canceler.order = order.id;
-            canceler.fee = current_fee_schedule().calculate_fee( canceler );
+            canceler.fee = current_fee_schedule().calculate_fee( canceler, price::unit_price(), get_chain_properties().feeless_account_ids() );
             if( canceler.fee.amount > order.deferred_fee )
             {
                // Cap auto-cancel fees at deferred_fee; see #549
