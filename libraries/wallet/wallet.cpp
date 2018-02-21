@@ -494,8 +494,9 @@ public:
 
    void set_operation_fees( signed_transaction& tx, const fee_schedule& s  )
    {
+      auto feeless_account_ids = _remote_db->get_chain_properties().feeless_account_ids();
       for( auto& op : tx.operations )
-         s.set_fee(op);
+         s.set_fee(op, price::unit_price(), feeless_account_ids);
    }
 
    variant info() const
@@ -2323,7 +2324,7 @@ public:
       prop_op.fee_paying_account = get_account(proposing_account).id;
 
       prop_op.proposed_ops.emplace_back( update_op );
-      current_params.current_fees->set_fee( prop_op.proposed_ops.back().op );
+      current_params.current_fees->set_fee( prop_op.proposed_ops.back().op, price::unit_price(), _remote_db->get_chain_properties().feeless_account_ids() );
 
       signed_transaction tx;
       tx.operations.push_back(prop_op);
@@ -2405,7 +2406,7 @@ public:
       prop_op.fee_paying_account = get_account(proposing_account).id;
 
       prop_op.proposed_ops.emplace_back( update_op );
-      current_params.current_fees->set_fee( prop_op.proposed_ops.back().op );
+      current_params.current_fees->set_fee( prop_op.proposed_ops.back().op, price::unit_price(), _remote_db->get_chain_properties().feeless_account_ids() );
 
       signed_transaction tx;
       tx.operations.push_back(prop_op);
