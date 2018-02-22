@@ -64,6 +64,8 @@
 
 #include <graphene/chain/protocol/fee_schedule.hpp>
 
+#include <graphene/chain/feeless_accounts.hpp>
+
 #include <fc/smart_ref_impl.hpp>
 #include <fc/uint128.hpp>
 #include <fc/crypto/digest.hpp>
@@ -406,7 +408,7 @@ void database::init_genesis(const genesis_state_type& genesis_state)
    for (uint32_t i = 0; i <= 0x10000; i++)
       create<block_summary_object>( [&]( block_summary_object&) {});
 
-   // Create initial accounts
+   // Create initial accounts before storing feeless account ids!!!
    for( const auto& account : genesis_state.initial_accounts )
    {
       account_create_operation cop;
@@ -443,6 +445,18 @@ void database::init_genesis(const genesis_state_type& genesis_state)
                 ("acct", name));
       return itr->get_id();
    };
+
+   // get feeless account ids only after the initial accounts were created!
+   feeless_account_ids_type::account_ids_type feeless_account_ids;
+   for (auto& account_name : genesis_state.immutable_parameters.feeless_accounts.account_names) {
+      account_id_type id = get_account_id(account_name);
+      feeless_account_ids.insert(id);
+   }
+
+   // update feeless_account_ids
+   modify(get_chain_properties(), [&](chain_property_object &cpo) {
+      cpo.feeless_accounts.account_ids = feeless_account_ids;
+   });
 
    // Helper function to get asset ID by symbol
    const auto& assets_by_symbol = get_index_type<asset_index>().indices().get<by_symbol>();
