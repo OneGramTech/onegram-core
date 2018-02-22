@@ -31,7 +31,7 @@ BOOST_AUTO_TEST_CASE(check_set_fee_with_feeless_account_ids_argument_when_transf
          cpo.feeless_accounts.account_ids.insert(nathan_account.id);
       });
 
-      BOOST_CHECK(db.get_chain_properties().immutable_parameters.feeless_accounts.contain("nathan"));
+      BOOST_CHECK(db.get_chain_properties().immutable_parameters.feeless_accounts.contains("nathan"));
 
       // input parameters
       uint64_t transfer_amount = 10000 * GRAPHENE_BLOCKCHAIN_PRECISION;

@@ -19,7 +19,7 @@ struct feeless_accounts_type {
 
    account_names_type account_names;
 
-   bool contain(account_name_type name) const {
+   bool contains(account_name_type name) const {
       return !(account_names.find(name) == account_names.end());
    }
 };

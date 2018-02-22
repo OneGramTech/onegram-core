@@ -31,7 +31,7 @@ BOOST_AUTO_TEST_CASE(when_feeless_accounts_empty_contains_false)
 {
    feeless_accounts_type accounts;
 
-   BOOST_CHECK(!accounts.contain("nathan"));
+   BOOST_CHECK(!accounts.contains("nathan"));
 }
 
 BOOST_AUTO_TEST_CASE(when_feeless_accounts_contains_true)
@@ -39,8 +39,8 @@ BOOST_AUTO_TEST_CASE(when_feeless_accounts_contains_true)
    feeless_accounts_type accounts;
    accounts.account_names.emplace("nathan");
 
-   BOOST_CHECK(accounts.contain("nathan"));
-   BOOST_CHECK(!accounts.contain("ltm"));
+   BOOST_CHECK(accounts.contains("nathan"));
+   BOOST_CHECK(!accounts.contains("ltm"));
 }
 
 BOOST_AUTO_TEST_CASE(check_container_serialization)
