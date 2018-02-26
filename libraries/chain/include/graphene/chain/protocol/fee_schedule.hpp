@@ -99,6 +99,8 @@ namespace graphene { namespace chain {
     */
    struct fee_schedule
    {
+      typedef std::set<account_id_type> feeless_account_ids_type;
+
       fee_schedule();
 
       static fee_schedule get_default();
@@ -107,8 +109,8 @@ namespace graphene { namespace chain {
        *  Finds the appropriate fee parameter struct for the operation
        *  and then calculates the appropriate fee.
        */
-      asset calculate_fee( const operation& op, const price& core_exchange_rate = price::unit_price() )const;
-      asset set_fee( operation& op, const price& core_exchange_rate = price::unit_price() )const;
+      asset calculate_fee( const operation& op, const price& core_exchange_rate = price::unit_price(), const optional<feeless_account_ids_type>& feeless_account_ids = optional<feeless_account_ids_type>() )const;
+      asset set_fee( operation& op, const price& core_exchange_rate = price::unit_price(), const optional<feeless_account_ids_type>& feeless_account_ids = optional<feeless_account_ids_type>() )const;
 
       void zero_all_fees();
 
