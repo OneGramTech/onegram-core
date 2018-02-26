@@ -24,6 +24,7 @@
 #pragma once
 
 #include <graphene/chain/immutable_chain_parameters.hpp>
+#include <graphene/chain/feeless_accounts.hpp>
 
 namespace graphene { namespace chain {
 
@@ -40,6 +41,10 @@ class chain_property_object : public abstract_object<chain_property_object>
 
       chain_id_type chain_id;
       immutable_chain_parameters immutable_parameters;
+
+      // contains ids of immutable_parameters.feeless_accounts.account_names for fast search
+      feeless_account_ids_type feeless_accounts;
+      const feeless_account_ids_type::account_ids_type& feeless_account_ids() const { return feeless_accounts.account_ids; }
 };
 
 } }
@@ -47,4 +52,5 @@ class chain_property_object : public abstract_object<chain_property_object>
 FC_REFLECT_DERIVED( graphene::chain::chain_property_object, (graphene::db::object),
                     (chain_id)
                     (immutable_parameters)
+                    (feeless_accounts)
                   )

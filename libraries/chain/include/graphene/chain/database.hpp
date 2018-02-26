@@ -282,14 +282,15 @@ namespace graphene { namespace chain {
 			void create_initial_accounts(const genesis_state_type& genesis_state, transaction_evaluation_state& genesis_eval_state);
 			void create_blockchain_accounts(const genesis_state_type& genesis_state);
 			const asset_object& create_core_asset(const genesis_state_type& genesis_state);
+			void create_feeless_accounts(const genesis_state_type& genesis_state);
 			void create_initial_assets
-				(
-					const genesis_state_type& genesis_state,
-					transaction_evaluation_state& genesis_eval_state,
-					const asset_object& core_asset,
-					map<asset_id_type, share_type>& total_supplies,
-					map<asset_id_type, share_type>& total_debts
-				);
+				   (
+					   const genesis_state_type& genesis_state,
+					   transaction_evaluation_state& genesis_eval_state,
+					   const asset_object& core_asset,
+					   map<asset_id_type, share_type>& total_supplies,
+					   map<asset_id_type, share_type>& total_debts
+				   );
 			void create_initial_balances(const genesis_state_type& genesis_state, map<asset_id_type, share_type>& total_supplies);
 			void create_initial_vesting_balances(const genesis_state_type& genesis_state, map<asset_id_type, share_type>& total_supplies);
 

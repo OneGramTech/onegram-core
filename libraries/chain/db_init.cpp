@@ -65,6 +65,8 @@
 #include <graphene/chain/protocol/fee_schedule.hpp>
 #include <graphene/chain/protocol/operations_permissions.hpp>
 
+#include <graphene/chain/feeless_accounts.hpp>
+
 #include <fc/smart_ref_impl.hpp>
 #include <fc/uint128.hpp>
 #include <fc/crypto/digest.hpp>
@@ -390,7 +392,7 @@ namespace graphene { namespace chain {
          transaction_evaluation_state& genesis_eval_state
       )
       {
-         // Create initial accounts
+         // Create initial accounts before storing feeless account ids!!!
          for(const auto& account : genesis_state.initial_accounts)
          {
             account_create_operation cop;
@@ -566,6 +568,21 @@ namespace graphene { namespace chain {
          return core_asset;
       }
 
+      void database::create_feeless_accounts(const genesis_state_type& genesis_state)
+      {
+         // get feeless account ids only after the initial accounts were created!
+         feeless_account_ids_type::account_ids_type feeless_account_ids;
+         for (auto& account_name : genesis_state.immutable_parameters.feeless_accounts.account_names) {
+            account_id_type id = get_account_id(account_name);
+            feeless_account_ids.insert(id);
+         }
+
+         // update feeless_account_ids
+         modify(get_chain_properties(), [&](chain_property_object &cpo) {
+            cpo.feeless_accounts.account_ids = feeless_account_ids;
+         });
+      }
+
       void database::init_genesis(const genesis_state_type& genesis_state)
       {
          try {
@@ -638,6 +655,7 @@ namespace graphene { namespace chain {
             create_blockchain_accounts(genesis_state);
             const auto& core_asset = create_core_asset(genesis_state);
             create_initial_accounts(genesis_state, genesis_eval_state);
+            create_feeless_accounts(genesis_state);
             create_initial_assets(genesis_state, genesis_eval_state, core_asset, total_supplies, total_debts);
             create_initial_balances(genesis_state, total_supplies);
             create_initial_vesting_balances(genesis_state, total_supplies);
