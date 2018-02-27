@@ -183,10 +183,19 @@ namespace graphene { namespace chain {
       {
          for(const auto& rule : op.rules)
          {
-            auto rules_count = rule.fee_payer_name.valid() + rule.fee_payer_type.valid() + rule.fee_payer_type.valid();
+            auto search_criteria_count = rule.fee_payer_name.valid() +
+               rule.fee_payer_id.valid() +
+               rule.fee_payer_type.valid();
 
-            // number of defined rules must be at most one or zero
-            FC_ASSERT(rules_count <= 1);
+            if (rule.fee_payer_type.valid())
+            {
+               FC_ASSERT(rule.fee_payer_type == committee_member_object_type ||
+                  rule.fee_payer_type == witness_object_type ||
+                  rule.fee_payer_type == worker_object_type);
+            }
+
+            // number of defined search criteria must be at most one or zero
+            FC_ASSERT(search_criteria_count <= 1);
          }
       }
    };
