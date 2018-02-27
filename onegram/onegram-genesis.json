@@ -1,5 +1,5 @@
 {
-  "initial_timestamp": "2018-02-04T11:00:00",
+  "initial_timestamp": "2018-02-27T12:00:00",
   "max_core_supply": "12400786000000",
   "initial_parameters": {
     "current_fees": {
@@ -201,6 +201,339 @@
         ]
       ],
       "scale": 10000
+    },
+    "current_operations_permissions": {
+      "parameters": [[
+          0,{
+            "rules": [{
+                "allowed": true
+              }
+            ]
+          }
+        ],[
+          1,{
+            "rules": [{
+                "allowed": true
+              }
+            ]
+          }
+        ],[
+          2,{
+            "rules": [{
+                "allowed": true
+              }
+            ]
+          }
+        ],[
+          3,{
+            "rules": [{
+                "allowed": true
+              }
+            ]
+          }
+        ],[
+          4,{
+            "rules": [{
+                "allowed": true
+              }
+            ]
+          }
+        ],[
+          5,{
+            "rules": [{
+                "allowed": true
+              }
+            ]
+          }
+        ],[
+          6,{
+            "rules": [{
+                "allowed": true
+              }
+            ]
+          }
+        ],[
+          7,{
+            "rules": [{
+                "allowed": true
+              }
+            ]
+          }
+        ],[
+          8,{
+            "rules": [{
+                "allowed": true
+              }
+            ]
+          }
+        ],[
+          9,{
+            "rules": [{
+                "allowed": true
+              }
+            ]
+          }
+        ],[
+          10,{
+            "rules": [{
+                "allowed": true
+              }
+            ]
+          }
+        ],[
+          11,{
+            "rules": [{
+                "allowed": true
+              }
+            ]
+          }
+        ],[
+          12,{
+            "rules": [{
+                "allowed": true
+              }
+            ]
+          }
+        ],[
+          13,{
+            "rules": [{
+                "allowed": true
+              }
+            ]
+          }
+        ],[
+          14,{
+            "rules": [{
+                "allowed": true
+              }
+            ]
+          }
+        ],[
+          15,{
+            "rules": [{
+                "allowed": true
+              }
+            ]
+          }
+        ],[
+          16,{
+            "rules": [{
+                "allowed": true
+              }
+            ]
+          }
+        ],[
+          17,{
+            "rules": [{
+                "allowed": true
+              }
+            ]
+          }
+        ],[
+          18,{
+            "rules": [{
+                "allowed": true
+              }
+            ]
+          }
+        ],[
+          19,{
+            "rules": [{
+                "allowed": true
+              }
+            ]
+          }
+        ],[
+          20,{
+            "rules": [{
+                "allowed": true
+              }
+            ]
+          }
+        ],[
+          21,{
+            "rules": [{
+                "allowed": true
+              }
+            ]
+          }
+        ],[
+          22,{
+            "rules": [{
+                "allowed": true
+              }
+            ]
+          }
+        ],[
+          23,{
+            "rules": [{
+                "allowed": true
+              }
+            ]
+          }
+        ],[
+          24,{
+            "rules": [{
+                "allowed": true
+              }
+            ]
+          }
+        ],[
+          25,{
+            "rules": [{
+                "allowed": true
+              }
+            ]
+          }
+        ],[
+          26,{
+            "rules": [{
+                "allowed": true
+              }
+            ]
+          }
+        ],[
+          27,{
+            "rules": [{
+                "allowed": true
+              }
+            ]
+          }
+        ],[
+          28,{
+            "rules": [{
+                "allowed": true
+              }
+            ]
+          }
+        ],[
+          29,{
+            "rules": [{
+                "allowed": true
+              }
+            ]
+          }
+        ],[
+          30,{
+            "rules": [{
+                "allowed": true
+              }
+            ]
+          }
+        ],[
+          31,{
+            "rules": [{
+                "allowed": true
+              }
+            ]
+          }
+        ],[
+          32,{
+            "rules": [{
+                "allowed": true
+              }
+            ]
+          }
+        ],[
+          33,{
+            "rules": [{
+                "allowed": true
+              }
+            ]
+          }
+        ],[
+          34,{
+            "rules": [{
+                "allowed": true
+              }
+            ]
+          }
+        ],[
+          35,{
+            "rules": [{
+                "allowed": true
+              }
+            ]
+          }
+        ],[
+          36,{
+            "rules": [{
+                "allowed": true
+              }
+            ]
+          }
+        ],[
+          37,{
+            "rules": [{
+                "allowed": true
+              }
+            ]
+          }
+        ],[
+          38,{
+            "rules": [{
+                "allowed": true
+              }
+            ]
+          }
+        ],[
+          39,{
+            "rules": [{
+                "allowed": true
+              }
+            ]
+          }
+        ],[
+          40,{
+            "rules": [{
+                "allowed": true
+              }
+            ]
+          }
+        ],[
+          41,{
+            "rules": [{
+                "allowed": true
+              }
+            ]
+          }
+        ],[
+          42,{
+            "rules": [{
+                "allowed": true
+              }
+            ]
+          }
+        ],[
+          43,{
+            "rules": [{
+                "allowed": true
+              }
+            ]
+          }
+        ],[
+          44,{
+            "rules": [{
+                "allowed": true
+              }
+            ]
+          }
+        ],[
+          45,{
+            "rules": [{
+                "allowed": true
+              }
+            ]
+          }
+        ],[
+          46,{
+            "rules": [{
+                "allowed": true
+              }
+            ]
+          }
+        ]
+      ]
     },
     "block_interval": 10,
     "maintenance_interval": 1800,
