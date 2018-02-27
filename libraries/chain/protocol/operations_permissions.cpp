@@ -66,18 +66,18 @@ namespace graphene { namespace chain {
             for (const auto& rule : rules)
             {
                // generic rule => match always if no matching condition is defined
-               if (!rule.account_name.valid() &&
-                   !rule.object_type.valid() &&
-                   !rule.object_id_type.valid())
+               if (!rule.fee_payer_name.valid() &&
+                   !rule.fee_payer_type.valid() &&
+                   !rule.fee_payer_id.valid())
                {
                   return rule.allowed;
                }
 
                // try to match by object type (witness, comittee, worker)
-               if (rule.object_type.valid() &&
+               if (rule.fee_payer_type.valid() &&
                   protocol_ids == account->space_id)
                {
-                  switch (*rule.object_type)
+                  switch (*rule.fee_payer_type)
                   {
                      case committee_member_object_type:
                         {                           
@@ -111,8 +111,8 @@ namespace graphene { namespace chain {
                }
 
                // try to match by account object id
-               if(rule.object_id_type.valid() &&
-                  rule.object_id_type == account_id)
+               if(rule.fee_payer_id.valid() &&
+                  rule.fee_payer_id == account_id)
                {
                   return rule.allowed;
                }
@@ -124,8 +124,8 @@ namespace graphene { namespace chain {
                }
 
                // try to match by account name
-               if(rule.account_name.valid() &&
-                  rule.account_name == account->name)
+               if(rule.fee_payer_name.valid() &&
+                  rule.fee_payer_name == account->name)
                {
                   return rule.allowed;
                }
@@ -183,7 +183,7 @@ namespace graphene { namespace chain {
       {
          for(const auto& rule : op.rules)
          {
-            auto rules_count = rule.account_name.valid() + rule.object_type.valid() + rule.object_id_type.valid();
+            auto rules_count = rule.fee_payer_name.valid() + rule.fee_payer_type.valid() + rule.fee_payer_type.valid();
 
             // number of defined rules must be at most one or zero
             FC_ASSERT(rules_count <= 1);
