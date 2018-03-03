@@ -124,6 +124,7 @@ namespace graphene { namespace chain {
          uint64_t long_symbol    = 5000   * GRAPHENE_BLOCKCHAIN_PRECISION;
          uint32_t price_per_kbyte = 10; /// only required for large memos.
       };
+      struct operation_permissions_type { operation_permissions_container_type rules; };
 
       asset                   fee;
       /// This account must sign and pay the fee for this operation. Later, this account may update the asset
@@ -164,6 +165,7 @@ namespace graphene { namespace chain {
    struct asset_global_settle_operation : public base_operation
    {
       struct fee_parameters_type { uint64_t fee = 500 * GRAPHENE_BLOCKCHAIN_PRECISION; };
+      struct operation_permissions_type { operation_permissions_container_type rules; };
 
       asset           fee;
       account_id_type issuer; ///< must equal @ref asset_to_settle->issuer
@@ -199,6 +201,7 @@ namespace graphene { namespace chain {
           */
          uint64_t fee      = 100 * GRAPHENE_BLOCKCHAIN_PRECISION;
       };
+      struct operation_permissions_type { operation_permissions_container_type rules; };
 
       asset           fee;
       /// Account requesting the force settlement. This account pays the fee
@@ -218,6 +221,7 @@ namespace graphene { namespace chain {
    struct asset_settle_cancel_operation : public base_operation
    {
       struct fee_parameters_type { };
+      struct operation_permissions_type { operation_permissions_container_type rules; };
 
       asset           fee;
       force_settlement_id_type settlement;
@@ -242,6 +246,7 @@ namespace graphene { namespace chain {
    struct asset_fund_fee_pool_operation : public base_operation
    {
       struct fee_parameters_type { uint64_t fee =  GRAPHENE_BLOCKCHAIN_PRECISION; };
+      struct operation_permissions_type { operation_permissions_container_type rules; };
 
       asset           fee; ///< core asset
       account_id_type from_account;
@@ -274,6 +279,7 @@ namespace graphene { namespace chain {
          uint64_t fee            = 500 * GRAPHENE_BLOCKCHAIN_PRECISION;
          uint32_t price_per_kbyte = 10;
       };
+      struct operation_permissions_type { operation_permissions_container_type rules; };
 
       asset_update_operation(){}
 
@@ -307,6 +313,7 @@ namespace graphene { namespace chain {
    struct asset_update_bitasset_operation : public base_operation
    {
       struct fee_parameters_type { uint64_t fee = 500 * GRAPHENE_BLOCKCHAIN_PRECISION; };
+      struct operation_permissions_type { operation_permissions_container_type rules; };
 
       asset           fee;
       account_id_type issuer;
@@ -338,6 +345,7 @@ namespace graphene { namespace chain {
    struct asset_update_feed_producers_operation : public base_operation
    {
       struct fee_parameters_type { uint64_t fee = 500 * GRAPHENE_BLOCKCHAIN_PRECISION; };
+      struct operation_permissions_type { operation_permissions_container_type rules; };
 
       asset           fee;
       account_id_type issuer;
@@ -369,6 +377,7 @@ namespace graphene { namespace chain {
    struct asset_publish_feed_operation : public base_operation
    {
       struct fee_parameters_type { uint64_t fee = GRAPHENE_BLOCKCHAIN_PRECISION; };
+      struct operation_permissions_type { operation_permissions_container_type rules; };
 
       asset                  fee; ///< paid for by publisher
       account_id_type        publisher;
@@ -389,6 +398,7 @@ namespace graphene { namespace chain {
          uint64_t fee = 20 * GRAPHENE_BLOCKCHAIN_PRECISION; 
          uint32_t price_per_kbyte = GRAPHENE_BLOCKCHAIN_PRECISION;
       };
+      struct operation_permissions_type { operation_permissions_container_type rules; };
 
       asset            fee;
       account_id_type  issuer; ///< Must be asset_to_issue->asset_id->issuer
@@ -414,6 +424,7 @@ namespace graphene { namespace chain {
    struct asset_reserve_operation : public base_operation
    {
       struct fee_parameters_type { uint64_t fee = 20 * GRAPHENE_BLOCKCHAIN_PRECISION; };
+      struct operation_permissions_type { operation_permissions_container_type rules; };
 
       asset             fee;
       account_id_type   payer;
@@ -432,6 +443,7 @@ namespace graphene { namespace chain {
       struct fee_parameters_type {
          uint64_t fee = 20 * GRAPHENE_BLOCKCHAIN_PRECISION;
       };
+      struct operation_permissions_type { operation_permissions_container_type rules; };
 
       asset           fee;
       account_id_type issuer;
@@ -447,6 +459,7 @@ namespace graphene { namespace chain {
 
 FC_REFLECT( graphene::chain::asset_claim_fees_operation, (fee)(issuer)(amount_to_claim)(extensions) )
 FC_REFLECT( graphene::chain::asset_claim_fees_operation::fee_parameters_type, (fee) )
+FC_REFLECT( graphene::chain::asset_claim_fees_operation::operation_permissions_type, (rules) )
 
 FC_REFLECT( graphene::chain::asset_options,
             (max_supply)
@@ -485,6 +498,17 @@ FC_REFLECT( graphene::chain::asset_publish_feed_operation::fee_parameters_type, 
 FC_REFLECT( graphene::chain::asset_issue_operation::fee_parameters_type, (fee)(price_per_kbyte) )
 FC_REFLECT( graphene::chain::asset_reserve_operation::fee_parameters_type, (fee) )
 
+FC_REFLECT( graphene::chain::asset_create_operation::operation_permissions_type, (rules) )
+FC_REFLECT( graphene::chain::asset_global_settle_operation::operation_permissions_type, (rules) )
+FC_REFLECT( graphene::chain::asset_settle_operation::operation_permissions_type, (rules) )
+FC_REFLECT( graphene::chain::asset_settle_cancel_operation::operation_permissions_type, (rules) )
+FC_REFLECT( graphene::chain::asset_fund_fee_pool_operation::operation_permissions_type, (rules) )
+FC_REFLECT( graphene::chain::asset_update_operation::operation_permissions_type, (rules) )
+FC_REFLECT( graphene::chain::asset_update_bitasset_operation::operation_permissions_type, (rules) )
+FC_REFLECT( graphene::chain::asset_update_feed_producers_operation::operation_permissions_type, (rules) )
+FC_REFLECT( graphene::chain::asset_publish_feed_operation::operation_permissions_type, (rules) )
+FC_REFLECT( graphene::chain::asset_issue_operation::operation_permissions_type, (rules) )
+FC_REFLECT( graphene::chain::asset_reserve_operation::operation_permissions_type, (rules) )
 
 FC_REFLECT( graphene::chain::asset_create_operation,
             (fee)

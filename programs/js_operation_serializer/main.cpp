@@ -23,6 +23,7 @@
  */
 #include <graphene/chain/protocol/protocol.hpp>
 #include <graphene/chain/protocol/fee_schedule.hpp>
+#include <graphene/chain/protocol/operations_permissions.hpp>
 
 #include <graphene/chain/account_object.hpp>
 #include <graphene/chain/asset_object.hpp>
@@ -395,6 +396,7 @@ int main( int argc, char** argv )
     detail_ns::js_name<vesting_policy_initializer>::name("vesting_policy_initializer");
     detail_ns::serializer<fee_parameters>::init();
     detail_ns::serializer<fee_schedule>::init();
+    detail_ns::serializer<operations_permissions>::init();
     detail_ns::serializer<signed_block>::init();
     detail_ns::serializer<block_header>::init();
     detail_ns::serializer<signed_block_header>::init();

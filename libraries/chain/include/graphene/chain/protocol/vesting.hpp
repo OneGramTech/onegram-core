@@ -66,6 +66,7 @@ namespace graphene { namespace chain {
    struct vesting_balance_create_operation : public base_operation
    {
       struct fee_parameters_type { uint64_t fee = GRAPHENE_BLOCKCHAIN_PRECISION; };
+      struct operation_permissions_type { operation_permissions_container_type rules; };
 
       asset                       fee;
       account_id_type             creator; ///< Who provides funds initially
@@ -93,6 +94,7 @@ namespace graphene { namespace chain {
    struct vesting_balance_withdraw_operation : public base_operation
    {
       struct fee_parameters_type { uint64_t fee = 20*GRAPHENE_BLOCKCHAIN_PRECISION; };
+      struct operation_permissions_type { operation_permissions_container_type rules; };
 
       asset                   fee;
       vesting_balance_id_type vesting_balance;
@@ -111,6 +113,9 @@ namespace graphene { namespace chain {
 
 FC_REFLECT( graphene::chain::vesting_balance_create_operation::fee_parameters_type, (fee) )
 FC_REFLECT( graphene::chain::vesting_balance_withdraw_operation::fee_parameters_type, (fee) )
+
+FC_REFLECT( graphene::chain::vesting_balance_create_operation::operation_permissions_type, (rules) )
+FC_REFLECT( graphene::chain::vesting_balance_withdraw_operation::operation_permissions_type, (rules) )
 
 FC_REFLECT( graphene::chain::vesting_balance_create_operation, (fee)(creator)(owner)(amount)(policy) )
 FC_REFLECT( graphene::chain::vesting_balance_withdraw_operation, (fee)(vesting_balance)(owner)(amount) )

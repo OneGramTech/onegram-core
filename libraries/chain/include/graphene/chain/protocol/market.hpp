@@ -47,6 +47,7 @@ namespace graphene { namespace chain {
    struct limit_order_create_operation : public base_operation
    {
       struct fee_parameters_type { uint64_t fee = 5 * GRAPHENE_BLOCKCHAIN_PRECISION; };
+      struct operation_permissions_type { operation_permissions_container_type rules; };
 
       asset           fee;
       account_id_type seller;
@@ -83,6 +84,7 @@ namespace graphene { namespace chain {
    struct limit_order_cancel_operation : public base_operation
    {
       struct fee_parameters_type { uint64_t fee = 0; };
+      struct operation_permissions_type { operation_permissions_container_type rules; };
 
       asset               fee;
       limit_order_id_type order;
@@ -93,8 +95,6 @@ namespace graphene { namespace chain {
       account_id_type fee_payer()const { return fee_paying_account; }
       void            validate()const;
    };
-
-
 
    /**
     *  @ingroup operations
@@ -112,6 +112,7 @@ namespace graphene { namespace chain {
    {
       /** this is slightly more expensive than limit orders, this pricing impacts prediction markets */
       struct fee_parameters_type { uint64_t fee = 20 * GRAPHENE_BLOCKCHAIN_PRECISION; };
+      struct operation_permissions_type { operation_permissions_container_type rules; };
 
       asset               fee;
       account_id_type     funding_account; ///< pays fee, collateral, and cover
@@ -133,6 +134,7 @@ namespace graphene { namespace chain {
    struct fill_order_operation : public base_operation
    {
       struct fee_parameters_type {};
+      struct operation_permissions_type { operation_permissions_container_type rules; };
 
       fill_order_operation(){}
       fill_order_operation( object_id_type o, account_id_type a, asset p, asset r, asset f, price fp, bool m )
@@ -169,6 +171,7 @@ namespace graphene { namespace chain {
    {
       /** should be equivalent to call_order_update fee */
       struct fee_parameters_type { uint64_t fee = 20 * GRAPHENE_BLOCKCHAIN_PRECISION; };
+      struct operation_permissions_type { operation_permissions_container_type rules; };
 
       asset               fee;
       account_id_type     bidder; ///< pays fee and additional collateral
@@ -189,6 +192,7 @@ namespace graphene { namespace chain {
    struct execute_bid_operation : public base_operation
    {
       struct fee_parameters_type {};
+      struct operation_permissions_type { operation_permissions_container_type rules; };
 
       execute_bid_operation(){}
       execute_bid_operation( account_id_type a, asset d, asset c )
@@ -213,6 +217,13 @@ FC_REFLECT( graphene::chain::call_order_update_operation::fee_parameters_type, (
 FC_REFLECT( graphene::chain::bid_collateral_operation::fee_parameters_type, (fee) )
 FC_REFLECT( graphene::chain::fill_order_operation::fee_parameters_type,  ) // VIRTUAL
 FC_REFLECT( graphene::chain::execute_bid_operation::fee_parameters_type,  ) // VIRTUAL
+
+FC_REFLECT( graphene::chain::limit_order_create_operation::operation_permissions_type, (rules) )
+FC_REFLECT( graphene::chain::limit_order_cancel_operation::operation_permissions_type, (rules) )
+FC_REFLECT( graphene::chain::call_order_update_operation::operation_permissions_type, (rules) )
+FC_REFLECT( graphene::chain::bid_collateral_operation::operation_permissions_type, (rules) )
+FC_REFLECT( graphene::chain::fill_order_operation::operation_permissions_type, (rules) )
+FC_REFLECT( graphene::chain::execute_bid_operation::operation_permissions_type, (rules) )
 
 FC_REFLECT( graphene::chain::limit_order_create_operation,(fee)(seller)(amount_to_sell)(min_to_receive)(expiration)(fill_or_kill)(extensions))
 FC_REFLECT( graphene::chain::limit_order_cancel_operation,(fee)(fee_paying_account)(order)(extensions) )

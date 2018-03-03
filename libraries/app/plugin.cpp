@@ -24,6 +24,7 @@
 
 #include <graphene/app/plugin.hpp>
 #include <graphene/chain/protocol/fee_schedule.hpp>
+#include <graphene/chain/protocol/operations_permissions.hpp>
 
 namespace graphene { namespace app {
 

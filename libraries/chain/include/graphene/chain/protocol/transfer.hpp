@@ -53,6 +53,8 @@ namespace graphene { namespace chain {
          uint16_t percentage = 0; /// when percentage=0, flat fee is calculated
       };
 
+      struct operation_permissions_type { operation_permissions_container_type rules; };
+
       asset            fee;
       /// Account to transfer asset from
       account_id_type  from;
@@ -88,6 +90,8 @@ namespace graphene { namespace chain {
          uint32_t price_per_kbyte = 10; /// only required for large memos.
       };
 
+      struct operation_permissions_type { operation_permissions_container_type rules; };
+
       asset           fee;
       account_id_type issuer;
       /// Account to transfer asset from
@@ -110,6 +114,8 @@ namespace graphene { namespace chain {
 
 FC_REFLECT( graphene::chain::transfer_operation::fee_parameters_type, (fee)(price_per_kbyte)(percentage_max_fee)(percentage) )
 FC_REFLECT( graphene::chain::override_transfer_operation::fee_parameters_type, (fee)(price_per_kbyte) )
+FC_REFLECT( graphene::chain::transfer_operation::operation_permissions_type, (rules) )
+FC_REFLECT( graphene::chain::override_transfer_operation::operation_permissions_type, (rules) )
 
 FC_REFLECT( graphene::chain::override_transfer_operation, (fee)(issuer)(from)(to)(amount)(memo)(extensions) )
 FC_REFLECT( graphene::chain::transfer_operation, (fee)(from)(to)(amount)(memo)(extensions) )
