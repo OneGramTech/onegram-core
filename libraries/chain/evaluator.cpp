@@ -35,6 +35,7 @@
 #include <graphene/chain/market_evaluator.hpp>
 #include <graphene/chain/protocol/fee_schedule.hpp>
 #include <graphene/chain/chain_property_object.hpp>
+#include <graphene/chain/protocol/operations_permissions.hpp>
 
 #include <fc/uint128.hpp>
 
@@ -125,6 +126,12 @@ database& generic_evaluator::db()const { return trx_state->db(); }
       database &d = db();
       return d.current_fee_schedule().calculate_fee(op, price::unit_price(), d.get_chain_properties().feeless_account_ids() ).amount;
    }
+
+   bool generic_evaluator::is_operation_allowed(const operation& op) const
+   {
+     return db().current_operations_permissions().is_allowed( trx_state, op );
+   }
+
    void generic_evaluator::db_adjust_balance(const account_id_type& fee_payer, asset fee_from_account)
    {
      db().adjust_balance(fee_payer, fee_from_account);
