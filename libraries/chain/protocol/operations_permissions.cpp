@@ -210,6 +210,7 @@ namespace graphene { namespace chain {
 
    void operations_permissions::enable_all_operations()
    {
+      *this = get_default();
       for(auto& operation_permissions : parameters )
       {
          operation_permissions.visit( enable_operation() );

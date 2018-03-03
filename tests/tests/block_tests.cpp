@@ -60,6 +60,7 @@ genesis_state_type make_genesis() {
       genesis_state.initial_witness_candidates.push_back({name, init_account_priv_key.get_public_key()});
    }
    genesis_state.initial_parameters.current_fees->zero_all_fees();
+   genesis_state.initial_parameters.current_operations_permissions->enable_all_operations();
    return genesis_state;
 }
 
