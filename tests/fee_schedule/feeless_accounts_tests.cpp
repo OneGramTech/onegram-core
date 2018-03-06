@@ -52,14 +52,14 @@ BOOST_AUTO_TEST_CASE(check_container_serialization)
    parameters.num_special_assets = 0;
 
    auto json = fc::json::to_string(parameters);
-   BOOST_CHECK_EQUAL("{\"min_committee_member_count\":11,\"min_witness_count\":11,\"num_special_accounts\":0,\"num_special_assets\":0,\"feeless_accounts\":{\"account_names\":[]}}", json);
+   BOOST_CHECK_EQUAL("{\"min_committee_member_count\":11,\"min_witness_count\":11,\"num_special_accounts\":0,\"num_special_assets\":0,\"feeless_accounts\":{\"account_names\":[]},\"sticky_lifetime_referrers\":{\"referrer_names\":[]}}", json);
 
    parameters.feeless_accounts.account_names.emplace("nathan");
    parameters.feeless_accounts.account_names.emplace("ltm1");
    parameters.feeless_accounts.account_names.emplace("ltm1"); // account_names guarantee uniqueness
    parameters.feeless_accounts.account_names.emplace("ltm2");
    json = fc::json::to_string(parameters);
-   BOOST_CHECK_EQUAL("{\"min_committee_member_count\":11,\"min_witness_count\":11,\"num_special_accounts\":0,\"num_special_assets\":0,\"feeless_accounts\":{\"account_names\":[\"ltm1\",\"ltm2\",\"nathan\"]}}", json);
+   BOOST_CHECK_EQUAL("{\"min_committee_member_count\":11,\"min_witness_count\":11,\"num_special_accounts\":0,\"num_special_assets\":0,\"feeless_accounts\":{\"account_names\":[\"ltm1\",\"ltm2\",\"nathan\"]},\"sticky_lifetime_referrers\":{\"referrer_names\":[]}}", json);
 }
 
 BOOST_AUTO_TEST_SUITE_END()
