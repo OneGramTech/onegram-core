@@ -62,12 +62,20 @@ ARG TARGET=
 RUN cd /src \
 	&& cmake -G Ninja -DCMAKE_BUILD_TYPE=$BUILD . \
 	&& ninja $TARGET \
+	# This would copy all built executables into /usr/local/bin/
+	# && find programs tests -type f -perm /111 -exec cp {} /usr/local/bin/ \;
 
-	&& cp ./programs/${TARGET:-witness_node}/${TARGET:-witness_node} /usr/local/bin/ \
-	&& cp -n ./programs/${TARGET:-cli_wallet}/${TARGET:-cli_wallet} /usr/local/bin/ \
+	# Explicitely pick relevant executables to be installed
+	&& cp ./programs/delayed_node/delayed_node \
+	      ./programs/witness_node/witness_node \
+	      ./programs/cli_wallet/cli_wallet \
+	      ./tests/chain_test \
+	      /usr/local/bin 2>/dev/null || : \
 
 	&& mkdir -p /var/onegram/data \
-	&& chown onegram:onegram /var/onegram/data
+	&& chown onegram:onegram /var/onegram/data \
+	# Remove everything from the src directory, including hidden files
+	&& ls -A1 |xargs -d '\n' rm -rf
 
 # Use the following to embed genesis config into the binary:
 # cmake -DGRAPHENE_EGENESIS_JSON="/home/onegram/onegram-genesis.json"
