@@ -583,6 +583,23 @@ namespace graphene { namespace chain {
          });
       }
 
+      void database::initialize_sticky_referrer_accounts(const genesis_state_type& genesis_state)
+      {
+         // initial accounts must be already created before the sticky lifetime referrers are validated
+         sticky_lifetime_referrers_ids_type::referrer_ids_type referrer_ids;
+         for (auto& account_name : genesis_state.immutable_parameters.sticky_lifetime_referrers.referrer_names)
+         {
+            const auto id = get_account_id(account_name);
+            referrer_ids.insert(id);
+         }
+
+         // update sticky lifetime referrer IDs
+         modify(get_chain_properties(), [&](chain_property_object &cpo)
+         {
+            cpo.sticky_lifetime_referers.referrer_ids = referrer_ids;
+         });
+      }
+
       void database::init_genesis(const genesis_state_type& genesis_state)
       {
          try {
@@ -656,6 +673,7 @@ namespace graphene { namespace chain {
             const auto& core_asset = create_core_asset(genesis_state);
             create_initial_accounts(genesis_state, genesis_eval_state);
             create_feeless_accounts(genesis_state);
+            initialize_sticky_referrer_accounts(genesis_state);
             create_initial_assets(genesis_state, genesis_eval_state, core_asset, total_supplies, total_debts);
             create_initial_balances(genesis_state, total_supplies);
             create_initial_vesting_balances(genesis_state, total_supplies);
