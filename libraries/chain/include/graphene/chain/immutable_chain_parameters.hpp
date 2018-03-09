@@ -29,6 +29,7 @@
 
 #include <graphene/chain/config.hpp>
 #include <graphene/chain/feeless_accounts.hpp>
+#include  <graphene/chain/sticky_lifetime_referrers.hpp>
 
 namespace graphene { namespace chain {
 
@@ -40,6 +41,7 @@ struct immutable_chain_parameters
    uint32_t num_special_assets = 0;
 
    feeless_accounts_type feeless_accounts;
+   sticky_lifetime_referrers_type sticky_lifetime_referrers;
 };
 
 } } // graphene::chain
@@ -50,4 +52,5 @@ FC_REFLECT( graphene::chain::immutable_chain_parameters,
    (num_special_accounts)
    (num_special_assets)
    (feeless_accounts)
+   (sticky_lifetime_referrers)
 )
