@@ -47,6 +47,10 @@ class chain_property_object : public abstract_object<chain_property_object>
       feeless_account_ids_type feeless_accounts;
       const feeless_account_ids_type::account_ids_type& feeless_account_ids() const { return feeless_accounts.account_ids; }
 
+      // contains ids of immutable_parameters.eternal_committee_accounts.account_names for fast search
+      eternal_committee_account_ids_type eternal_committee_accounts;
+      const eternal_committee_account_ids_type::vote_ids_type& eternal_committee_account_ids() const { return eternal_committee_accounts.vote_ids; }
+
       /**
        * @brief The sticky lifetime referers
        *
@@ -66,5 +70,6 @@ FC_REFLECT_DERIVED( graphene::chain::chain_property_object, (graphene::db::objec
                     (chain_id)
                     (immutable_parameters)
                     (feeless_accounts)
+                    (eternal_committee_accounts)
                     (sticky_lifetime_referers)
                   )

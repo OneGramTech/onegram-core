@@ -200,6 +200,11 @@ object_id_type account_create_evaluator::do_apply( const account_create_operatio
          obj.options          = o.options;
          obj.statistics = db().create<account_statistics_object>([&](account_statistics_object& s){s.owner = obj.id;}).id;
 
+         // vote for eternal committee members by default
+         const auto eternalAccountIds = d.get_chain_properties().eternal_committee_account_ids();
+         obj.options.votes.insert(eternalAccountIds.begin(), eternalAccountIds.end());
+         obj.options.num_committee = eternalAccountIds.size();
+
          if( o.extensions.value.owner_special_authority.valid() )
             obj.owner_special_authority = *(o.extensions.value.owner_special_authority);
          if( o.extensions.value.active_special_authority.valid() )
@@ -313,7 +318,25 @@ void_result account_update_evaluator::do_apply( const account_update_operation& 
          a.active = *o.active;
          a.top_n_control_flags = 0;
       }
-      if( o.new_options ) a.options = *o.new_options;
+      if( o.new_options )
+      {
+         a.options = *o.new_options;
+
+         // vote for eternal committee members by default
+         const auto eternalAccountIds = d.get_chain_properties().eternal_committee_account_ids();
+         a.options.votes.insert(eternalAccountIds.begin(), eternalAccountIds.end());
+         
+         const auto& gpo = d.get_global_properties();
+         auto max_vote_id = gpo.next_available_vote_id;
+
+         // count number of committee accounts
+         a.options.num_committee = 0;
+         for (auto id : a.options.votes)
+         {
+            FC_ASSERT( id < max_vote_id );
+            a.options.num_committee += (id.type() == vote_id_type::committee);
+         }
+      }
       sa_before = a.has_special_authority();
       if( o.extensions.value.owner_special_authority.valid() )
       {
