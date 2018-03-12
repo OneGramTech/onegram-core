@@ -229,10 +229,8 @@ namespace graphene { namespace chain {
       	const genesis_state_type& genesis_state,
          transaction_evaluation_state& genesis_eval_state,
          const asset_object& core_asset,
-         map<asset_id_type,
-         share_type>& total_supplies,
-         map<asset_id_type,
-         share_type>& total_debts
+         map<asset_id_type, share_type>& total_supplies,
+         map<asset_id_type, share_type>& total_debts
       )
       {
          // Create initial assets
@@ -386,6 +384,19 @@ namespace graphene { namespace chain {
          return itr->get_id();
       }
 
+      vote_id_type database::get_committee_member_vote_id(const string& name) const
+      {
+         // Helper function to get committee member vote ID by name
+         const auto& idx = get_index_type<committee_member_index>().indices().get<by_account>();
+         const auto& itr = idx.find(get_account_id(name));
+
+         FC_ASSERT(itr != idx.end(),
+            "Unable to find committee account '${acct}'. Did you forget to add a record for it to initial_accounts?",
+            ("acct", name));
+
+         return itr->vote_id;
+      }        
+
       void database::create_initial_accounts
       (
          const genesis_state_type& genesis_state,
@@ -417,6 +428,31 @@ namespace graphene { namespace chain {
                op.account_to_upgrade = account_id;
                op.upgrade_to_lifetime_member = true;
                apply_operation(genesis_eval_state, op);
+            }
+         }
+      }
+
+      void database::initialize_accounts_eternal_votes( transaction_evaluation_state& genesis_eval_state )
+      {
+         const auto& account_idx = get_index_type<account_index>().indices().get<by_id>();
+         for( const auto& account : account_idx )
+         {
+            try
+            {
+               account_update_operation upgrade_vop;
+
+               upgrade_vop.fee = asset( 0, asset_id_type() );
+               upgrade_vop.account = account.id;
+               upgrade_vop.new_options = account.options;
+
+               apply_operation( genesis_eval_state, upgrade_vop );
+            }
+            catch( const fc::exception& e )
+            {
+               // we can in fact get here, e.g. if asset issuer of buy/sell asset blacklists/whitelists the buyback account
+               wlog( "Skipping initialize accounts eternal votes processing for account ${a} (${an}) at block ${n}; exception was ${e}",
+                     ("a", account.id)("an", account.name)("n", head_block_num())("e", e.to_detail_string()) );
+               continue;
             }
          }
       }
@@ -580,6 +616,24 @@ namespace graphene { namespace chain {
          // update feeless_account_ids
          modify(get_chain_properties(), [&](chain_property_object &cpo) {
             cpo.feeless_accounts.account_ids = feeless_account_ids;
+         });
+      }
+
+      void database::initialize_eternal_committee_members_accounts(const genesis_state_type& genesis_state)
+      {
+         // get eternal committee account ids only after the initial accounts were created!
+         eternal_committee_account_ids_type::vote_ids_type eternal_committee_account_ids;
+
+         for (auto& account_name : genesis_state.immutable_parameters.eternal_committee_members.account_names)
+         {
+            const auto id = get_committee_member_vote_id(account_name);
+            eternal_committee_account_ids.insert(id);
+         }
+
+         // update eternal_committee_account_ids
+         modify(get_chain_properties(), [&](chain_property_object &cpo)
+         {
+            cpo.eternal_committee_accounts.vote_ids = eternal_committee_account_ids;
          });
       }
 
@@ -755,6 +809,10 @@ namespace graphene { namespace chain {
                   op.committee_member_account = get_account_id(member.owner_name);
                   apply_operation(genesis_eval_state, op);
                });
+
+            // initialize list of eternal committee members
+            initialize_eternal_committee_members_accounts(genesis_state);
+            initialize_accounts_eternal_votes(genesis_eval_state);
 
             // Create initial workers
             std::for_each(genesis_state.initial_worker_candidates.begin(),
