@@ -394,6 +394,7 @@ void database::init_genesis(const genesis_state_type& genesis_state)
       p.time = genesis_state.initial_timestamp;
       p.dynamic_flags = 0;
       p.witness_budget = 0;
+      p.witness_pay = 0;
       p.recent_slots_filled = fc::uint128::max_value();
    });
 
