@@ -348,6 +348,9 @@ void database::initialize_budget_record( fc::time_point_sec now, budget_record& 
    // at the BEGINNING of the maintenance interval.
    reserve += dpo.witness_budget;
 
+   rec.total_budget = reserve;
+
+   /* Intentionally commented out - see https://gitlab.com/cryptohouse/OneGramDev/issues/43
    fc::uint128_t budget_u128 = reserve.value;
    budget_u128 *= uint64_t(dt);
    budget_u128 *= GRAPHENE_CORE_ASSET_CYCLE_RATE;
@@ -361,8 +364,7 @@ void database::initialize_budget_record( fc::time_point_sec now, budget_record& 
       rec.total_budget = share_type(budget_u128.to_uint64());
    else
       rec.total_budget = reserve;
-
-   return;
+   */
 }
 
 /**
@@ -403,8 +405,9 @@ void database::process_budget()
       share_type witness_budget = gpo.parameters.witness_pay_per_block.value * blocks_to_maint;
       rec.requested_witness_budget = witness_budget;
       witness_budget = std::min(witness_budget, available_funds);
+      share_type witness_pay = witness_budget / blocks_to_maint; // less-or-equal gpo.parameters.witness_pay_per_block.value
       rec.witness_budget = witness_budget;
-      available_funds -= witness_budget;
+      available_funds -= witness_budget; // => remaining available_funds > 0 only if (gpo.parameters.witness_pay_per_block.value * blocks_to_maint) < init. available_funds
 
       fc::uint128_t worker_budget_u128 = gpo.parameters.worker_budget_per_day.value;
       worker_budget_u128 *= uint64_t(time_to_maint);
@@ -449,6 +452,7 @@ void database::process_budget()
          // available_funds, we replace it with witness_budget
          // instead of adding it.
          _dpo.witness_budget = witness_budget;
+         _dpo.witness_pay = witness_pay;
          _dpo.last_budget_time = now;
       });
 
