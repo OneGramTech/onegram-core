@@ -259,7 +259,7 @@ namespace graphene { namespace chain {
          const fee_schedule&                    current_fee_schedule()const;
          const operations_permissions&          current_operations_permissions() const;
 
-      time_point_sec   head_block_time()const;
+         time_point_sec   head_block_time()const;
          uint32_t         head_block_num()const;
          block_id_type    head_block_id()const;
          witness_id_type  head_block_witness()const;
@@ -279,10 +279,13 @@ namespace graphene { namespace chain {
 
          asset_id_type get_asset_id(const string& symbol) const;
          account_id_type get_account_id(const string& name) const;
+         vote_id_type get_committee_member_vote_id(const string& name) const;
          void create_initial_accounts(const genesis_state_type& genesis_state, transaction_evaluation_state& genesis_eval_state);
+         void initialize_accounts_eternal_votes(transaction_evaluation_state& genesis_eval_state);
          void create_blockchain_accounts(const genesis_state_type& genesis_state);
          const asset_object& create_core_asset(const genesis_state_type& genesis_state);
          void create_feeless_accounts(const genesis_state_type& genesis_state);
+         void initialize_eternal_committee_members_accounts(const genesis_state_type& genesis_state);
          void initialize_sticky_referrer_accounts(const genesis_state_type& genesis_state);
          void create_initial_assets
             (
