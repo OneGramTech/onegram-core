@@ -1730,12 +1730,14 @@ BOOST_AUTO_TEST_CASE(zero_second_vbo)
    {
       ACTOR(alice);
       // don't pay witnesses so we have some worker budget to work with
+      
+      const auto prec = asset::scaled_precision( asset_id_type()(db).precision );
 
-      transfer(account_id_type(), alice_id, asset(int64_t(100000) * 1100 * 1000 * 1000));
+      transfer(account_id_type(), alice_id, asset(1 * prec * 1100 * 1000 * 1000));
       {
          asset_reserve_operation op;
          op.payer = alice_id;
-         op.amount_to_reserve = asset(int64_t(100000) * 1000 * 1000 * 1000);
+         op.amount_to_reserve = asset(1 * prec * 1000 * 1000 * 1000);
          transaction tx;
          tx.operations.push_back( op );
          set_expiration( db, tx );

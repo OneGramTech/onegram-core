@@ -151,6 +151,7 @@ struct transfer_to_blind_operation : public base_operation
       uint64_t fee              = 5*GRAPHENE_BLOCKCHAIN_PRECISION; ///< the cost to register the cheapest non-free account
       uint32_t price_per_output = 5*GRAPHENE_BLOCKCHAIN_PRECISION;
    };
+   struct operation_permissions_type { operation_permissions_container_type rules; };
 
 
    asset                 fee;
@@ -173,6 +174,7 @@ struct transfer_from_blind_operation : public base_operation
    struct fee_parameters_type { 
       uint64_t fee              = 5*GRAPHENE_BLOCKCHAIN_PRECISION; ///< the cost to register the cheapest non-free account
    };
+   struct operation_permissions_type { operation_permissions_container_type rules; };
 
    asset                 fee;
    asset                 amount;
@@ -239,6 +241,7 @@ struct blind_transfer_operation : public base_operation
       uint64_t fee              = 5*GRAPHENE_BLOCKCHAIN_PRECISION; ///< the cost to register the cheapest non-free account
       uint32_t price_per_output = 5*GRAPHENE_BLOCKCHAIN_PRECISION;
    };
+   struct operation_permissions_type { operation_permissions_container_type rules; };
 
    asset                 fee;
    vector<blind_input>   inputs;
@@ -281,3 +284,7 @@ FC_REFLECT( graphene::chain::blind_transfer_operation,
 FC_REFLECT( graphene::chain::transfer_to_blind_operation::fee_parameters_type, (fee)(price_per_output) )
 FC_REFLECT( graphene::chain::transfer_from_blind_operation::fee_parameters_type, (fee) )
 FC_REFLECT( graphene::chain::blind_transfer_operation::fee_parameters_type, (fee)(price_per_output) )
+
+FC_REFLECT( graphene::chain::transfer_to_blind_operation::operation_permissions_type, (rules) )
+FC_REFLECT( graphene::chain::transfer_from_blind_operation::operation_permissions_type, (rules) )
+FC_REFLECT( graphene::chain::blind_transfer_operation::operation_permissions_type, (rules) )

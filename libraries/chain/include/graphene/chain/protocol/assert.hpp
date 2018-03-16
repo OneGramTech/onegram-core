@@ -91,6 +91,7 @@ namespace graphene { namespace chain {
    struct assert_operation : public base_operation
    {
       struct fee_parameters_type { uint64_t fee = GRAPHENE_BLOCKCHAIN_PRECISION; };
+      struct operation_permissions_type { operation_permissions_container_type rules; };
 
       asset                      fee;
       account_id_type            fee_paying_account;
@@ -106,6 +107,7 @@ namespace graphene { namespace chain {
 } } // graphene::chain
 
 FC_REFLECT( graphene::chain::assert_operation::fee_parameters_type, (fee) )
+FC_REFLECT( graphene::chain::assert_operation::operation_permissions_type, (rules) )
 FC_REFLECT( graphene::chain::account_name_eq_lit_predicate, (account_id)(name) )
 FC_REFLECT( graphene::chain::asset_symbol_eq_lit_predicate, (asset_id)(symbol) )
 FC_REFLECT( graphene::chain::block_id_predicate, (id) )

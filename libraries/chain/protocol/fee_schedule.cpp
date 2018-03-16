@@ -23,6 +23,7 @@
  */
 #include <algorithm>
 #include <graphene/chain/protocol/fee_schedule.hpp>
+#include <graphene/chain/protocol/operations_permissions.hpp>
 #include <fc/smart_ref_impl.hpp>
 
 namespace fc
@@ -104,7 +105,7 @@ namespace graphene { namespace chain {
       {
          try {
             return op.calculate_fee( param.get<OpType>() ).value;
-         } catch (fc::assert_exception e) {
+         } catch (const fc::assert_exception& e) {
              fee_parameters params; params.set_which(current_op);
              auto itr = param.parameters.find(params);
              if( itr != param.parameters.end() ) params = *itr;
@@ -195,6 +196,7 @@ namespace graphene { namespace chain {
    void chain_parameters::validate()const
    {
       current_fees->validate();
+      current_operations_permissions->validate();
       FC_ASSERT( reserve_percent_of_fee <= GRAPHENE_100_PERCENT );
       FC_ASSERT( network_percent_of_fee <= GRAPHENE_100_PERCENT );
       FC_ASSERT( lifetime_referrer_percent_of_fee <= GRAPHENE_100_PERCENT );
