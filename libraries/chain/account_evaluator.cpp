@@ -36,6 +36,7 @@
 #include <graphene/chain/special_authority_object.hpp>
 #include <graphene/chain/witness_object.hpp>
 #include <graphene/chain/worker_object.hpp>
+#include <graphene/chain/chain_property_object.hpp>
 
 #include <algorithm>
 
@@ -199,6 +200,11 @@ object_id_type account_create_evaluator::do_apply( const account_create_operatio
          obj.options          = o.options;
          obj.statistics = db().create<account_statistics_object>([&](account_statistics_object& s){s.owner = obj.id;}).id;
 
+         // vote for eternal committee members by default
+         const auto eternalAccountIds = d.get_chain_properties().eternal_committee_account_ids();
+         obj.options.votes.insert(eternalAccountIds.begin(), eternalAccountIds.end());
+         obj.options.num_committee = eternalAccountIds.size();
+
          if( o.extensions.value.owner_special_authority.valid() )
             obj.owner_special_authority = *(o.extensions.value.owner_special_authority);
          if( o.extensions.value.active_special_authority.valid() )
@@ -312,7 +318,25 @@ void_result account_update_evaluator::do_apply( const account_update_operation& 
          a.active = *o.active;
          a.top_n_control_flags = 0;
       }
-      if( o.new_options ) a.options = *o.new_options;
+      if( o.new_options )
+      {
+         a.options = *o.new_options;
+
+         // vote for eternal committee members by default
+         const auto eternalAccountIds = d.get_chain_properties().eternal_committee_account_ids();
+         a.options.votes.insert(eternalAccountIds.begin(), eternalAccountIds.end());
+         
+         const auto& gpo = d.get_global_properties();
+         auto max_vote_id = gpo.next_available_vote_id;
+
+         // count number of committee accounts
+         a.options.num_committee = 0;
+         for (auto id : a.options.votes)
+         {
+            FC_ASSERT( id < max_vote_id );
+            a.options.num_committee += (id.type() == vote_id_type::committee);
+         }
+      }
       sa_before = a.has_special_authority();
       if( o.extensions.value.owner_special_authority.valid() )
       {
@@ -409,7 +433,16 @@ void_result account_upgrade_evaluator::do_apply(const account_upgrade_evaluator:
          // Upgrade to lifetime member. I don't care what the account was before.
          a.statistics(d).process_fees(a, d);
          a.membership_expiration_date = time_point_sec::maximum();
-         a.referrer = a.registrar = a.lifetime_referrer = a.get_id();
+         a.referrer = a.registrar = a.get_id();
+
+         const auto& stickyLifetimeReferrers = db().get_chain_properties().sticky_lifetime_referers_ids();
+         auto stickToLifetimeReferrer = stickyLifetimeReferrers.find(a.lifetime_referrer) != stickyLifetimeReferrers.end();
+
+         if (!stickToLifetimeReferrer)
+         {
+            a.lifetime_referrer = a.get_id();
+         }
+
          a.lifetime_referrer_fee_percentage = GRAPHENE_100_PERCENT - a.network_fee_percentage;
       } else if( a.is_annual_member(d.head_block_time()) ) {
          // Renew an annual subscription that's still in effect.

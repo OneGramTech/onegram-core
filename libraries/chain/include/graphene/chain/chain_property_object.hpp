@@ -25,6 +25,7 @@
 
 #include <graphene/chain/immutable_chain_parameters.hpp>
 #include <graphene/chain/feeless_accounts.hpp>
+#include <graphene/chain/sticky_lifetime_referrers.hpp>
 
 namespace graphene { namespace chain {
 
@@ -45,6 +46,22 @@ class chain_property_object : public abstract_object<chain_property_object>
       // contains ids of immutable_parameters.feeless_accounts.account_names for fast search
       feeless_account_ids_type feeless_accounts;
       const feeless_account_ids_type::account_ids_type& feeless_account_ids() const { return feeless_accounts.account_ids; }
+
+      // contains ids of immutable_parameters.eternal_committee_accounts.account_names for fast search
+      eternal_committee_account_ids_type eternal_committee_accounts;
+      const eternal_committee_account_ids_type::vote_ids_type& eternal_committee_account_ids() const { return eternal_committee_accounts.vote_ids; }
+
+      /**
+       * @brief The sticky lifetime referers
+       *
+       * List of accounts that "stick" as a lifetime referrer even when somebody upgrades his account to LTM.
+       */
+      sticky_lifetime_referrers_ids_type sticky_lifetime_referers;
+      const sticky_lifetime_referrers_ids_type::referrer_ids_type& sticky_lifetime_referers_ids() const
+      {
+         return sticky_lifetime_referers.referrer_ids;
+      }
+
 };
 
 } }
@@ -53,4 +70,6 @@ FC_REFLECT_DERIVED( graphene::chain::chain_property_object, (graphene::db::objec
                     (chain_id)
                     (immutable_parameters)
                     (feeless_accounts)
+                    (eternal_committee_accounts)
+                    (sticky_lifetime_referers)
                   )
