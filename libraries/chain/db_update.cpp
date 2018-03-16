@@ -103,11 +103,10 @@ void database::update_global_dynamic_data( const signed_block& b )
 
 void database::update_signing_witness(const witness_object& signing_witness, const signed_block& new_block)
 {
-   const global_property_object& gpo = get_global_properties();
    const dynamic_global_property_object& dpo = get_dynamic_global_properties();
    uint64_t new_block_aslot = dpo.current_aslot + get_slot_at_time( new_block.timestamp );
 
-   share_type witness_pay = std::min( gpo.parameters.witness_pay_per_block, dpo.witness_budget );
+   share_type witness_pay = std::min( dpo.witness_pay, dpo.witness_budget );
 
    modify( dpo, [&]( dynamic_global_property_object& _dpo )
    {
