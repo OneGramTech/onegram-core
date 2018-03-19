@@ -280,8 +280,6 @@
             "rules": [{
                 "account_name": "ext1",
                 "allowed": true
-              },{
-                "allowed": false
               }
             ]
           }
@@ -290,8 +288,6 @@
             "rules": [{
                 "account_name": "ext1",
                 "allowed": true
-              },{
-                "allowed": false
               }
             ]
           }
@@ -300,8 +296,6 @@
             "rules": [{
                 "account_name": "ext1",
                 "allowed": true
-              },{
-                "allowed": false
               }
             ]
           }
@@ -310,8 +304,6 @@
             "rules": [{
                 "account_name": "ext1",
                 "allowed": true
-              },{
-                "allowed": false
               }
             ]
           }
@@ -320,8 +312,6 @@
             "rules": [{
                 "account_name": "ext1",
                 "allowed": true
-              },{
-                "allowed": false
               }
             ]
           }
@@ -330,8 +320,6 @@
             "rules": [{
                 "account_name": "ext1",
                 "allowed": true
-              },{
-                "allowed": false
               }
             ]
           }
@@ -340,8 +328,6 @@
             "rules": [{
                 "account_name": "ext1",
                 "allowed": true
-              },{
-                "allowed": false
               }
             ]
           }
@@ -350,8 +336,6 @@
             "rules": [{
                 "account_name": "ext1",
                 "allowed": true
-              },{
-                "allowed": false
               }
             ]
           }
@@ -360,8 +344,6 @@
             "rules": [{
                 "account_name": "ext1",
                 "allowed": true
-              },{
-                "allowed": false
               }
             ]
           }
@@ -370,8 +352,6 @@
             "rules": [{
                 "account_name": "ext1",
                 "allowed": true
-              },{
-                "allowed": false
               }
             ]
           }
@@ -443,8 +423,6 @@
             "rules": [{
                 "account_name": "ext1",
                 "allowed": true
-              },{
-                "allowed": false
               }
             ]
           }
@@ -467,8 +445,6 @@
             "rules": [{
                 "account_name": "ext1",
                 "allowed": true
-              },{
-                "allowed": false
               }
             ]
           }
@@ -484,8 +460,6 @@
             "rules": [{
                 "account_name": "ext1",
                 "allowed": true
-              },{
-                "allowed": false
               }
             ]
           }
