@@ -1,6 +1,6 @@
 {
   "initial_timestamp": "2018-03-29T12:00:00",
-  "max_core_supply": "12400786000000",
+  "max_core_supply": 12400786000000,
   "initial_parameters": {
     "current_fees": {
       "parameters": [[
@@ -42,7 +42,7 @@
         ],[
           8,{
             "membership_annual_fee": 12400786000000,
-            "membership_lifetime_fee": "5000000"
+            "membership_lifetime_fee": 5000000
           }
         ],[
           9,{
@@ -50,9 +50,9 @@
           }
         ],[
           10,{
-            "symbol3": "10000000",
-            "symbol4": "5000000",
-            "long_symbol": "1000000",
+            "symbol3": 10000000,
+            "symbol4": 5000000,
+            "long_symbol": 1000000,
             "price_per_kbyte": 100000
           }
         ],[
@@ -95,7 +95,7 @@
           }
         ],[
           20,{
-            "fee": "3000000"
+            "fee": 3000000
           }
         ],[
           21,{
@@ -134,7 +134,7 @@
           }
         ],[
           29,{
-            "fee": "10000000"
+            "fee": 10000000
           }
         ],[
           30,{
@@ -154,7 +154,7 @@
           }
         ],[
           34,{
-            "fee": "8000000"
+            "fee": 8000000
           }
         ],[
           35,{
