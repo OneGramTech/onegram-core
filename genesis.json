@@ -586,8 +586,8 @@
       "is_lifetime_member": true
     },{
       "name": "ico2",
-      "owner_key": "OGC5TwVgdjR4mn4oLMYT8CJ2hVXGT7GnsriTjTNguuCegkixYxaYV",
-      "active_key": "OGC5TwVgdjR4mn4oLMYT8CJ2hVXGT7GnsriTjTNguuCegkixYxaYV",
+      "owner_key": "OGC78nzcFTS7S8Pkwu3R2GeKeFZ5BXUKtiJd2CZ6zbgWSK5G5jDMo",
+      "active_key": "OGC78nzcFTS7S8Pkwu3R2GeKeFZ5BXUKtiJd2CZ6zbgWSK5G5jDMo",
       "is_lifetime_member": true
     },{
       "name": "fees",
@@ -740,8 +740,12 @@
   "initial_balances": [{
       "owner": "OGC5TwVgdjR4mn4oLMYT8CJ2hVXGT7GnsriTjTNguuCegkixYxaYV",
       "asset_symbol": "OGC",
-      "amount": "12400786000000"
-    }
+      "amount": 6200393000000
+    },{
+      "owner": "OGC78nzcFTS7S8Pkwu3R2GeKeFZ5BXUKtiJd2CZ6zbgWSK5G5jDMo",
+      "asset_symbol": "OGC",
+      "amount": 6200393000000
+    },
   ],
   "initial_vesting_balances": [],
   "initial_active_witnesses": 11,
