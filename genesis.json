@@ -551,9 +551,9 @@
       ]
     },
     "block_interval": 10,
-    "maintenance_interval": 86400,
+    "maintenance_interval": 1800,
     "maintenance_skip_slots": 3,
-    "committee_proposal_review_period": 1209600,
+    "committee_proposal_review_period": 14400,
     "maximum_transaction_size": 2048,
     "maximum_block_size": 1024000000,
     "maximum_time_until_expiration": 86400,
