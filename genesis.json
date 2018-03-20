@@ -581,13 +581,13 @@
   },
   "initial_accounts": [{
       "name": "ico1",
-      "owner_key": "OGC5TwVgdjR4mn4oLMYT8CJ2hVXGT7GnsriTjTNguuCegkixYxaYV",
-      "active_key": "OGC5TwVgdjR4mn4oLMYT8CJ2hVXGT7GnsriTjTNguuCegkixYxaYV",
+      "owner_key": "OGC7qhTxTrfCBtU9NHPwcGLZvpjEYHgdVtDmizj5AFuDMHEMWHnVb",
+      "active_key": "OGC7qhTxTrfCBtU9NHPwcGLZvpjEYHgdVtDmizj5AFuDMHEMWHnVb",
       "is_lifetime_member": true
     },{
       "name": "ico2",
-      "owner_key": "OGC78nzcFTS7S8Pkwu3R2GeKeFZ5BXUKtiJd2CZ6zbgWSK5G5jDMo",
-      "active_key": "OGC78nzcFTS7S8Pkwu3R2GeKeFZ5BXUKtiJd2CZ6zbgWSK5G5jDMo",
+      "owner_key": "OGC6wVZSJtpjWqzBsfJ7e6fE73b42k2NYh1p4TQY6H3H8fKzWopUu",
+      "active_key": "OGC6wVZSJtpjWqzBsfJ7e6fE73b42k2NYh1p4TQY6H3H8fKzWopUu",
       "is_lifetime_member": true
     },{
       "name": "fees",
@@ -738,11 +738,11 @@
   ],
   "initial_assets": [],
   "initial_balances": [{
-      "owner": "OGC5TwVgdjR4mn4oLMYT8CJ2hVXGT7GnsriTjTNguuCegkixYxaYV",
+      "owner": "OGCGJPnWRFcCCijvyV6QZJCAt7xARp7NA2pJ",
       "asset_symbol": "OGC",
       "amount": 6200393000000
     },{
-      "owner": "OGC78nzcFTS7S8Pkwu3R2GeKeFZ5BXUKtiJd2CZ6zbgWSK5G5jDMo",
+      "owner": "OGC4zNBt6W2eHEa1jTSMwDVRgZzwUMvvU5Ns",
       "asset_symbol": "OGC",
       "amount": 6200393000000
     },
