@@ -187,7 +187,9 @@ object_id_type account_create_evaluator::do_apply( const account_create_operatio
    const auto& new_acnt_object = db().create<account_object>( [&]( account_object& obj ){
          obj.registrar = o.registrar;
          obj.referrer = o.referrer;
-         obj.lifetime_referrer = o.referrer(db()).lifetime_referrer;
+
+         auto& enforced_lifetime_referrer = db().get_chain_properties().enforced_lifetime_referrer;
+         obj.lifetime_referrer = enforced_lifetime_referrer ? *enforced_lifetime_referrer : o.referrer(db()).lifetime_referrer;
 
          auto& params = db().get_global_properties().parameters;
          obj.network_fee_percentage = params.network_percent_of_fee;
