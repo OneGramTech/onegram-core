@@ -52,6 +52,7 @@
 
 #include <iostream>
 #include <fstream>
+#include <boost/smart_ptr/make_shared.hpp>
 
 #ifdef WIN32
 # include <signal.h> 
@@ -357,7 +358,7 @@ int main(int argc, char** argv)
       node->shutdown_plugins();
       node->shutdown();
       node = nullptr;
-
+    
       return 0;
    }
    catch (const fc::exception& e)
