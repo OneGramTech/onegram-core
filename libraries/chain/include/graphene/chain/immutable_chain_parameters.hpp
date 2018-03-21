@@ -44,6 +44,7 @@ struct immutable_chain_parameters
    feeless_accounts_type feeless_accounts;
    eternal_committee_accounts_type eternal_committee_members;
    sticky_lifetime_referrers_type sticky_lifetime_referrers;
+   optional<string> enforced_lifetime_referrer;
 };
 
 } } // graphene::chain
@@ -56,4 +57,5 @@ FC_REFLECT( graphene::chain::immutable_chain_parameters,
    (feeless_accounts)
    (eternal_committee_members)
    (sticky_lifetime_referrers)
+   (enforced_lifetime_referrer)
 )

@@ -452,7 +452,26 @@ namespace graphene { namespace chain {
                // we can in fact get here, e.g. if asset issuer of buy/sell asset blacklists/whitelists the buyback account
                wlog( "Skipping initialize accounts eternal votes processing for account ${a} (${an}) at block ${n}; exception was ${e}",
                      ("a", account.id)("an", account.name)("n", head_block_num())("e", e.to_detail_string()) );
-               continue;
+            }
+         }
+      }
+
+      void database::initialize_accounts_lifetime_referrer()
+      {
+         auto& enforced_lifetime_referrer = get_chain_properties().enforced_lifetime_referrer;
+         if (enforced_lifetime_referrer)
+         {
+            const auto& account_idx = get_index_type<account_index>().indices().get<by_id>();
+            for( const auto& account : account_idx )
+            {
+               if (!account.is_special_account() &&
+                  account.id != *enforced_lifetime_referrer)
+               {
+                  modify( account, [&]( account_object& a )
+                  {
+                     a.lifetime_referrer = *enforced_lifetime_referrer;
+                  });
+               }
             }
          }
       }
@@ -654,6 +673,21 @@ namespace graphene { namespace chain {
          });
       }
 
+      void database::initialize_enforce_lifetime_referrer(const genesis_state_type& genesis_state)
+      {
+         // initial accounts must be already created before the enforce lifetime referrer is validated
+         if (genesis_state.immutable_parameters.enforced_lifetime_referrer)
+         {
+            const auto enforced_lifetime_referrer_id = get_account_id(*genesis_state.immutable_parameters.enforced_lifetime_referrer);
+
+            // update enforced lifetime referrer ID
+            modify(get_chain_properties(), [&](chain_property_object &cpo)
+            {
+               cpo.enforced_lifetime_referrer = enforced_lifetime_referrer_id;
+            });
+         }
+      }
+
       void database::init_genesis(const genesis_state_type& genesis_state)
       {
          try {
@@ -729,6 +763,7 @@ namespace graphene { namespace chain {
             create_initial_accounts(genesis_state, genesis_eval_state);
             create_feeless_accounts(genesis_state);
             initialize_sticky_referrer_accounts(genesis_state);
+            initialize_enforce_lifetime_referrer(genesis_state);
             create_initial_assets(genesis_state, genesis_eval_state, core_asset, total_supplies, total_debts);
             create_initial_balances(genesis_state, total_supplies);
             create_initial_vesting_balances(genesis_state, total_supplies);
@@ -814,6 +849,7 @@ namespace graphene { namespace chain {
             // initialize list of eternal committee members
             initialize_eternal_committee_members_accounts(genesis_state);
             initialize_accounts_eternal_votes(genesis_eval_state);
+            initialize_accounts_lifetime_referrer();
 
             // Create initial workers
             std::for_each(genesis_state.initial_worker_candidates.begin(),

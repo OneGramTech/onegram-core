@@ -62,6 +62,7 @@ class chain_property_object : public abstract_object<chain_property_object>
          return sticky_lifetime_referers.referrer_ids;
       }
 
+      optional<account_id_type> enforced_lifetime_referrer;
 };
 
 } }
@@ -72,4 +73,5 @@ FC_REFLECT_DERIVED( graphene::chain::chain_property_object, (graphene::db::objec
                     (feeless_accounts)
                     (eternal_committee_accounts)
                     (sticky_lifetime_referers)
+                    (enforced_lifetime_referrer)
                   )

@@ -282,11 +282,13 @@ namespace graphene { namespace chain {
          vote_id_type get_committee_member_vote_id(const string& name) const;
          void create_initial_accounts(const genesis_state_type& genesis_state, transaction_evaluation_state& genesis_eval_state);
          void initialize_accounts_eternal_votes(transaction_evaluation_state& genesis_eval_state);
+         void initialize_accounts_lifetime_referrer();
          void create_blockchain_accounts(const genesis_state_type& genesis_state);
          const asset_object& create_core_asset(const genesis_state_type& genesis_state);
          void create_feeless_accounts(const genesis_state_type& genesis_state);
          void initialize_eternal_committee_members_accounts(const genesis_state_type& genesis_state);
          void initialize_sticky_referrer_accounts(const genesis_state_type& genesis_state);
+         void initialize_enforce_lifetime_referrer(const genesis_state_type& genesis_state);
          void create_initial_assets
             (
             const genesis_state_type& genesis_state,
