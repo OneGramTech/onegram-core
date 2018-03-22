@@ -751,37 +751,37 @@
   "initial_active_witnesses": 11,
   "initial_witness_candidates": [{
       "owner_name": "wit1",
-      "block_signing_key": "OGC6MRyAjQq8ud7hVNYcfnVPJqcVpscN5So8BhtHuGYqET5GDW5CV"
+      "block_signing_key": "OGC8CAY9y2yQvYN3djfVQWLyCAT2k4qcTCDdKzBnpTCiJJ6HKjW7U"
     },{
       "owner_name": "wit2",
-      "block_signing_key": "OGC6MRyAjQq8ud7hVNYcfnVPJqcVpscN5So8BhtHuGYqET5GDW5CV"
+      "block_signing_key": "OGC8CAY9y2yQvYN3djfVQWLyCAT2k4qcTCDdKzBnpTCiJJ6HKjW7U"
     },{
       "owner_name": "wit3",
-      "block_signing_key": "OGC6MRyAjQq8ud7hVNYcfnVPJqcVpscN5So8BhtHuGYqET5GDW5CV"
+      "block_signing_key": "OGC8CAY9y2yQvYN3djfVQWLyCAT2k4qcTCDdKzBnpTCiJJ6HKjW7U"
     },{
       "owner_name": "wit4",
-      "block_signing_key": "OGC6MRyAjQq8ud7hVNYcfnVPJqcVpscN5So8BhtHuGYqET5GDW5CV"
+      "block_signing_key": "OGC8CAY9y2yQvYN3djfVQWLyCAT2k4qcTCDdKzBnpTCiJJ6HKjW7U"
     },{
       "owner_name": "wit5",
-      "block_signing_key": "OGC6MRyAjQq8ud7hVNYcfnVPJqcVpscN5So8BhtHuGYqET5GDW5CV"
+      "block_signing_key": "OGC8CAY9y2yQvYN3djfVQWLyCAT2k4qcTCDdKzBnpTCiJJ6HKjW7U"
     },{
       "owner_name": "wit6",
-      "block_signing_key": "OGC6MRyAjQq8ud7hVNYcfnVPJqcVpscN5So8BhtHuGYqET5GDW5CV"
+      "block_signing_key": "OGC8CAY9y2yQvYN3djfVQWLyCAT2k4qcTCDdKzBnpTCiJJ6HKjW7U"
     },{
       "owner_name": "wit7",
-      "block_signing_key": "OGC6MRyAjQq8ud7hVNYcfnVPJqcVpscN5So8BhtHuGYqET5GDW5CV"
+      "block_signing_key": "OGC8CAY9y2yQvYN3djfVQWLyCAT2k4qcTCDdKzBnpTCiJJ6HKjW7U"
     },{
       "owner_name": "wit8",
-      "block_signing_key": "OGC6MRyAjQq8ud7hVNYcfnVPJqcVpscN5So8BhtHuGYqET5GDW5CV"
+      "block_signing_key": "OGC8CAY9y2yQvYN3djfVQWLyCAT2k4qcTCDdKzBnpTCiJJ6HKjW7U"
     },{
       "owner_name": "wit9",
-      "block_signing_key": "OGC6MRyAjQq8ud7hVNYcfnVPJqcVpscN5So8BhtHuGYqET5GDW5CV"
+      "block_signing_key": "OGC8CAY9y2yQvYN3djfVQWLyCAT2k4qcTCDdKzBnpTCiJJ6HKjW7U"
     },{
       "owner_name": "wit10",
-      "block_signing_key": "OGC6MRyAjQq8ud7hVNYcfnVPJqcVpscN5So8BhtHuGYqET5GDW5CV"
+      "block_signing_key": "OGC8CAY9y2yQvYN3djfVQWLyCAT2k4qcTCDdKzBnpTCiJJ6HKjW7U"
     },{
       "owner_name": "wit11",
-      "block_signing_key": "OGC6MRyAjQq8ud7hVNYcfnVPJqcVpscN5So8BhtHuGYqET5GDW5CV"
+      "block_signing_key": "OGC8CAY9y2yQvYN3djfVQWLyCAT2k4qcTCDdKzBnpTCiJJ6HKjW7U"
     }
   ],
   "initial_committee_candidates": [{
