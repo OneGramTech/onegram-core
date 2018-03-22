@@ -807,6 +807,7 @@
     },
     "sticky_lifetime_referrers": {
       "referrer_names": ["fees"]
-    }
+    },
+    "enforced_lifetime_referrer": "fees",
   }
 }
