@@ -169,3 +169,23 @@
 ///@}
 
 #define GRAPHENE_FBA_STEALTH_DESIGNATED_ASSET (asset_id_type(743))
+
+/**
+ *  User facing branding strings
+ */
+///@{
+#define GRAPHENE_CHAIN_IDENTIFIER_TXT "OneGram Chain Identifier"
+#define GRAPHENE_DELAYED_NODE_TXT "OneGram Delayed Node"
+#define GRAPHENE_EMPTY_BLOCKS_TXT "OneGram empty blocks"
+#define GRAPHENE_WITNESS_NODE_TXT "OneGram Witness Node"
+#define GRAPHENE_NEW_CHAIN_BANNER_TXT \
+"********************************\n"\
+"*                              *\n"\
+"*   ------- NEW CHAIN ------   *\n"\
+"*   - Welcome to OneGram!  -   *\n"\
+"*   ------------------------   *\n"\
+"*                              *\n"\
+"********************************\n"
+#define GRAPHENE_NODE_NAME_TXT "OneGram"
+#define GRAPHENE_P2P_NODE_NAME_TXT "OneGram Reference Implementation"
+///@}

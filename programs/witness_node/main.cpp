@@ -104,7 +104,7 @@ static void load_config_file
 )
 {
    deduplicator dedup;
-   bpo::options_description unique_options("Graphene Witness Node");
+   bpo::options_description unique_options(GRAPHENE_WITNESS_NODE_TXT);
    for (const auto& opt : cfg_options.options())
    {
       const auto od = dedup.next(opt);
@@ -251,8 +251,8 @@ int main(int argc, char** argv)
 
    try
    {
-      bpo::options_description app_options("Graphene Witness Node");
-      bpo::options_description cfg_options("Graphene Witness Node");
+      bpo::options_description app_options(GRAPHENE_WITNESS_NODE_TXT);
+      bpo::options_description cfg_options(GRAPHENE_WITNESS_NODE_TXT);
       app_options.add_options()
             ("help,h", "Print this help message and exit.")
             ("data-dir,d", bpo::value<boost::filesystem::path>()->default_value("witness_node_data_dir"), "Directory containing databases, configuration file, etc.")
@@ -349,7 +349,7 @@ int main(int argc, char** argv)
          exit_promise->set_value(signal);
       }, SIGTERM);
 
-      ilog("Started BitShares node on a chain with ${h} blocks.", ("h", node->chain_database()->head_block_num()));
+      ilog("Started ${n} node on a chain with ${h} blocks.", ("n", GRAPHENE_NODE_NAME_TXT)("h", node->chain_database()->head_block_num()));
       ilog("Chain ID is ${id}", ("id", node->chain_database()->get_chain_id()) );
 
       auto signal = exit_promise->wait();
