@@ -33,4 +33,8 @@ file(GLOB FEE_SCHEDULE_SOURCES "fee_schedule/*.cpp")
 add_executable( fee_schedule_test ${FEE_SCHEDULE_SOURCES} )
 target_link_libraries( fee_schedule_test graphene_chain fc ${PLATFORM_SPECIFIC_LIBS} )
 
+file(GLOB VESTING_BALANCE_SOURCES "vesting_balance/*.cpp")
+add_executable( vesting_balance_test ${VESTING_BALANCE_SOURCES} )
+target_link_libraries( vesting_balance_test graphene_chain fc ${PLATFORM_SPECIFIC_LIBS} )
+
 add_subdirectory( generate_empty_blocks )
