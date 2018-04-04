@@ -106,6 +106,7 @@ FC_REFLECT( graphene::chain::chain_parameters,
             (count_non_member_votes)
             (allow_non_member_whitelists)
             (witness_pay_per_block)
+            (witness_pay_vesting_seconds)
             (worker_budget_per_day)
             (max_predicate_opcode)
             (fee_liquidation_threshold)
