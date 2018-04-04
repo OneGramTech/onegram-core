@@ -42,14 +42,8 @@ namespace bpo = boost::program_options;
 void new_chain_banner( const graphene::chain::database& db )
 {
    std::cerr << "\n"
-      "********************************\n"
-      "*                              *\n"
-      "*   ------- NEW CHAIN ------   *\n"
-      "*   - Welcome to Graphene! -   *\n"
-      "*   ------------------------   *\n"
-      "*                              *\n"
-      "********************************\n"
-      "\n";
+   GRAPHENE_NEW_CHAIN_BANNER_TXT
+   "\n";
    if( db.get_slot_at_time( fc::time_point::now() ) > 200 )
    {
       std::cerr << "Your genesis seems to have an old timestamp\n"
