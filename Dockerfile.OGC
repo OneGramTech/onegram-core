@@ -73,16 +73,15 @@ RUN cd /src \
 	      /usr/local/bin 2>/dev/null || : \
 
 	&& mkdir -p /var/onegram/data \
-	&& chown onegram:onegram /var/onegram/data \
+	&& cp -r onegram/default-configs/* /var/onegram/data \
+	&& chown -R onegram:onegram /var/onegram/data \
 	# Remove everything from the src directory, including hidden files
 	&& ls -A1 |xargs -d '\n' rm -rf
 
 # Use the following to embed genesis config into the binary:
 # cmake -DGRAPHENE_EGENESIS_JSON="/home/onegram/onegram-genesis.json"
 
-COPY onegram/onegram-genesis.json /home/onegram/
-COPY onegram/onegram-config.ini /var/onegram/data/config.ini
-COPY onegram/onegram_witness /usr/local/bin/
+COPY onegram/bin/ /usr/local/bin/
 
 WORKDIR /home/onegram
 
