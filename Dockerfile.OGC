@@ -1,4 +1,4 @@
-FROM ubuntu:16.04
+FROM ubuntu:16.04 as builder
 MAINTAINER Jozef Knaperek <jozef.knaperek@01cryptohouse.com>
 
 ARG uid=1000
@@ -49,7 +49,8 @@ RUN apt-get update \
 		libboost-locale-dev \
 		libboost-iostreams-dev \
 		libboost-coroutine-dev \
-	&& apt-get clean
+    && apt-get clean \
+    && rm -rf /var/lib/apt/lists/* /tmp/* /var/tmp/*
 # Note: the build requires access to .git (repo metadata) - fails otherwise!
 
 COPY . /src
@@ -70,13 +71,8 @@ RUN cd /src \
 	      ./programs/witness_node/witness_node \
 	      ./programs/cli_wallet/cli_wallet \
 	      ./tests/chain_test \
-	      /usr/local/bin 2>/dev/null || : \
+	      /usr/local/bin 2>/dev/null || :
 
-	&& mkdir -p /var/onegram/data \
-	&& cp -r onegram/default-configs/* /var/onegram/data \
-	&& chown -R onegram:onegram /var/onegram/data \
-	# Remove everything from the src directory, including hidden files
-	&& ls -A1 |xargs -d '\n' rm -rf
 
 # Use the following to embed genesis config into the binary:
 # cmake -DGRAPHENE_EGENESIS_JSON="/home/onegram/onegram-genesis.json"
@@ -85,9 +81,27 @@ COPY onegram/bin/ /usr/local/bin/
 
 WORKDIR /home/onegram
 
-EXPOSE 8540 11011
+USER onegram
+
+# Make a clean runtime image
+FROM ubuntu:16.04
+RUN apt-get update \
+	&& apt-get install -y --no-install-recommends \
+		libcurl3 \
+    && apt-get clean \
+    && rm -rf /var/lib/apt/lists/* /tmp/* /var/tmp/*
+COPY --from=builder /usr/local/bin/ /usr/local/bin/
+
+COPY onegram/default-configs/ /var/onegram/data/
+
+ARG uid=1000
+ARG gid=1000
+RUN groupadd --gid $gid -r onegram && useradd --uid $uid --create-home --system -g onegram onegram \
+	&& chown -R onegram:onegram /var/onegram/data
 
 USER onegram
+
+EXPOSE 8540 11011
 
 VOLUME /var/onegram/data
 
