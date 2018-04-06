@@ -1,4 +1,4 @@
-FROM ubuntu:16.04 as builder
+FROM ubuntu:17.10 as builder
 MAINTAINER Jozef Knaperek <jozef.knaperek@01cryptohouse.com>
 
 ARG uid=1000
@@ -32,23 +32,22 @@ RUN apt-get update \
 		automake \
 		ncurses-dev \
 		nodejs \
-		nodejs-legacy \
 		npm \
 		git \
-		libboost1.58-dev \
-		libboost-thread-dev \
-		libboost-date-time-dev \
-		libboost-system-dev \
-		libboost-filesystem-dev \
-		libboost-program-options-dev \
-		libboost-signals-dev \
-		libboost-serialization-dev \
-		libboost-chrono-dev \
-		libboost-test-dev \
-		libboost-context-dev \
-		libboost-locale-dev \
-		libboost-iostreams-dev \
-		libboost-coroutine-dev \
+		libboost1.63-dev \
+		libboost-thread1.63-dev \
+		libboost-date-time1.63-dev \
+		libboost-system1.63-dev \
+		libboost-filesystem1.63-dev \
+		libboost-program-options1.63-dev \
+		libboost-signals1.63-dev \
+		libboost-serialization1.63-dev \
+		libboost-chrono1.63-dev \
+		libboost-test1.63-dev \
+		libboost-context1.63-dev \
+		libboost-locale1.63-dev \
+		libboost-iostreams1.63-dev \
+		libboost-coroutine1.63-dev \
     && apt-get clean \
     && rm -rf /var/lib/apt/lists/* /tmp/* /var/tmp/*
 # Note: the build requires access to .git (repo metadata) - fails otherwise!
@@ -84,7 +83,7 @@ WORKDIR /home/onegram
 USER onegram
 
 # Make a clean runtime image
-FROM ubuntu:16.04
+FROM ubuntu:17.10
 RUN apt-get update \
 	&& apt-get install -y --no-install-recommends \
 		libcurl3 \
