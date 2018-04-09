@@ -1116,9 +1116,6 @@ BOOST_AUTO_TEST_CASE( witness_feeds )
  */
 BOOST_AUTO_TEST_CASE( trade_amount_equals_zero )
 {
-   // TODO: enable this test when the issue #26 is resolved (https://gitlab.com/cryptohouse/OneGramDev/issues/26)
-   BOOST_TEST_MESSAGE("temporary disabled");
-   /*
    try {
       INVOKE(issue_uia);
       generate_blocks( HARDFORK_555_TIME );
@@ -1130,29 +1127,30 @@ BOOST_AUTO_TEST_CASE( trade_amount_equals_zero )
       const asset_id_type core_id = core.id;
       const account_object& core_seller = create_account( "shorter1" );
       const account_object& core_buyer = get_account("nathan");
+      const auto prec = asset::scaled_precision( asset_id_type()(db).precision );
 
-      transfer( committee_account(db), core_seller, asset( 100000000 ) );
+      transfer( committee_account(db), core_seller, asset( 1000 * prec ) );
 
       BOOST_CHECK_EQUAL(get_balance(core_buyer, core), 0);
-      BOOST_CHECK_EQUAL(get_balance(core_buyer, test), 10000000);
+      BOOST_CHECK_EQUAL(get_balance(core_buyer, test), 100 * prec.value);
       BOOST_CHECK_EQUAL(get_balance(core_seller, test), 0);
-      BOOST_CHECK_EQUAL(get_balance(core_seller, core), 100000000);
+      BOOST_CHECK_EQUAL(get_balance(core_seller, core), 1000 * prec.value);
 
       create_sell_order(core_seller, core.amount(1), test.amount(2));
       create_sell_order(core_seller, core.amount(1), test.amount(2));
       create_sell_order(core_buyer, test.amount(3), core.amount(1));
 
       BOOST_CHECK_EQUAL(get_balance(core_buyer, core), 1);
-      BOOST_CHECK_EQUAL(get_balance(core_buyer, test), 9999997);
-      BOOST_CHECK_EQUAL(get_balance(core_seller, core), 99999998);
+      BOOST_CHECK_EQUAL(get_balance(core_buyer, test), 100 * prec.value - 3);
+      BOOST_CHECK_EQUAL(get_balance(core_seller, core), 1000 * prec.value - 2);
       BOOST_CHECK_EQUAL(get_balance(core_seller, test), 3);
-
-      generate_block();
-      fc::usleep(fc::milliseconds(1000));
 
        //TODO: This will fail because of something-for-nothing bug(#345)
        // Must be fixed with a hardfork
 /**
+      generate_block();
+      fc::usleep(fc::milliseconds(1000));
+
 *  TODO: Remove this comment block when #345 is resolved.
 *  Added comment block to allow Travis-CI to pass by ignoring this test
 *      auto result = get_market_order_history(core_id, test_id);
@@ -1166,7 +1164,6 @@ BOOST_AUTO_TEST_CASE( trade_amount_equals_zero )
       edump((e.to_detail_string()));
       throw;
    }
-   */
 }
 
 
