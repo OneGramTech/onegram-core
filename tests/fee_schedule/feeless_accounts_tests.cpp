@@ -23,7 +23,7 @@ BOOST_AUTO_TEST_CASE(check_serialization)
    json = fc::json::to_string(accounts);
    BOOST_CHECK_EQUAL("{\"account_names\":[\"ltm\",\"nathan\"]}", json);
 
-   auto from_json = fc::json::from_string(json).as<feeless_accounts_type>();
+   auto from_json = fc::json::from_string(json).as<feeless_accounts_type>(20); // TODO: magic number?!
    BOOST_CHECK(from_json.account_names == accounts.account_names);
 }
 
