@@ -59,8 +59,12 @@ ARG BUILD=Debug
 # Use TARGET=witness_node to only build witness_node
 ARG TARGET=
 
+# Fill these args from version control system in your build script
+ARG REVISION_SHA=a1b2c3d4
+ARG REVISION_TIMESTAMP=1521619797
+
 RUN cd /src \
-	&& cmake -G Ninja -DCMAKE_BUILD_TYPE=$BUILD . \
+	&& cmake -G Ninja -DCMAKE_BUILD_TYPE=$BUILD -DREVISION_SHA=$REVISION_SHA -DREVISION_TIMESTAMP=$REVISION_TIMESTAMP . \
 	&& ninja $TARGET \
 	# This would copy all built executables into /usr/local/bin/
 	# && find programs tests -type f -perm /111 -exec cp {} /usr/local/bin/ \;
