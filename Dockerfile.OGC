@@ -66,16 +66,13 @@ ARG REVISION_TIMESTAMP=1521619797
 RUN cd /src \
 	&& cmake -G Ninja -DCMAKE_BUILD_TYPE=$BUILD -DREVISION_SHA=$REVISION_SHA -DREVISION_TIMESTAMP=$REVISION_TIMESTAMP . \
 	&& ninja $TARGET \
-	# This would copy all built executables into /usr/local/bin/
-	# && find programs tests -type f -perm /111 -exec cp {} /usr/local/bin/ \;
-
-	# Explicitely pick relevant executables to be installed
-	&& cp ./programs/delayed_node/delayed_node \
-	      ./programs/witness_node/witness_node \
-	      ./programs/cli_wallet/cli_wallet \
-	      ./programs/genesis_util/get_dev_key \
-	      ./tests/chain_test \
-	      /usr/local/bin 2>/dev/null || :
+	&& cp programs/delayed_node/delayed_node \
+	      programs/witness_node/witness_node \
+	      programs/cli_wallet/cli_wallet \
+	      programs/genesis_util/get_dev_key \
+	      tests/chain_test \
+	      /usr/local/bin 2>/dev/null || : \
+	&& find tests -type f -perm /111 -exec cp {} /usr/local/bin/ \;
 
 
 # Use the following to embed genesis config into the binary:
