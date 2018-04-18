@@ -73,6 +73,7 @@ RUN cd /src \
 	&& cp ./programs/delayed_node/delayed_node \
 	      ./programs/witness_node/witness_node \
 	      ./programs/cli_wallet/cli_wallet \
+	      ./programs/genesis_util/get_dev_key \
 	      ./tests/chain_test \
 	      /usr/local/bin 2>/dev/null || :
 
