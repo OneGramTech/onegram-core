@@ -63,7 +63,7 @@ BOOST_AUTO_TEST_CASE(check_serialization)
    json = fc::json::to_string(accounts);
    BOOST_CHECK_EQUAL("{\"referrer_names\":[\"ltm\",\"nathan\"]}", json);
 
-   auto from_json = fc::json::from_string(json).as<sticky_lifetime_referrers_type>();
+   auto from_json = fc::json::from_string(json).as<sticky_lifetime_referrers_type>(20); // TODO: magic number?!
    BOOST_CHECK(from_json.referrer_names == accounts.referrer_names);
 }
 

@@ -1291,7 +1291,7 @@ namespace graphene
 					for (const peer_and_items_to_fetch& peer_and_items : items_by_peer)
 					{
 						// the item lists are heterogenous and
-						// the fetch_items_message can only deal with one item type at a time.  
+						// the fetch_items_message can only deal with one item type at a time.
 						std::map<uint32_t, std::vector<item_hash_t>> items_to_fetch_by_type;
 						for (const item_id& item : peer_and_items.item_ids)
 							items_to_fetch_by_type[item.item_type].push_back(item.item_hash);
@@ -1437,7 +1437,7 @@ namespace graphene
 				// reconnect with the rest of the network, or it might just futher isolate us.
 				{
 					// As usual, the first step is to walk through all our peers and figure out which
-					// peers need action (disconneting, sending keepalives, etc), then we walk through 
+					// peers need action (disconneting, sending keepalives, etc), then we walk through
 					// those lists yielding at our leisure later.
 					ASSERT_TASK_NOT_PREEMPTED();
 
@@ -1474,89 +1474,83 @@ namespace graphene
 					// or transaction from a peer, this timeout determines how long we wait for them
 					// to reply before we give up and ask another peer for the item.
 					// Ideally this should be significantly shorter than the block interval, because
-					// we'd like to realize the block isn't coming and fetch it from a different 
+					// we'd like to realize the block isn't coming and fetch it from a different
 					// peer before the next block comes in.  At the current target of 3 second blocks,
-					// 1 second seems reasonable.  When we get closer to our eventual target of 1 second 
+					// 1 second seems reasonable.  When we get closer to our eventual target of 1 second
 					// blocks, this will need to be re-evaluated (i.e., can we set the timeout to 500ms
 					// and still handle normal network & processing delays without excessive disconnects)
 					fc::microseconds active_ignored_request_timeout = fc::seconds(1);
 
-					fc::time_point active_disconnect_threshold = fc::time_point::now() - fc::seconds(active_disconnect_timeout);
-					fc::time_point active_send_keepalive_threshold = fc::time_point::now() - fc::
-						seconds(active_send_keepalive_timeout);
-					fc::time_point active_ignored_request_threshold = fc::time_point::now() - active_ignored_request_timeout;
-					for (const peer_connection_ptr& active_peer : _active_connections)
-					{
-						if (active_peer->connection_initiation_time < active_disconnect_threshold &&
-							active_peer->get_last_message_received_time() < active_disconnect_threshold)
-						{
-							wlog( "Closing connection with peer ${peer} due to inactivity of at least ${timeout} seconds",
-								( "peer", active_peer->get_remote_endpoint() )("timeout", active_disconnect_timeout ) );
-							peers_to_disconnect_gently.push_back(active_peer);
-						}
-						else
-						{
-							bool disconnect_due_to_request_timeout = false;
-							if (!active_peer->sync_items_requested_from_peer.empty() &&
-								active_peer->last_sync_item_received_time < active_ignored_request_threshold)
-							{
-								wlog(
-									"Disconnecting peer ${peer} because they haven't made any progress on my remaining ${count} sync item requests"
-									,
-									("peer", active_peer->get_remote_endpoint())("count", active_peer->sync_items_requested_from_peer.size()));
-								disconnect_due_to_request_timeout = true;
-								break;
-							}
-							if (!disconnect_due_to_request_timeout &&
-								active_peer->item_ids_requested_from_peer &&
-								active_peer->item_ids_requested_from_peer->get<1>() < active_ignored_request_threshold)
-							{
-								wlog("Disconnecting peer ${peer} because they didn't respond to my request for sync item ids after ${synopsis}",
-									("peer", active_peer->get_remote_endpoint())
-									("synopsis", active_peer->item_ids_requested_from_peer->get<0>()));
-								disconnect_due_to_request_timeout = true;
-							}
-							if (!disconnect_due_to_request_timeout)
-								for (const peer_connection::item_to_time_map_type::value_type& item_and_time : active_peer->
-								     items_requested_from_peer)
-									if (item_and_time.second < active_ignored_request_threshold)
-									{
-										wlog("Disconnecting peer ${peer} because they didn't respond to my request for item ${id}",
-											("peer", active_peer->get_remote_endpoint())("id", item_and_time.first.item_hash));
-										disconnect_due_to_request_timeout = true;
-										break;
-									}
-							if (disconnect_due_to_request_timeout)
-							{
-								// we should probably disconnect nicely and give them a reason, but right now the logic
-								// for rescheduling the requests only executes when the connection is fully closed,
-								// and we want to get those requests rescheduled as soon as possible
-								peers_to_disconnect_forcibly.push_back(active_peer);
-							}
-							else if (active_peer->connection_initiation_time < active_send_keepalive_threshold &&
-								active_peer->get_last_message_received_time() < active_send_keepalive_threshold)
-							{
-								wlog(
-									"Sending a keepalive message to peer ${peer} who hasn't sent us any messages in the last ${timeout} seconds",
-									( "peer", active_peer->get_remote_endpoint() )("timeout", active_send_keepalive_timeout ) );
-								peers_to_send_keep_alive.push_back(active_peer);
-							}
-							else if (active_peer->we_need_sync_items_from_peer &&
-								!active_peer->is_currently_handling_message() &&
-								!active_peer->item_ids_requested_from_peer &&
-								active_peer->ids_of_items_to_get.empty())
-							{
-								// This is a state we should never get into in the first place, but if we do, we should disconnect the peer
-								// to re-establish the connection.
-								fc_wlog(fc::logger::get("sync"),
-									"Disconnecting peer ${peer} because we think we need blocks from them but sync has stalled.",
-									("peer", active_peer->get_remote_endpoint()));
-								wlog("Disconnecting peer ${peer} because we think we need blocks from them but sync has stalled.",
-									("peer", active_peer->get_remote_endpoint()));
-								peers_to_disconnect_forcibly.push_back(active_peer);
-							}
-						}
-					}
+        fc::time_point active_disconnect_threshold = fc::time_point::now() - fc::seconds(active_disconnect_timeout);
+        fc::time_point active_send_keepalive_threshold = fc::time_point::now() - fc::seconds(active_send_keepalive_timeout);
+        fc::time_point active_ignored_request_threshold = fc::time_point::now() - active_ignored_request_timeout;
+        for( const peer_connection_ptr& active_peer : _active_connections )
+        {
+          if( active_peer->connection_initiation_time < active_disconnect_threshold &&
+              active_peer->get_last_message_received_time() < active_disconnect_threshold )
+          {
+            wlog( "Closing connection with peer ${peer} due to inactivity of at least ${timeout} seconds",
+                  ( "peer", active_peer->get_remote_endpoint() )("timeout", active_disconnect_timeout ) );
+            peers_to_disconnect_gently.push_back( active_peer );
+          }
+          else
+          {
+            bool disconnect_due_to_request_timeout = false;
+            if (!active_peer->sync_items_requested_from_peer.empty() &&
+                active_peer->last_sync_item_received_time < active_ignored_request_threshold)
+            {
+              wlog("Disconnecting peer ${peer} because they haven't made any progress on my remaining ${count} sync item requests",
+                   ("peer", active_peer->get_remote_endpoint())("count", active_peer->sync_items_requested_from_peer.size()));
+              disconnect_due_to_request_timeout = true;
+
+            }
+            if (!disconnect_due_to_request_timeout &&
+                active_peer->item_ids_requested_from_peer &&
+                active_peer->item_ids_requested_from_peer->get<1>() < active_ignored_request_threshold)
+              {
+                wlog("Disconnecting peer ${peer} because they didn't respond to my request for sync item ids after ${synopsis}",
+                      ("peer", active_peer->get_remote_endpoint())
+                      ("synopsis", active_peer->item_ids_requested_from_peer->get<0>()));
+                disconnect_due_to_request_timeout = true;
+              }
+            if (!disconnect_due_to_request_timeout)
+              for (const peer_connection::item_to_time_map_type::value_type& item_and_time : active_peer->items_requested_from_peer)
+                if (item_and_time.second < active_ignored_request_threshold)
+                {
+                  wlog("Disconnecting peer ${peer} because they didn't respond to my request for item ${id}",
+                        ("peer", active_peer->get_remote_endpoint())("id", item_and_time.first.item_hash));
+                  disconnect_due_to_request_timeout = true;
+                  break;
+                }
+            if (disconnect_due_to_request_timeout)
+            {
+              // we should probably disconnect nicely and give them a reason, but right now the logic
+              // for rescheduling the requests only executes when the connection is fully closed,
+              // and we want to get those requests rescheduled as soon as possible
+              peers_to_disconnect_forcibly.push_back(active_peer);
+            }
+            else if (active_peer->connection_initiation_time < active_send_keepalive_threshold &&
+                     active_peer->get_last_message_received_time() < active_send_keepalive_threshold)
+            {
+              wlog( "Sending a keepalive message to peer ${peer} who hasn't sent us any messages in the last ${timeout} seconds",
+                    ( "peer", active_peer->get_remote_endpoint() )("timeout", active_send_keepalive_timeout ) );
+              peers_to_send_keep_alive.push_back(active_peer);
+            }            
+            else if (active_peer->we_need_sync_items_from_peer && 
+                     !active_peer->is_currently_handling_message() &&
+                     !active_peer->item_ids_requested_from_peer &&
+                     active_peer->ids_of_items_to_get.empty())
+            {
+              // This is a state we should never get into in the first place, but if we do, we should disconnect the peer
+              // to re-establish the connection.
+              fc_wlog(fc::logger::get("sync"), "Disconnecting peer ${peer} because we think we need blocks from them but sync has stalled.",
+                      ("peer", active_peer->get_remote_endpoint()));
+              wlog("Disconnecting peer ${peer} because we think we need blocks from them but sync has stalled.",
+                      ("peer", active_peer->get_remote_endpoint()));
+              peers_to_disconnect_forcibly.push_back(active_peer);
+            }
+          }
+        }
 
 					fc::time_point closing_disconnect_threshold = fc::time_point::now() - fc::seconds(
 						GRAPHENE_NET_PEER_DISCONNECT_TIMEOUT);
@@ -1595,8 +1589,8 @@ namespace graphene
 					}
 					peers_to_terminate.clear();
 
-					// if we're going to abruptly disconnect anyone, do it here 
-					// (it doesn't yield).  I don't think there would be any harm if this were 
+					// if we're going to abruptly disconnect anyone, do it here
+					// (it doesn't yield).  I don't think there would be any harm if this were
 					// moved to the yielding section
 					for (const peer_connection_ptr& peer : peers_to_disconnect_forcibly)
 					{
@@ -1655,7 +1649,7 @@ namespace graphene
 					}
 				}
 
-				// this has nothing to do with updating the peer list, but we need to prune this list 
+				// this has nothing to do with updating the peer list, but we need to prune this list
 				// at regular intervals, this is a fine place to do it.
 				fc::time_point_sec oldest_failed_ids_to_keep(fc::time_point::now() - fc::minutes(15));
 				auto oldest_failed_ids_to_keep_iter = _recently_failed_items
@@ -1998,10 +1992,10 @@ namespace graphene
 #endif
 				user_data["bitness"] = sizeof(void*) * 8;
 
-				user_data["node_id"] = _node_id;
+				user_data["node_id"] = fc::variant( _node_id, 1 );
 
 				item_hash_t head_block_id = _delegate->get_head_block_id();
-				user_data["last_known_block_hash"] = head_block_id;
+				user_data["last_known_block_hash"] = fc::variant( head_block_id, 1 );
 				user_data["last_known_block_number"] = _delegate->get_block_number(head_block_id);
 				user_data["last_known_block_time"] = _delegate->get_block_time(head_block_id);
 
@@ -2020,20 +2014,20 @@ namespace graphene
 					originating_peer->graphene_git_revision_sha = user_data["graphene_git_revision_sha"].as_string();
 				if (user_data.contains("graphene_git_revision_unix_timestamp"))
 					originating_peer->graphene_git_revision_unix_timestamp = fc::time_point_sec(
-						user_data["graphene_git_revision_unix_timestamp"].as<uint32_t>());
+						user_data["graphene_git_revision_unix_timestamp"].as<uint32_t>(1));
 				if (user_data.contains("fc_git_revision_sha"))
 					originating_peer->fc_git_revision_sha = user_data["fc_git_revision_sha"].as_string();
 				if (user_data.contains("fc_git_revision_unix_timestamp"))
 					originating_peer->fc_git_revision_unix_timestamp = fc::time_point_sec(
-						user_data["fc_git_revision_unix_timestamp"].as<uint32_t>());
+						user_data["fc_git_revision_unix_timestamp"].as<uint32_t>(1));
 				if (user_data.contains("platform"))
 					originating_peer->platform = user_data["platform"].as_string();
 				if (user_data.contains("bitness"))
-					originating_peer->bitness = user_data["bitness"].as<uint32_t>();
+					originating_peer->bitness = user_data["bitness"].as<uint32_t>(1);
 				if (user_data.contains("node_id"))
-					originating_peer->node_id = user_data["node_id"].as<node_id_t>();
+					originating_peer->node_id = user_data["node_id"].as<node_id_t>(1);
 				if (user_data.contains("last_known_fork_block_number"))
-					originating_peer->last_known_fork_block_number = user_data["last_known_fork_block_number"].as<uint32_t>();
+					originating_peer->last_known_fork_block_number = user_data["last_known_fork_block_number"].as<uint32_t>(1);
 			}
 
 			void node_impl::on_hello_message(peer_connection* originating_peer, const hello_message& hello_message_received)
@@ -2043,7 +2037,7 @@ namespace graphene
 				node_id_t peer_node_id = hello_message_received.node_public_key;
 				try
 				{
-					peer_node_id = hello_message_received.user_data["node_id"].as<node_id_t>();
+					peer_node_id = hello_message_received.user_data["node_id"].as<node_id_t>(1);
 				}
 				catch (const fc::exception&)
 				{
@@ -2440,7 +2434,7 @@ namespace graphene
 				catch (const peer_is_on_an_unreachable_fork&)
 				{
 					dlog("Peer is on a fork and there's no set of blocks we can provide to switch them to our fork");
-					// we reply with an empty list as if we had an empty blockchain; 
+					// we reply with an empty list as if we had an empty blockchain;
 					// we don't want to disconnect because they may be able to provide
 					// us with blocks on their chain
 				}
@@ -2566,7 +2560,7 @@ namespace graphene
 					synopsis = _delegate->get_blockchain_synopsis(reference_point, number_of_blocks_after_reference_point);
 
 				// TODO: it's possible that the returned synopsis is empty if the blockchain is empty (that's fine)
-				// or if the reference point is now past our undo history (that's not). 
+				// or if the reference point is now past our undo history (that's not).
 				// in the second case, we should mark this peer as one we're unable to sync with and
 				// disconnect them.
 				if (reference_point != item_hash_t() && synopsis.empty())
@@ -2579,7 +2573,7 @@ namespace graphene
 					uint32_t first_block_num_in_ids_to_get = _delegate->get_block_number(original_ids_of_items_to_get.front());
 					uint32_t true_high_block_num = first_block_num_in_ids_to_get + original_ids_of_items_to_get.size() - 1;
 
-					// in order to generate a seamless synopsis, we need to be using the same low_block_num as the 
+					// in order to generate a seamless synopsis, we need to be using the same low_block_num as the
 					// backend code; the first block in the synopsis will be the low block number it used
 					uint32_t low_block_num = synopsis.empty() ? 1 : _delegate->get_block_number(synopsis.front());
 
@@ -2635,7 +2629,7 @@ namespace graphene
 				if (originating_peer->item_ids_requested_from_peer)
 				{
 					// verify that the peer's the block ids the peer sent is a valid response to our request;
-					// It should either be an empty list of blocks, or a list of blocks that builds off of one of 
+					// It should either be an empty list of blocks, or a list of blocks that builds off of one of
 					// the blocks in the synopsis we sent
 					if (!blockchain_item_ids_inventory_message_received.item_hashes_available.empty())
 					{
@@ -3153,32 +3147,31 @@ namespace graphene
 				VERIFY_CORRECT_THREAD();
 				originating_peer->they_have_requested_close = true;
 
-				if (closing_connection_message_received.closing_due_to_error)
-				{
-					elog( "Peer ${peer} is disconnecting us because of an error: ${msg}, exception: ${error}",
-						( "peer", originating_peer->get_remote_endpoint() )
-						( "msg", closing_connection_message_received.reason_for_closing )
-						( "error", closing_connection_message_received.error ) );
-					std::ostringstream message;
-					message << "Peer " << fc::variant(originating_peer->get_remote_endpoint()).as_string() <<
-						" disconnected us: " << closing_connection_message_received.reason_for_closing;
-					fc::exception detailed_error(
-						FC_LOG_MESSAGE(warn, "Peer ${peer} is disconnecting us because of an error: ${msg}, exception: ${error}",
-							( "peer", originating_peer->get_remote_endpoint() )
-							( "msg", closing_connection_message_received.reason_for_closing )
-							( "error", closing_connection_message_received.error ) ));
-					_delegate->error_encountered(message.str(),
-					                             detailed_error);
-				}
-				else
-				{
-					wlog( "Peer ${peer} is disconnecting us because: ${msg}",
-						( "peer", originating_peer->get_remote_endpoint() )
-						( "msg", closing_connection_message_received.reason_for_closing ) );
-				}
-				if (originating_peer->we_have_requested_close)
-					originating_peer->close_connection();
-			}
+      if( closing_connection_message_received.closing_due_to_error )
+      {
+        elog( "Peer ${peer} is disconnecting us because of an error: ${msg}, exception: ${error}",
+             ( "peer", originating_peer->get_remote_endpoint() )
+             ( "msg", closing_connection_message_received.reason_for_closing )
+             ( "error", closing_connection_message_received.error ) );
+        std::ostringstream message;
+        message << "Peer " << fc::variant( originating_peer->get_remote_endpoint() , GRAPHENE_NET_MAX_NESTED_OBJECTS).as_string() <<
+                  " disconnected us: " << closing_connection_message_received.reason_for_closing;
+        fc::exception detailed_error(FC_LOG_MESSAGE(warn, "Peer ${peer} is disconnecting us because of an error: ${msg}, exception: ${error}",
+                                                    ( "peer", originating_peer->get_remote_endpoint() )
+                                                    ( "msg", closing_connection_message_received.reason_for_closing )
+                                                    ( "error", closing_connection_message_received.error ) ));
+        _delegate->error_encountered( message.str(),
+                                      detailed_error );
+      }
+      else
+      {
+        wlog( "Peer ${peer} is disconnecting us because: ${msg}",
+             ( "peer", originating_peer->get_remote_endpoint() )
+             ( "msg", closing_connection_message_received.reason_for_closing ) );
+      }
+      if( originating_peer->we_have_requested_close )
+        originating_peer->close_connection();
+      }
 
 			void node_impl::on_connection_closed(peer_connection* originating_peer)
 			{
@@ -4103,7 +4096,7 @@ namespace graphene
 						user_data["bitness"] = *peer->bitness;
 					user_data["user_agent"] = peer->user_agent;
 
-					user_data["last_known_block_hash"] = peer->last_block_delegate_has_seen;
+					user_data["last_known_block_hash"] = fc::variant( peer->last_block_delegate_has_seen, 1 );
 					user_data["last_known_block_number"] = _delegate->get_block_number(peer->last_block_delegate_has_seen);
 					user_data["last_known_block_time"] = peer->last_block_time_delegate_has_seen;
 
@@ -4727,7 +4720,7 @@ namespace graphene
 				{
 					try
 					{
-						_node_configuration = fc::json::from_file(configuration_file_name).as<detail::node_configuration>();
+						_node_configuration = fc::json::from_file(configuration_file_name).as<detail::node_configuration>(GRAPHENE_NET_MAX_NESTED_OBJECTS);
 						ilog( "Loaded configuration from file ${filename}", ("filename", configuration_file_name ) );
 
 						if (_node_configuration.private_key == fc::ecc::private_key())
@@ -5108,23 +5101,21 @@ namespace graphene
 					peer_to_disconnect->send_message(closing_message);
 				}
 
-				// notify the user.  This will be useful in testing, but we might want to remove it later;
-				// it makes good sense to notify the user if other nodes think she is behaving badly, but
-				// if we're just detecting and dissconnecting other badly-behaving nodes, they don't really care.
-				if (caused_by_error)
-				{
-					std::ostringstream error_message;
-					error_message << "I am disconnecting peer " << fc::variant(peer_to_disconnect->get_remote_endpoint()).as_string()
-						<<
-						" for reason: " << reason_for_disconnect;
-					_delegate->error_encountered(error_message.str(), fc::oexception());
-					dlog(error_message.str());
-				}
-				else
-					dlog("Disconnecting from ${peer} for ${reason}", ("peer",peer_to_disconnect->get_remote_endpoint()) ("reason",
-					reason_for_disconnect));
-				// peer_to_disconnect->close_connection();
-			}
+      // notify the user.  This will be useful in testing, but we might want to remove it later.
+      // It makes good sense to notify the user if other nodes think she is behaving badly, but
+      // if we're just detecting and dissconnecting other badly-behaving nodes, they don't really care.
+      if (caused_by_error)
+      {
+        std::ostringstream error_message;
+        error_message << "I am disconnecting peer " << fc::variant( peer_to_disconnect->get_remote_endpoint() , GRAPHENE_NET_MAX_NESTED_OBJECTS).as_string()
+                         <<" for reason: " << reason_for_disconnect;
+        _delegate->error_encountered(error_message.str(), fc::oexception());
+        dlog(error_message.str());
+      }
+      else
+        dlog("Disconnecting from ${peer} for ${reason}", ("peer",peer_to_disconnect->get_remote_endpoint()) ("reason",reason_for_disconnect));
+
+    }
 
 			void node_impl::listen_on_endpoint(const fc::ip::endpoint& ep, bool wait_if_not_available)
 			{
@@ -5182,7 +5173,7 @@ namespace graphene
 					peer_details["version"] = "";
 					peer_details["subver"] = peer->user_agent;
 					peer_details["inbound"] = peer->direction == peer_connection_direction::inbound;
-					peer_details["firewall_status"] = peer->is_firewalled;
+					peer_details["firewall_status"] = fc::variant( peer->is_firewalled, 1 );
 					peer_details["startingheight"] = "";
 					peer_details["banscore"] = "";
 					peer_details["syncnode"] = "";
@@ -5215,7 +5206,7 @@ namespace graphene
 					// provide these for debugging
 					// warning: these are just approximations, if the peer is "downstream" of us, they may
 					// have received blocks from other peers that we are unaware of
-					peer_details["current_head_block"] = peer->last_block_delegate_has_seen;
+					peer_details["current_head_block"] = fc::variant( peer->last_block_delegate_has_seen, 1 );
 					peer_details["current_head_block_number"] = _delegate->get_block_number(peer->last_block_delegate_has_seen);
 					peer_details["current_head_block_time"] = peer->last_block_time_delegate_has_seen;
 
@@ -5292,18 +5283,18 @@ namespace graphene
 			{
 				VERIFY_CORRECT_THREAD();
 				if (params.contains("peer_connection_retry_timeout"))
-					_peer_connection_retry_timeout = params["peer_connection_retry_timeout"].as<uint32_t>();
+					_peer_connection_retry_timeout = params["peer_connection_retry_timeout"].as<uint32_t>(1);
 				if (params.contains("desired_number_of_connections"))
-					_desired_number_of_connections = params["desired_number_of_connections"].as<uint32_t>();
+					_desired_number_of_connections = params["desired_number_of_connections"].as<uint32_t>(1);
 				if (params.contains("maximum_number_of_connections"))
-					_maximum_number_of_connections = params["maximum_number_of_connections"].as<uint32_t>();
+					_maximum_number_of_connections = params["maximum_number_of_connections"].as<uint32_t>(1);
 				if (params.contains("maximum_number_of_blocks_to_handle_at_one_time"))
 					_maximum_number_of_blocks_to_handle_at_one_time = params["maximum_number_of_blocks_to_handle_at_one_time"].as<
-						uint32_t>();
+						uint32_t>(1);
 				if (params.contains("maximum_number_of_sync_blocks_to_prefetch"))
-					_maximum_number_of_sync_blocks_to_prefetch = params["maximum_number_of_sync_blocks_to_prefetch"].as<uint32_t>();
+					_maximum_number_of_sync_blocks_to_prefetch = params["maximum_number_of_sync_blocks_to_prefetch"].as<uint32_t>(1);
 				if (params.contains("maximum_blocks_per_peer_during_syncing"))
-					_maximum_blocks_per_peer_during_syncing = params["maximum_blocks_per_peer_during_syncing"].as<uint32_t>();
+					_maximum_blocks_per_peer_during_syncing = params["maximum_blocks_per_peer_during_syncing"].as<uint32_t>(1);
 
 				_desired_number_of_connections = std::min(_desired_number_of_connections, _maximum_number_of_connections);
 
@@ -5391,9 +5382,9 @@ namespace graphene
 				VERIFY_CORRECT_THREAD();
 				fc::mutable_variant_object info;
 				info["listening_on"] = _actual_listening_endpoint;
-				info["node_public_key"] = _node_public_key;
-				info["node_id"] = _node_id;
-				info["firewalled"] = _is_firewalled;
+				info["node_public_key"] = fc::variant( _node_public_key, 1 );
+				info["node_id"] = fc::variant( _node_id, 1 );
+				info["firewalled"] = fc::variant( _is_firewalled, 1 );
 				return info;
 			}
 
@@ -5422,9 +5413,9 @@ namespace graphene
 				               std::plus<uint32_t>());
 
 				fc::mutable_variant_object result;
-				result["usage_by_second"] = network_usage_by_second;
-				result["usage_by_minute"] = network_usage_by_minute;
-				result["usage_by_hour"] = network_usage_by_hour;
+				result["usage_by_second"] = fc::variant( network_usage_by_second, 2 );
+				result["usage_by_minute"] = fc::variant( network_usage_by_minute, 2 );
+				result["usage_by_hour"]   = fc::variant( network_usage_by_hour, 2 );
 				return result;
 			}
 
