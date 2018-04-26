@@ -395,7 +395,7 @@ namespace graphene { namespace chain {
             ("acct", name));
 
          return itr->vote_id;
-      }        
+      }
 
       void database::create_initial_accounts
       (
