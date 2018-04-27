@@ -77,11 +77,30 @@ namespace graphene { namespace chain {
       }
    };
 
+   template<>
+   class fee_helper<transfer_operation> {
+   public:
+       const transfer_operation::fee_parameters_type& cget(const flat_set<fee_parameters>& parameters)const
+       {
+          auto itr = parameters.find( transfer_operation::fee_parameters_type() );
+          FC_ASSERT( itr != parameters.end() );
+          return itr->get<transfer_operation::fee_parameters_type>();
+       }
+       typename transfer_operation::fee_parameters_type& get(flat_set<fee_parameters>& parameters)const
+       {
+          auto itr = parameters.find( transfer_operation::fee_parameters_type() );
+          FC_ASSERT( itr != parameters.end() );
+          return itr->get<transfer_operation::fee_parameters_type>();
+       }
+   };
+
    /**
     *  @brief contains all of the parameters necessary to calculate the fee for any operation
     */
    struct fee_schedule
    {
+      typedef std::set<account_id_type> feeless_account_ids_type;
+
       fee_schedule();
 
       static fee_schedule get_default();
@@ -90,8 +109,8 @@ namespace graphene { namespace chain {
        *  Finds the appropriate fee parameter struct for the operation
        *  and then calculates the appropriate fee.
        */
-      asset calculate_fee( const operation& op, const price& core_exchange_rate = price::unit_price() )const;
-      asset set_fee( operation& op, const price& core_exchange_rate = price::unit_price() )const;
+      asset calculate_fee( const operation& op, const price& core_exchange_rate = price::unit_price(), const optional<feeless_account_ids_type>& feeless_account_ids = optional<feeless_account_ids_type>() )const;
+      asset set_fee( operation& op, const price& core_exchange_rate = price::unit_price(), const optional<feeless_account_ids_type>& feeless_account_ids = optional<feeless_account_ids_type>() )const;
 
       void zero_all_fees();
 

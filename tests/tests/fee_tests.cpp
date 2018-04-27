@@ -310,6 +310,12 @@ BOOST_AUTO_TEST_CASE( cashback_test )
    PREP_ACTOR(dumy);
    PREP_ACTOR(stud);
    PREP_ACTOR(pleb);
+   // use ##_public_key vars to silence unused variable warning
+   BOOST_CHECK_GT(ann_public_key.key_data.size(), 0);
+   BOOST_CHECK_GT(scud_public_key.key_data.size(), 0);
+   BOOST_CHECK_GT(dumy_public_key.key_data.size(), 0);
+   BOOST_CHECK_GT(stud_public_key.key_data.size(), 0);
+   BOOST_CHECK_GT(pleb_public_key.key_data.size(), 0);
 
    account_id_type ann_id, scud_id, dumy_id, stud_id, pleb_id;
    actor_audit alife, arog, aann, ascud, adumy, astud, apleb;
@@ -1062,7 +1068,7 @@ BOOST_AUTO_TEST_CASE( issue_433_test )
       transfer( committee_account, alice_id, asset( 1000000 * asset::scaled_precision( core.precision ) ) );
 
       const auto& myusd = create_user_issued_asset( "MYUSD", alice, 0 );
-      issue_uia( alice, myusd.amount( 2000000000 ) );
+      issue_uia( alice, myusd.amount( 20000 * asset::scaled_precision( core.precision ) ) );
 
       // make sure the database requires our fee to be nonzero
       enable_fees();
@@ -1103,7 +1109,7 @@ BOOST_AUTO_TEST_CASE( issue_433_indirect_test )
       transfer( committee_account, alice_id, asset( 1000000 * asset::scaled_precision( core.precision ) ) );
 
       const auto& myusd = create_user_issued_asset( "MYUSD", alice, 0 );
-      issue_uia( alice, myusd.amount( 2000000000 ) );
+      issue_uia( alice, myusd.amount( 20000 * asset::scaled_precision( core.precision ) ) );
 
       // make sure the database requires our fee to be nonzero
       enable_fees();

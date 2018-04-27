@@ -35,6 +35,8 @@
 #include <graphene/chain/witness_object.hpp>
 
 #include <graphene/chain/protocol/fee_schedule.hpp>
+#include <graphene/chain/chain_property_object.hpp>
+#include <graphene/chain/protocol/operations_permissions.hpp>
 
 #include <fc/uint128.hpp>
 
@@ -101,11 +103,10 @@ void database::update_global_dynamic_data( const signed_block& b )
 
 void database::update_signing_witness(const witness_object& signing_witness, const signed_block& new_block)
 {
-   const global_property_object& gpo = get_global_properties();
    const dynamic_global_property_object& dpo = get_dynamic_global_properties();
    uint64_t new_block_aslot = dpo.current_aslot + get_slot_at_time( new_block.timestamp );
 
-   share_type witness_pay = std::min( gpo.parameters.witness_pay_per_block, dpo.witness_budget );
+   share_type witness_pay = std::min( dpo.witness_pay, dpo.witness_budget );
 
    modify( dpo, [&]( dynamic_global_property_object& _dpo )
    {
@@ -268,7 +269,7 @@ void database::clear_expired_orders()
             const limit_order_object& order = *limit_index.begin();
             canceler.fee_paying_account = order.seller;
             canceler.order = order.id;
-            canceler.fee = current_fee_schedule().calculate_fee( canceler );
+            canceler.fee = current_fee_schedule().calculate_fee( canceler, price::unit_price(), get_chain_properties().feeless_account_ids() );
             if( canceler.fee.amount > order.deferred_fee )
             {
                // Cap auto-cancel fees at deferred_fee; see #549

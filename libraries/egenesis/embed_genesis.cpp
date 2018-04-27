@@ -39,6 +39,7 @@
 
 // we need to include the world in order to serialize fee_parameters
 #include <graphene/chain/protocol/fee_schedule.hpp>
+#include <graphene/chain/protocol/operations_permissions.hpp>
 
 using namespace graphene::chain;
 
@@ -220,7 +221,7 @@ void load_genesis(
 int main( int argc, char** argv )
 {
    int main_return = 0;
-   boost::program_options::options_description cli_options("Graphene Chain Identifier");
+   boost::program_options::options_description cli_options(GRAPHENE_CHAIN_IDENTIFIER_TXT);
    cli_options.add_options()
       ("help,h", "Print this help message and exit.")
       ("genesis-json,g", boost::program_options::value<boost::filesystem::path>(), "File to read genesis state from")

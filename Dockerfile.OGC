@@ -1,0 +1,109 @@
+FROM ubuntu:17.10 as builder
+MAINTAINER Jozef Knaperek <jozef.knaperek@01cryptohouse.com>
+
+ARG uid=1000
+ARG gid=1000
+
+RUN groupadd --gid $gid -r onegram && useradd --uid $uid --create-home --system -g onegram onegram
+
+RUN apt-get update \
+	&& apt-get install -y --no-install-recommends \
+		gcc-5 \
+		g++-5 \
+		cmake \
+		make \
+		ninja-build \
+		libbz2-dev \
+		libdb++-dev \
+		libdb-dev \
+		libssl-dev \
+		libcurl4-openssl-dev \
+		openssl \
+		libreadline-dev \
+		autoconf \
+		libtool \
+		doxygen \
+		uuid-dev \
+		zip \
+		build-essential \
+		python-dev \
+		autotools-dev \
+		libicu-dev \
+		automake \
+		ncurses-dev \
+		nodejs \
+		npm \
+		git \
+		libboost1.63-dev \
+		libboost-thread1.63-dev \
+		libboost-date-time1.63-dev \
+		libboost-system1.63-dev \
+		libboost-filesystem1.63-dev \
+		libboost-program-options1.63-dev \
+		libboost-signals1.63-dev \
+		libboost-serialization1.63-dev \
+		libboost-chrono1.63-dev \
+		libboost-test1.63-dev \
+		libboost-context1.63-dev \
+		libboost-locale1.63-dev \
+		libboost-iostreams1.63-dev \
+		libboost-coroutine1.63-dev \
+    && apt-get clean \
+    && rm -rf /var/lib/apt/lists/* /tmp/* /var/tmp/*
+# Note: the build requires access to .git (repo metadata) - fails otherwise!
+
+COPY . /src
+
+# Use BUILD=Release for production builds
+ARG BUILD=Debug
+# Use TARGET=witness_node to only build witness_node
+ARG TARGET=
+
+# Fill these args from version control system in your build script
+ARG REVISION_SHA=a1b2c3d4
+ARG REVISION_TIMESTAMP=1521619797
+
+RUN cd /src \
+	&& cmake -G Ninja -DCMAKE_BUILD_TYPE=$BUILD -DREVISION_SHA=$REVISION_SHA -DREVISION_TIMESTAMP=$REVISION_TIMESTAMP . \
+	&& ninja $TARGET \
+	&& cp programs/delayed_node/delayed_node \
+	      programs/witness_node/witness_node \
+	      programs/cli_wallet/cli_wallet \
+	      programs/genesis_util/get_dev_key \
+	      tests/chain_test \
+	      /usr/local/bin 2>/dev/null || : \
+	&& find tests -type f -perm /111 -exec cp {} /usr/local/bin/ \;
+
+
+# Use the following to embed genesis config into the binary:
+# cmake -DGRAPHENE_EGENESIS_JSON="/home/onegram/onegram-genesis.json"
+
+COPY onegram/bin/ /usr/local/bin/
+
+WORKDIR /home/onegram
+
+USER onegram
+
+# Make a clean runtime image
+FROM ubuntu:17.10
+RUN apt-get update \
+	&& apt-get install -y --no-install-recommends \
+		libcurl3 \
+    && apt-get clean \
+    && rm -rf /var/lib/apt/lists/* /tmp/* /var/tmp/*
+COPY --from=builder /usr/local/bin/ /usr/local/bin/
+
+COPY onegram/default-configs/ /var/onegram/data/
+
+ARG uid=1000
+ARG gid=1000
+RUN groupadd --gid $gid -r onegram && useradd --uid $uid --create-home --system -g onegram onegram \
+	&& chown -R onegram:onegram /var/onegram/data
+
+USER onegram
+
+EXPOSE 8540 11011
+
+VOLUME /var/onegram/data
+
+CMD /usr/local/bin/onegram_witness

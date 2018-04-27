@@ -23,6 +23,7 @@
  */
 #include <algorithm>
 #include <graphene/chain/protocol/fee_schedule.hpp>
+#include <graphene/chain/protocol/operations_permissions.hpp>
 #include <fc/smart_ref_impl.hpp>
 
 namespace fc
@@ -75,6 +76,22 @@ namespace graphene { namespace chain {
          f.visit( fee_schedule_validate_visitor() );
    }
 
+   struct feeless_payer_visitor
+   {
+      typedef bool result_type;
+
+      const fee_schedule::feeless_account_ids_type& feeless_account_ids;
+
+      feeless_payer_visitor(const fee_schedule::feeless_account_ids_type& ids) : feeless_account_ids(ids) {}
+
+      template<typename OpType>
+      result_type operator()( OpType& op )const
+      {
+         account_id_type fee_payer_id = op.fee_payer();
+         return !(feeless_account_ids.find(fee_payer_id) == feeless_account_ids.end());
+      }
+   };
+
    struct calc_fee_visitor
    {
       typedef uint64_t result_type;
@@ -88,7 +105,7 @@ namespace graphene { namespace chain {
       {
          try {
             return op.calculate_fee( param.get<OpType>() ).value;
-         } catch (fc::assert_exception e) {
+         } catch (const fc::assert_exception& e) {
              fee_parameters params; params.set_which(current_op);
              auto itr = param.parameters.find(params);
              if( itr != param.parameters.end() ) params = *itr;
@@ -130,8 +147,11 @@ namespace graphene { namespace chain {
       this->scale = 0;
    }
 
-   asset fee_schedule::calculate_fee( const operation& op, const price& core_exchange_rate )const
+   asset fee_schedule::calculate_fee( const operation& op, const price& core_exchange_rate, const optional<feeless_account_ids_type>& feeless_account_ids )const
    {
+      if (feeless_account_ids.valid() && op.visit( feeless_payer_visitor( *feeless_account_ids ) )) {
+         return asset(); // zero fee
+      }
       auto base_value = op.visit( calc_fee_visitor( *this, op ) );
       auto scaled = fc::uint128(base_value) * scale;
       scaled /= GRAPHENE_100_PERCENT;
@@ -147,14 +167,18 @@ namespace graphene { namespace chain {
       return result;
    }
 
-   asset fee_schedule::set_fee( operation& op, const price& core_exchange_rate )const
+   asset fee_schedule::set_fee( operation& op, const price& core_exchange_rate, const optional<feeless_account_ids_type>& feeless_account_ids )const
    {
-      auto f = calculate_fee( op, core_exchange_rate );
+      auto f = calculate_fee( op, core_exchange_rate, feeless_account_ids );
+      if (f.amount == 0) {
+         op.visit( set_fee_visitor( f ) );
+         return f;
+      }
       auto f_max = f;
       for( int i=0; i<MAX_FEE_STABILIZATION_ITERATION; i++ )
       {
          op.visit( set_fee_visitor( f_max ) );
-         auto f2 = calculate_fee( op, core_exchange_rate );
+         auto f2 = calculate_fee( op, core_exchange_rate, feeless_account_ids );
          if( f == f2 )
             break;
          f_max = std::max( f_max, f2 );
@@ -172,6 +196,7 @@ namespace graphene { namespace chain {
    void chain_parameters::validate()const
    {
       current_fees->validate();
+      current_operations_permissions->validate();
       FC_ASSERT( reserve_percent_of_fee <= GRAPHENE_100_PERCENT );
       FC_ASSERT( network_percent_of_fee <= GRAPHENE_100_PERCENT );
       FC_ASSERT( lifetime_referrer_percent_of_fee <= GRAPHENE_100_PERCENT );

@@ -26,7 +26,11 @@
 #include <graphene/chain/protocol/types.hpp>
 #include <fc/smart_ref_fwd.hpp>
 
-namespace graphene { namespace chain { struct fee_schedule; } }
+namespace graphene { namespace chain
+{
+   struct fee_schedule;
+   struct operations_permissions;
+} }
 
 namespace graphene { namespace chain {
 
@@ -35,6 +39,7 @@ namespace graphene { namespace chain {
    {
       /** using a smart ref breaks the circular dependency created between operations and the fee schedule */
       smart_ref<fee_schedule> current_fees;                       ///< current schedule of fees
+      smart_ref<operations_permissions> current_operations_permissions;  ///< current operations permissions
       uint8_t                 block_interval                      = GRAPHENE_DEFAULT_BLOCK_INTERVAL; ///< interval in seconds between blocks
       uint32_t                maintenance_interval                = GRAPHENE_DEFAULT_MAINTENANCE_INTERVAL; ///< interval in sections between blockchain maintenance events
       uint8_t                 maintenance_skip_slots              = GRAPHENE_DEFAULT_MAINTENANCE_SKIP_SLOTS; ///< number of block_intervals to skip at maintenance time
@@ -73,6 +78,7 @@ namespace graphene { namespace chain {
 
 FC_REFLECT( graphene::chain::chain_parameters,
             (current_fees)
+            (current_operations_permissions)
             (block_interval)
             (maintenance_interval)
             (maintenance_skip_slots)
@@ -94,6 +100,7 @@ FC_REFLECT( graphene::chain::chain_parameters,
             (count_non_member_votes)
             (allow_non_member_whitelists)
             (witness_pay_per_block)
+            (witness_pay_vesting_seconds)
             (worker_budget_per_day)
             (max_predicate_opcode)
             (fee_liquidation_threshold)

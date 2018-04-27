@@ -1,11 +1,27 @@
-list( APPEND CMAKE_MODULE_PATH "${CMAKE_SOURCE_DIR}/libraries/fc/GitVersionGen" )
-include( GetGitRevisionDescription )
-get_git_head_revision(GIT_REFSPEC GRAPHENE_GIT_REVISION_SHA)
-get_git_unix_timestamp(GRAPHENE_GIT_REVISION_UNIX_TIMESTAMP)
-git_describe(GRAPHENE_GIT_REVISION_DESCRIPTION --tags)
-if(NOT GRAPHENE_GIT_REVISION_DESCRIPTION)
-    set(GRAPHENE_GIT_REVISION_DESCRIPTION "unknown")
-endif(NOT GRAPHENE_GIT_REVISION_DESCRIPTION)
+set (REVISION_SHA "" CACHE STRING "git revision sha")
+set (REVISION_TIMESTAMP "" CACHE STRING "git revision unix timestamp")
+set (REVISION_DESCRIPTION "" CACHE STRING "git revision description")
+
+if(REVISION_SHA STREQUAL "" OR REVISION_TIMESTAMP STREQUAL "")
+    list( APPEND CMAKE_MODULE_PATH "${CMAKE_SOURCE_DIR}/libraries/fc/GitVersionGen" )
+    include( GetGitRevisionDescription )
+
+	if(REVISION_SHA STREQUAL "")
+		get_git_head_revision(GIT_REFSPEC REVISION_SHA)
+	endif()
+
+	if(REVISION_TIMESTAMP STREQUAL "")
+		get_git_unix_timestamp(REVISION_TIMESTAMP)
+	endif()
+
+	if(REVISION_DESCRIPTION STREQUAL "")
+		git_describe(REVISION_DESCRIPTION --tags)
+	endif()
+endif()
+
+if(REVISION_DESCRIPTION STREQUAL "")
+	set(REVISION_DESCRIPTION "unknown")
+endif()
 
 file(GLOB HEADERS "include/graphene/utilities/*.hpp")
 
