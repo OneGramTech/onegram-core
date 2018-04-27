@@ -1,0 +1,27 @@
+version: '3'
+services:
+    build:
+        image: onegramdev
+        network_mode: bridge
+        volumes:
+            - .:/proj
+        container_name: build
+        command: 'bash -c "mkdir -p /proj/build && cd /proj/build && cmake -G Ninja ../ && ninja"'
+
+    clean:
+        image: onegramdev
+        network_mode: bridge
+        volumes:
+            - .:/proj
+        container_name: clean
+        command: 'bash -c "rm -rf /proj/build/*"'
+
+    run:
+        image: onegramdev
+        network_mode: bridge
+        volumes:
+            - .:/proj
+        container_name: run
+        command: '/proj/build/tests/chain_test --log_level=all'
+
+

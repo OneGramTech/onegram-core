@@ -38,7 +38,7 @@ struct budget_record
    share_type from_unused_witness_budget = 0;
 
    // witness budget requested by the committee
-   share_type requested_witness_budget = 0;
+   share_type requested_witness_budget = 0; // is max value for witness_budget
 
    // funds that can be released from reserve at maximum rate
    share_type total_budget = 0;

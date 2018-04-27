@@ -27,9 +27,34 @@ namespace graphene { namespace chain {
 
 share_type transfer_operation::calculate_fee( const fee_parameters_type& schedule )const
 {
-   share_type core_fee_required = schedule.fee;
+   share_type core_fee_required = calculate_flat_or_percentage_fee(schedule);
    if( memo )
       core_fee_required += calculate_data_fee( fc::raw::pack_size(memo), schedule.price_per_kbyte );
+   return core_fee_required;
+}
+
+/**
+ * Calculates fee from amount and fee_parameters_type
+ * <p>
+ * - if fee_parameters_type::percentage and/or amount = 0, returns fee_parameters_type::fee
+ * <p>
+ * - else returns max( min(core_fee_required, max_fee), min_fee ), where core_fee_required is percentage of amount
+ * @param schedule
+ * @return fee value
+ */
+share_type transfer_operation::calculate_flat_or_percentage_fee(const fee_parameters_type &schedule) const {
+   if (schedule.percentage == 0) {
+      return schedule.fee;
+   }
+   auto core_fee_amount = fc::uint128(amount.amount.value);
+   core_fee_amount *= schedule.percentage;
+   core_fee_amount /= GRAPHENE_100_PERCENT;
+   share_type core_fee_required = core_fee_amount.to_uint64();
+   auto min_fee = schedule.fee;
+   auto max_fee = schedule.percentage_max_fee;
+   /// max( min(core_fee_required, max_fee), min_fee )
+   if( core_fee_required > max_fee ) core_fee_required = max_fee;
+   if( core_fee_required < min_fee ) core_fee_required = min_fee;
    return core_fee_required;
 }
 

@@ -263,6 +263,21 @@ namespace graphene { namespace chain {
          }
 
          account_id_type get_id()const { return id; }
+
+         /**
+          * @brief Query if this object is special account
+          *
+          * @return True if special account, false otherwise.
+          */
+         bool is_special_account() const
+         {
+            return id == GRAPHENE_COMMITTEE_ACCOUNT ||
+               id == GRAPHENE_WITNESS_ACCOUNT ||
+               id == GRAPHENE_RELAXED_COMMITTEE_ACCOUNT ||
+               id == GRAPHENE_NULL_ACCOUNT ||
+               id == GRAPHENE_TEMP_ACCOUNT ||
+               id == GRAPHENE_PROXY_TO_SELF_ACCOUNT;
+         }
    };
 
    /**

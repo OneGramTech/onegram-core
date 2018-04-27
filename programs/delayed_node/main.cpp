@@ -61,8 +61,8 @@ fc::optional<fc::logging_config> load_logging_config_from_ini_file(const fc::pat
 int main(int argc, char** argv) {
    try {
       app::application node;
-      bpo::options_description app_options("Graphene Delayed Node");
-      bpo::options_description cfg_options("Graphene Delayed Node");
+      bpo::options_description app_options(GRAPHENE_DELAYED_NODE_TXT);
+      bpo::options_description cfg_options(GRAPHENE_DELAYED_NODE_TXT);
       app_options.add_options()
             ("help,h", "Print this help message and exit.")
             ("data-dir,d", bpo::value<boost::filesystem::path>()->default_value("delayed_node_data_dir"), "Directory containing databases, configuration file, etc.")

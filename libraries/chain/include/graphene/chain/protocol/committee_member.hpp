@@ -37,6 +37,7 @@ namespace graphene { namespace chain {
    struct committee_member_create_operation : public base_operation
    {
       struct fee_parameters_type { uint64_t fee = 5000 * GRAPHENE_BLOCKCHAIN_PRECISION; };
+      struct operation_permissions_type { operation_permissions_container_type rules; };
 
       asset                                 fee;
       /// The account which owns the committee_member. This account pays the fee for this operation.
@@ -57,6 +58,7 @@ namespace graphene { namespace chain {
    struct committee_member_update_operation : public base_operation
    {
       struct fee_parameters_type { uint64_t fee = 20 * GRAPHENE_BLOCKCHAIN_PRECISION; };
+      struct operation_permissions_type { operation_permissions_container_type rules; };
 
       asset                                 fee;
       /// The committee member to update.
@@ -83,6 +85,7 @@ namespace graphene { namespace chain {
    struct committee_member_update_global_parameters_operation : public base_operation
    {
       struct fee_parameters_type { uint64_t fee = GRAPHENE_BLOCKCHAIN_PRECISION; };
+      struct operation_permissions_type { operation_permissions_container_type rules; };
 
       asset             fee;
       chain_parameters  new_parameters;
@@ -98,6 +101,9 @@ FC_REFLECT( graphene::chain::committee_member_create_operation::fee_parameters_t
 FC_REFLECT( graphene::chain::committee_member_update_operation::fee_parameters_type, (fee) )
 FC_REFLECT( graphene::chain::committee_member_update_global_parameters_operation::fee_parameters_type, (fee) )
 
+FC_REFLECT( graphene::chain::committee_member_create_operation::operation_permissions_type, (rules) )
+FC_REFLECT( graphene::chain::committee_member_update_operation::operation_permissions_type, (rules) )
+FC_REFLECT( graphene::chain::committee_member_update_global_parameters_operation::operation_permissions_type, (rules) )
 
 FC_REFLECT( graphene::chain::committee_member_create_operation,
             (fee)(committee_member_account)(url) )

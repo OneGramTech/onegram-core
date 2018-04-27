@@ -1979,11 +1979,13 @@ struct get_required_fees_helper
    get_required_fees_helper(
       const fee_schedule& _current_fee_schedule,
       const price& _core_exchange_rate,
-      uint32_t _max_recursion
+      uint32_t _max_recursion,
+      const feeless_account_ids_type::account_ids_type& ids
       )
       : current_fee_schedule(_current_fee_schedule),
         core_exchange_rate(_core_exchange_rate),
-        max_recursion(_max_recursion)
+        max_recursion(_max_recursion),
+        feeless_account_ids(ids)
    {}
 
    fc::variant set_op_fees( operation& op )
@@ -1994,7 +1996,7 @@ struct get_required_fees_helper
       }
       else
       {
-         asset fee = current_fee_schedule.set_fee( op, core_exchange_rate );
+         asset fee = current_fee_schedule.set_fee( op, core_exchange_rate, feeless_account_ids );
          fc::variant result;
          fc::to_variant( fee, result, GRAPHENE_NET_MAX_NESTED_OBJECTS );
          return result;
@@ -2014,7 +2016,7 @@ struct get_required_fees_helper
       }
       // we need to do this on the boxed version, which is why we use
       // two mutually recursive functions instead of a visitor
-      result.first = current_fee_schedule.set_fee( proposal_create_op, core_exchange_rate );
+      result.first = current_fee_schedule.set_fee( proposal_create_op, core_exchange_rate, feeless_account_ids );
       fc::variant vresult;
       fc::to_variant( result, vresult, GRAPHENE_NET_MAX_NESTED_OBJECTS );
       return vresult;
@@ -2024,6 +2026,7 @@ struct get_required_fees_helper
    const price& core_exchange_rate;
    uint32_t max_recursion;
    uint32_t current_recursion = 0;
+   const feeless_account_ids_type::account_ids_type& feeless_account_ids;
 };
 
 vector< fc::variant > database_api_impl::get_required_fees( const vector<operation>& ops, asset_id_type id )const
@@ -2040,7 +2043,8 @@ vector< fc::variant > database_api_impl::get_required_fees( const vector<operati
    get_required_fees_helper helper(
       _db.current_fee_schedule(),
       a.options.core_exchange_rate,
-      GET_REQUIRED_FEES_MAX_RECURSION );
+      GET_REQUIRED_FEES_MAX_RECURSION,
+      _db.get_chain_properties().feeless_account_ids());
    for( operation& op : _ops )
    {
       result.push_back( helper.set_op_fees( op ) );

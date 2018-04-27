@@ -60,7 +60,7 @@ int main( int argc, char** argv )
 {
    try
    {
-      bpo::options_description cli_options("Graphene empty blocks");
+      bpo::options_description cli_options(GRAPHENE_EMPTY_BLOCKS_TXT);
       cli_options.add_options()
             ("help,h", "Print this help message and exit.")
             ("genesis-json,g", bpo::value<boost::filesystem::path>(), "File to read genesis state from")

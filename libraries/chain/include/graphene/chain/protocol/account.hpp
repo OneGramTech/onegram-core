@@ -80,6 +80,8 @@ namespace graphene { namespace chain {
          uint32_t price_per_kbyte = GRAPHENE_BLOCKCHAIN_PRECISION;
       };
 
+      struct operation_permissions_type { operation_permissions_container_type rules; };
+
       asset           fee;
       /// This account pays the fee. Must be a lifetime member.
       account_id_type registrar;
@@ -132,6 +134,8 @@ namespace graphene { namespace chain {
          uint32_t   price_per_kbyte = GRAPHENE_BLOCKCHAIN_PRECISION;
       };
 
+      struct operation_permissions_type { operation_permissions_container_type rules; };
+
       asset fee;
       /// The account to update
       account_id_type account;
@@ -181,6 +185,7 @@ namespace graphene { namespace chain {
    struct account_whitelist_operation : public base_operation
    {
       struct fee_parameters_type { share_type fee = 300000; };
+      struct operation_permissions_type { operation_permissions_container_type rules; };
       enum account_listing {
          no_listing = 0x0, ///< No opinion is specified about this account
          white_listed = 0x1, ///< This account is whitelisted, but not blacklisted
@@ -222,6 +227,7 @@ namespace graphene { namespace chain {
          uint64_t membership_annual_fee   =  2000 * GRAPHENE_BLOCKCHAIN_PRECISION;
          uint64_t membership_lifetime_fee = 10000 * GRAPHENE_BLOCKCHAIN_PRECISION; ///< the cost to upgrade to a lifetime member
       };
+      struct operation_permissions_type { operation_permissions_container_type rules; };
 
       asset             fee;
       /// The account to upgrade; must not already be a lifetime member
@@ -251,6 +257,7 @@ namespace graphene { namespace chain {
    struct account_transfer_operation : public base_operation
    {
       struct fee_parameters_type { uint64_t fee = 500 * GRAPHENE_BLOCKCHAIN_PRECISION; };
+      struct operation_permissions_type { operation_permissions_container_type rules; };
 
       asset           fee;
       account_id_type account_id;
@@ -289,5 +296,11 @@ FC_REFLECT( graphene::chain::account_whitelist_operation::fee_parameters_type, (
 FC_REFLECT( graphene::chain::account_update_operation::fee_parameters_type, (fee)(price_per_kbyte) )
 FC_REFLECT( graphene::chain::account_upgrade_operation::fee_parameters_type, (membership_annual_fee)(membership_lifetime_fee) )
 FC_REFLECT( graphene::chain::account_transfer_operation::fee_parameters_type, (fee) )
+
+FC_REFLECT( graphene::chain::account_create_operation::operation_permissions_type, (rules) )
+FC_REFLECT( graphene::chain::account_whitelist_operation::operation_permissions_type, (rules) )
+FC_REFLECT( graphene::chain::account_update_operation::operation_permissions_type, (rules) )
+FC_REFLECT( graphene::chain::account_upgrade_operation::operation_permissions_type, (rules) )
+FC_REFLECT( graphene::chain::account_transfer_operation::operation_permissions_type, (rules) )
 
 FC_REFLECT( graphene::chain::account_transfer_operation, (fee)(account_id)(new_owner)(extensions) )

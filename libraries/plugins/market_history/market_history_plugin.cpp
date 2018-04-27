@@ -32,6 +32,7 @@
 #include <graphene/chain/operation_history_object.hpp>
 #include <graphene/chain/transaction_evaluation_state.hpp>
 #include <graphene/chain/protocol/fee_schedule.hpp>
+#include <graphene/chain/protocol/operations_permissions.hpp>
 
 #include <fc/thread/thread.hpp>
 #include <fc/smart_ref_impl.hpp>

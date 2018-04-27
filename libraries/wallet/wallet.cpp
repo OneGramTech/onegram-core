@@ -59,10 +59,12 @@
 #include <fc/crypto/hex.hpp>
 #include <fc/thread/mutex.hpp>
 #include <fc/thread/scoped_lock.hpp>
+#include <fc/rpc/api_connection.hpp>
 
 #include <graphene/app/api.hpp>
 #include <graphene/chain/asset_object.hpp>
 #include <graphene/chain/protocol/fee_schedule.hpp>
+#include <graphene/chain/protocol/operations_permissions.hpp>
 #include <graphene/utilities/git_revision.hpp>
 #include <graphene/utilities/key_conversion.hpp>
 #include <graphene/utilities/words.hpp>
@@ -76,6 +78,11 @@
 # include <sys/types.h>
 # include <sys/stat.h>
 #endif
+
+// explicit instantiation for later use
+namespace fc {
+template class api<graphene::wallet::wallet_api, identity_member>;
+}
 
 #define BRAIN_KEY_WORD_COUNT 16
 
@@ -494,8 +501,9 @@ public:
 
    void set_operation_fees( signed_transaction& tx, const fee_schedule& s  )
    {
+      auto feeless_account_ids = _remote_db->get_chain_properties().feeless_account_ids();
       for( auto& op : tx.operations )
-         s.set_fee(op);
+         s.set_fee(op, price::unit_price(), feeless_account_ids);
    }
 
    variant info() const
@@ -2202,7 +2210,7 @@ public:
          }
          return ss.str();
       };
-      m["get_order_book"] = [this](variant result, const fc::variants& a)
+      m["get_order_book"] = [](variant result, const fc::variants& a)
       {
          auto orders = result.as<order_book>( GRAPHENE_MAX_NESTED_OBJECTS );
          auto bids = orders.bids;
@@ -2317,7 +2325,7 @@ public:
       prop_op.fee_paying_account = get_account(proposing_account).id;
 
       prop_op.proposed_ops.emplace_back( update_op );
-      current_params.current_fees->set_fee( prop_op.proposed_ops.back().op );
+      current_params.current_fees->set_fee( prop_op.proposed_ops.back().op, price::unit_price(), _remote_db->get_chain_properties().feeless_account_ids() );
 
       signed_transaction tx;
       tx.operations.push_back(prop_op);
@@ -2399,7 +2407,7 @@ public:
       prop_op.fee_paying_account = get_account(proposing_account).id;
 
       prop_op.proposed_ops.emplace_back( update_op );
-      current_params.current_fees->set_fee( prop_op.proposed_ops.back().op );
+      current_params.current_fees->set_fee( prop_op.proposed_ops.back().op, price::unit_price(), _remote_db->get_chain_properties().feeless_account_ids() );
 
       signed_transaction tx;
       tx.operations.push_back(prop_op);

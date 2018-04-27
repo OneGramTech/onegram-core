@@ -20,6 +20,7 @@
  */
 #include <graphene/chain/protocol/protocol.hpp>
 #include <graphene/chain/protocol/fee_schedule.hpp>
+#include <graphene/chain/protocol/operations_permissions.hpp>
 #include <graphene/chain/vesting_balance_object.hpp>
 #include <graphene/chain/withdraw_permission_object.hpp>
 #include <graphene/chain/proposal_object.hpp>

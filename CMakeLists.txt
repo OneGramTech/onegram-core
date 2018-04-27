@@ -24,6 +24,7 @@ list( APPEND CMAKE_MODULE_PATH "${CMAKE_CURRENT_SOURCE_DIR}/CMakeModules" )
 
 set(CMAKE_EXPORT_COMPILE_COMMANDS "ON")
 set(GRAPHENE_EGENESIS_JSON "${CMAKE_CURRENT_SOURCE_DIR}/genesis.json" )
+include_directories(SYSTEM ${CMAKE_CURRENT_SOURCE_DIR})
 
 #set (ENABLE_INSTALLER 1)
 #set (USE_PCH 1)
@@ -35,9 +36,10 @@ endif(USE_PCH)
 IF( NOT WIN32 )
   list( APPEND CMAKE_MODULE_PATH "${CMAKE_CURRENT_SOURCE_DIR}/libraries/fc/CMakeModules" )
 ENDIF( NOT WIN32 )
-list( APPEND CMAKE_MODULE_PATH "${CMAKE_CURRENT_SOURCE_DIR}/libraries/fc/GitVersionGen" )
-include( GetGitRevisionDescription )
-get_git_head_revision( GIT_REFSPEC GIT_SHA2 )
+
+#list( APPEND CMAKE_MODULE_PATH "${CMAKE_CURRENT_SOURCE_DIR}/libraries/fc/GitVersionGen" )
+#include( GetGitRevisionDescription )
+#get_git_head_revision( GIT_REFSPEC GIT_SHA2 )
 
 SET(BOOST_COMPONENTS)
 LIST(APPEND BOOST_COMPONENTS thread
