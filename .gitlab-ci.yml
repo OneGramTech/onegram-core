@@ -1,0 +1,42 @@
+image: docker:latest
+
+# When using dind, it's wise to use the overlayfs driver for
+# improved performance.
+variables:
+  DOCKER_DRIVER: overlay2
+  GIT_SUBMODULE_STRATEGY: recursive
+  IMG_NAME: ogc-$CI_JOB_NAME:$CI_COMMIT_SHA
+  #GIT_STRATEGY: clone
+
+services:
+- docker:dind
+
+before_script:
+  - docker info
+
+.script_template: &script_definition
+  script:
+    - docker build --build-arg BUILD=$BUILD_TARGET --build-arg REVISION_SHA=$CI_COMMIT_SHA -t $IMG_NAME -f Dockerfile.OGC .
+    - docker image ls
+    - docker run --rm $IMG_NAME bash -c "ls -l /usr/local/bin/"
+    - docker run --rm $IMG_NAME chain_test
+    - docker run --rm $IMG_NAME fee_schedule_test
+    - docker run --rm $IMG_NAME vesting_balance_test
+
+build_release:
+  <<: *script_definition
+  stage: build
+  variables:
+    BUILD_TARGET: Release
+    GIT_SUBMODULE_STRATEGY: recursive
+  tags:
+    - docker
+
+build_debug:
+  <<: *script_definition
+  stage: build
+  variables:
+    BUILD_TARGET: Debug
+    GIT_SUBMODULE_STRATEGY: recursive
+  tags:
+    - docker
