@@ -1,12 +1,12 @@
 {
-  "initial_timestamp": "2018-03-21T12:00:00",
+  "initial_timestamp": "2018-05-30T18:00:00",
   "max_core_supply": 12400786000000,
   "initial_parameters": {
     "current_fees": {
       "parameters": [[
           0,{
             "fee": 0,
-            "price_per_kbyte": 500000,
+            "price_per_kbyte": 640000,
             "percentage_max_fee": 1000000,
             "percentage": 100
           }
@@ -26,14 +26,14 @@
           4,{}
         ],[
           5,{
-            "basic_fee": 100000,
-            "premium_fee": 1000000,
-            "price_per_kbyte": 500000
+            "basic_fee": 500000,
+            "premium_fee": 500000,
+            "price_per_kbyte": 640000
           }
         ],[
           6,{
-            "fee": 20000,
-            "price_per_kbyte": 500000
+            "fee": 10000,
+            "price_per_kbyte": 640000
           }
         ],[
           7,{
@@ -53,12 +53,12 @@
             "symbol3": 10000000,
             "symbol4": 5000000,
             "long_symbol": 1000000,
-            "price_per_kbyte": 100000
+            "price_per_kbyte": 640000
           }
         ],[
           11,{
             "fee": 500000,
-            "price_per_kbyte": 100000
+            "price_per_kbyte": 640000
           }
         ],[
           12,{
@@ -71,7 +71,7 @@
         ],[
           14,{
             "fee": 5000000,
-            "price_per_kbyte": 100000
+            "price_per_kbyte": 640000
           }
         ],[
           15,{
@@ -104,12 +104,12 @@
         ],[
           22,{
             "fee": 5000000,
-            "price_per_kbyte": 10000
+            "price_per_kbyte": 640000
           }
         ],[
           23,{
             "fee": 2000000,
-            "price_per_kbyte": 10000
+            "price_per_kbyte": 640000
           }
         ],[
           24,{
@@ -126,7 +126,7 @@
         ],[
           27,{
             "fee": 10000,
-            "price_per_kbyte": 5000
+            "price_per_kbyte": 640000
           }
         ],[
           28,{
@@ -150,7 +150,7 @@
           }
         ],[
           33,{
-            "fee": 100000
+            "fee": 2000
           }
         ],[
           34,{
@@ -159,7 +159,7 @@
         ],[
           35,{
             "fee": 10000,
-            "price_per_kbyte": 10000
+            "price_per_kbyte": 640000
           }
         ],[
           36,{
@@ -170,7 +170,7 @@
         ],[
           38,{
             "fee": 2000000,
-            "price_per_kbyte": 100000
+            "price_per_kbyte": 640000
           }
         ],[
           39,{
@@ -550,10 +550,10 @@
         ]
       ]
     },
-    "block_interval": 10,
-    "maintenance_interval": 1800,
-    "maintenance_skip_slots": 3,
-    "committee_proposal_review_period": 14400,
+    "block_interval": 60,
+    "maintenance_interval": 86400,
+    "maintenance_skip_slots": 1,
+    "committee_proposal_review_period": 1209600,
     "maximum_transaction_size": 2048,
     "maximum_block_size": 1024000000,
     "maximum_time_until_expiration": 86400,
@@ -572,7 +572,7 @@
     "allow_non_member_whitelists": false,
     "witness_pay_per_block": 1000000,
     "witness_pay_vesting_seconds": 21600,
-    "worker_budget_per_day": "0",
+    "worker_budget_per_day": 0,
     "max_predicate_opcode": 1,
     "fee_liquidation_threshold": 100000000,
     "accounts_per_fee_scale": 10000,
@@ -594,6 +594,11 @@
       "name": "fees",
       "owner_key": "OGC6FU5LDp8oUnE3XnMqJxQMZc68Ywwucwj1JD9YKc5adh1aduh6J",
       "active_key": "OGC6FU5LDp8oUnE3XnMqJxQMZc68Ywwucwj1JD9YKc5adh1aduh6J",
+      "is_lifetime_member": true
+    },{
+      "name": "registrar",
+      "owner_key": "OGC6wVZSJtpjWqzBsfJ7e6fE73b42k2NYh1p4TQY6H3H8fKzWopUu",
+      "active_key": "OGC6wVZSJtpjWqzBsfJ7e6fE73b42k2NYh1p4TQY6H3H8fKzWopUu",
       "is_lifetime_member": true
     },{
       "name": "wit1",
@@ -801,7 +806,7 @@
     "num_special_accounts": 0,
     "num_special_assets": 0,
     "feeless_accounts": {
-      "account_names": ["ico1", "ico2", "fees", "com1", "com2", "com3"]
+      "account_names": ["ico1", "ico2", "fees", "registrar", "com1", "com2", "com3"]
     },
     "eternal_committee_members": {
       "account_names": ["com1", "com2", "com3"]
