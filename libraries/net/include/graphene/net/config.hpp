@@ -31,7 +31,7 @@
  * used for automated testing (creating artificial net splits,
  * tracking where messages came from and when)
  */
-#define ENABLE_P2P_DEBUGGING_API                             1
+#define ENABLE_P2P_DEBUGGING_API                             0
 
 /**
  * 2MiB
