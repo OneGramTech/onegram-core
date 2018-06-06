@@ -8,12 +8,11 @@ import hashlib
 import os
 import random
 import re
-import string
 import sys
 
 
-SEED_LEN = 90
-SEED_CHARS = string.ascii_lowercase + string.ascii_uppercase + string.digits
+SEED_LEN = 64
+SEED_CHARS = '0123456789abcdef'
 
 try:
     filename = sys.argv[1]
