@@ -571,6 +571,7 @@
     "count_non_member_votes": true,
     "allow_non_member_whitelists": false,
     "witness_pay_per_block": 1000000,
+    "witness_pay_vesting_seconds": 21600,
     "worker_budget_per_day": "0",
     "max_predicate_opcode": 1,
     "fee_liquidation_threshold": 100000000,
