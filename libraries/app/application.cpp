@@ -145,47 +145,47 @@ void application_impl::reset_p2p_node(const fc::path& data_dir)
       }
    }
 
-         if( _options->count("seed-nodes") )
-         {
-            auto seeds_str = _options->at("seed-nodes").as<string>();
-            auto seeds = fc::json::from_string(seeds_str).as<vector<string>>(2);
-            for( const string& endpoint_string : seeds )
+   if( _options->count("seed-nodes") )
+   {
+      auto seeds_str = _options->at("seed-nodes").as<string>();
+      auto seeds = fc::json::from_string(seeds_str).as<vector<string>>(2);
+      for( const string& endpoint_string : seeds )
+      {
+         try {
+            std::vector<fc::ip::endpoint> endpoints = resolve_string_to_ip_endpoints(endpoint_string);
+            for (const fc::ip::endpoint& endpoint : endpoints)
             {
-               try {
-                  std::vector<fc::ip::endpoint> endpoints = resolve_string_to_ip_endpoints(endpoint_string);
-                  for (const fc::ip::endpoint& endpoint : endpoints)
-                  {
-                     ilog("Adding seed node ${endpoint}", ("endpoint", endpoint));
-                     _p2p_network->add_node(endpoint);
-                  }
-               } catch( const fc::exception& e ) {
-                  wlog( "caught exception ${e} while adding seed node ${endpoint}",
-                           ("e", e.to_detail_string())("endpoint", endpoint_string) );
-               }
+               ilog("Adding seed node ${endpoint}", ("endpoint", endpoint));
+               _p2p_network->add_node(endpoint);
             }
+         } catch( const fc::exception& e ) {
+            wlog( "caught exception ${e} while adding seed node ${endpoint}",
+                     ("e", e.to_detail_string())("endpoint", endpoint_string) );
          }
-         else
-         {
-            // https://bitsharestalk.org/index.php/topic,23715.0.html
-            vector<string> seeds =
+      }
+   }
+   else
+   {
+      // https://bitsharestalk.org/index.php/topic,23715.0.html
+      vector<string> seeds =
+      {
+          #include <seed-nodes.h>
+      };
+      for( const string& endpoint_string : seeds )
+      {
+         try {
+            std::vector<fc::ip::endpoint> endpoints = resolve_string_to_ip_endpoints(endpoint_string);
+            for (const fc::ip::endpoint& endpoint : endpoints)
             {
-                #include <seed-nodes.h>
-            };
-            for( const string& endpoint_string : seeds )
-            {
-               try {
-                  std::vector<fc::ip::endpoint> endpoints = resolve_string_to_ip_endpoints(endpoint_string);
-                  for (const fc::ip::endpoint& endpoint : endpoints)
-                  {
-                     ilog("Adding seed node ${endpoint}", ("endpoint", endpoint));
-                     _p2p_network->add_node(endpoint);
-                  }
-               } catch( const fc::exception& e ) {
-                  wlog( "caught exception ${e} while adding seed node ${endpoint}",
-                           ("e", e.to_detail_string())("endpoint", endpoint_string) );
-               }
+               ilog("Adding seed node ${endpoint}", ("endpoint", endpoint));
+               _p2p_network->add_node(endpoint);
             }
+         } catch( const fc::exception& e ) {
+            wlog( "caught exception ${e} while adding seed node ${endpoint}",
+                     ("e", e.to_detail_string())("endpoint", endpoint_string) );
          }
+      }
+   }
 
    if( _options->count("p2p-endpoint") )
       _p2p_network->listen_on_endpoint(fc::ip::endpoint::from_string(_options->at("p2p-endpoint").as<string>()), true);

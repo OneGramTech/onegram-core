@@ -588,13 +588,14 @@ assets_922_931 create_assets_922_931(database_fixture* fixture)
    asset_objs.user_issued = &fixture->create_user_issued_asset( "USERISSUED",
          GRAPHENE_WITNESS_ACCOUNT(fixture->db), charge_market_fee );
 
-   BOOST_TEST_MESSAGE( "Create a user-issued asset with a precision of 6" );
-   asset_objs.six_precision = &fixture->create_user_issued_asset( "SIXPRECISION", GRAPHENE_WITNESS_ACCOUNT(fixture->db),
-         charge_market_fee, price(asset(1, asset_id_type(1)), asset(1)), 6 );
+   uint16_t high_precision = GRAPHENE_BLOCKCHAIN_PRECISION_DIGITS + 1;
+   BOOST_TEST_MESSAGE( "Create a user-issued asset with a precision of BLOCKCHAIN_PRECISION + 1" );
+   asset_objs.six_precision = &fixture->create_user_issued_asset( "HIGHPRECISION", GRAPHENE_WITNESS_ACCOUNT(fixture->db),
+         charge_market_fee, price(asset(1, asset_id_type(1)), asset(1)), high_precision );
 
-   BOOST_TEST_MESSAGE( "Create Prediction market with precision of 6, backed by SIXPRECISION" );
+   BOOST_TEST_MESSAGE( "Create Prediction market with precision of BLOCKCHAIN_PRECISION + 1, backed by HIGHPRECISION" );
    asset_objs.prediction = &fixture->create_prediction_market( "PREDICTION", GRAPHENE_WITNESS_ACCOUNT,
-         100, charge_market_fee, 6, asset_objs.six_precision->get_id() );
+         100, charge_market_fee, high_precision, asset_objs.six_precision->get_id() );
 
    return asset_objs;
 }

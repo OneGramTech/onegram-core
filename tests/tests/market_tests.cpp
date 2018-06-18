@@ -974,6 +974,8 @@ BOOST_AUTO_TEST_CASE(hard_fork_649_cross_test)
 
    const auto& bitusd = create_bitasset("USDBIT", feedproducer_id);
    const auto& core   = asset_id_type()(db);
+   asset_id_type usd_id = bitusd.id;
+   asset_id_type core_id = core.id;
 
    int64_t init_balance(1000000);
 
@@ -994,8 +996,10 @@ BOOST_AUTO_TEST_CASE(hard_fork_649_cross_test)
    call_order_id_type call_id = call.id;
    // create another position with 310% collateral, call price is 15.5/1.75 CORE/USD = 62/7
    const call_order_object& call2 = *borrow( borrower2, bitusd.amount(1000), asset(15500));
+   call_order_id_type call2_id = call2.id;
    // create yet another position with 320% collateral, call price is 16/1.75 CORE/USD = 64/7
    const call_order_object& call3 = *borrow( borrower3, bitusd.amount(1000), asset(16000));
+   call_order_id_type call3_id = call3.id;
    transfer(borrower, seller, bitusd.amount(1000));
    transfer(borrower2, seller, bitusd.amount(1000));
    transfer(borrower3, seller, bitusd.amount(1000));
