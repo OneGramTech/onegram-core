@@ -131,53 +131,54 @@ namespace graphene { namespace chain {
       const uint8_t worker_object::type_id;
 
 
-void database::initialize_evaluators()
-{
-   _operation_evaluators.resize(255);
-   register_evaluator<account_create_evaluator>();
-   register_evaluator<account_update_evaluator>();
-   register_evaluator<account_upgrade_evaluator>();
-   register_evaluator<account_whitelist_evaluator>();
-   register_evaluator<committee_member_create_evaluator>();
-   register_evaluator<committee_member_update_evaluator>();
-   register_evaluator<committee_member_update_global_parameters_evaluator>();
-   register_evaluator<custom_evaluator>();
-   register_evaluator<asset_create_evaluator>();
-   register_evaluator<asset_issue_evaluator>();
-   register_evaluator<asset_reserve_evaluator>();
-   register_evaluator<asset_update_evaluator>();
-   register_evaluator<asset_update_bitasset_evaluator>();
-   register_evaluator<asset_update_feed_producers_evaluator>();
-   register_evaluator<asset_settle_evaluator>();
-   register_evaluator<asset_global_settle_evaluator>();
-   register_evaluator<assert_evaluator>();
-   register_evaluator<limit_order_create_evaluator>();
-   register_evaluator<limit_order_cancel_evaluator>();
-   register_evaluator<call_order_update_evaluator>();
-   register_evaluator<bid_collateral_evaluator>();
-   register_evaluator<transfer_evaluator>();
-   register_evaluator<override_transfer_evaluator>();
-   register_evaluator<asset_fund_fee_pool_evaluator>();
-   register_evaluator<asset_publish_feeds_evaluator>();
-   register_evaluator<proposal_create_evaluator>();
-   register_evaluator<proposal_update_evaluator>();
-   register_evaluator<proposal_delete_evaluator>();
-   register_evaluator<vesting_balance_create_evaluator>();
-   register_evaluator<vesting_balance_withdraw_evaluator>();
-   register_evaluator<witness_create_evaluator>();
-   register_evaluator<witness_update_evaluator>();
-   register_evaluator<withdraw_permission_create_evaluator>();
-   register_evaluator<withdraw_permission_claim_evaluator>();
-   register_evaluator<withdraw_permission_update_evaluator>();
-   register_evaluator<withdraw_permission_delete_evaluator>();
-   register_evaluator<worker_create_evaluator>();
-   register_evaluator<balance_claim_evaluator>();
-   register_evaluator<transfer_to_blind_evaluator>();
-   register_evaluator<transfer_from_blind_evaluator>();
-   register_evaluator<blind_transfer_evaluator>();
-   register_evaluator<asset_claim_fees_evaluator>();
-register_evaluator<asset_update_issuer_evaluator>();
-   register_evaluator<asset_claim_pool_evaluator>();}
+      void database::initialize_evaluators()
+      {
+         _operation_evaluators.resize(255);
+         register_evaluator<account_create_evaluator>();
+         register_evaluator<account_update_evaluator>();
+         register_evaluator<account_upgrade_evaluator>();
+         register_evaluator<account_whitelist_evaluator>();
+         register_evaluator<committee_member_create_evaluator>();
+         register_evaluator<committee_member_update_evaluator>();
+         register_evaluator<committee_member_update_global_parameters_evaluator>();
+         register_evaluator<custom_evaluator>();
+         register_evaluator<asset_create_evaluator>();
+         register_evaluator<asset_issue_evaluator>();
+         register_evaluator<asset_reserve_evaluator>();
+         register_evaluator<asset_update_evaluator>();
+         register_evaluator<asset_update_bitasset_evaluator>();
+         register_evaluator<asset_update_feed_producers_evaluator>();
+         register_evaluator<asset_settle_evaluator>();
+         register_evaluator<asset_global_settle_evaluator>();
+         register_evaluator<assert_evaluator>();
+         register_evaluator<limit_order_create_evaluator>();
+         register_evaluator<limit_order_cancel_evaluator>();
+         register_evaluator<call_order_update_evaluator>();
+         register_evaluator<bid_collateral_evaluator>();
+         register_evaluator<transfer_evaluator>();
+         register_evaluator<override_transfer_evaluator>();
+         register_evaluator<asset_fund_fee_pool_evaluator>();
+         register_evaluator<asset_publish_feeds_evaluator>();
+         register_evaluator<proposal_create_evaluator>();
+         register_evaluator<proposal_update_evaluator>();
+         register_evaluator<proposal_delete_evaluator>();
+         register_evaluator<vesting_balance_create_evaluator>();
+         register_evaluator<vesting_balance_withdraw_evaluator>();
+         register_evaluator<witness_create_evaluator>();
+         register_evaluator<witness_update_evaluator>();
+         register_evaluator<withdraw_permission_create_evaluator>();
+         register_evaluator<withdraw_permission_claim_evaluator>();
+         register_evaluator<withdraw_permission_update_evaluator>();
+         register_evaluator<withdraw_permission_delete_evaluator>();
+         register_evaluator<worker_create_evaluator>();
+         register_evaluator<balance_claim_evaluator>();
+         register_evaluator<transfer_to_blind_evaluator>();
+         register_evaluator<transfer_from_blind_evaluator>();
+         register_evaluator<blind_transfer_evaluator>();
+         register_evaluator<asset_claim_fees_evaluator>();
+         register_evaluator<asset_update_issuer_evaluator>();
+         register_evaluator<asset_claim_pool_evaluator>();
+      }
 
       void database::initialize_indexes()
       {
@@ -276,14 +277,15 @@ register_evaluator<asset_update_issuer_evaluator>();
                   ++collateral_holder_number;
                }
 
-               bitasset_data_id = create<asset_bitasset_data_object>([&](asset_bitasset_data_object& b)
+               bitasset_data_id = create<asset_bitasset_data_object>([&core_asset,new_asset_id](asset_bitasset_data_object& b)
                {
                   b.options.short_backing_asset = core_asset.id;
                   b.options.minimum_feeds = GRAPHENE_DEFAULT_MINIMUM_FEEDS;
+                  b.asset_id = new_asset_id;
                }).id;
             }
 
-            asset_dynamic_data_id_type dynamic_data_id = create<asset_dynamic_data_object>([&](asset_dynamic_data_object& d)
+            asset_dynamic_data_id_type dynamic_data_id = create<asset_dynamic_data_object>([&asset](asset_dynamic_data_object& d)
             {
                d.accumulated_fees = asset.accumulated_fees;
             }).id;
@@ -797,7 +799,7 @@ register_evaluator<asset_update_issuer_evaluator>();
                            "   Debt is ${debt}\n"
                            "   Supply is ${supply}\n",
                         ("aname", it->symbol)
-                  ("debt", debt_itr->second)
+                        ("debt", debt_itr->second)
                         ("supply", supply_itr->second));
                   }
                }
