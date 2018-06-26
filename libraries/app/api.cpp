@@ -461,6 +461,30 @@ namespace graphene { namespace app {
        return result;
     } FC_CAPTURE_AND_RETHROW( (a)(b)(bucket_seconds)(start)(end) ) }
 
+    vector<operation_history_object> history_api::get_last_operations_history(unsigned limit) const
+    {
+        FC_ASSERT(limit <= OperationHistoryObjectsLimit);
+        FC_ASSERT(_app.chain_database());
+
+        const auto& db = *_app.chain_database();
+        const auto& history_by_id_idx = db.get_index_type<operation_history_index>().indices().get<by_id>();
+
+        vector<operation_history_object> result;
+        result.reserve(limit);
+
+        // copy the operation history elements in reverse order from newest to oldest
+        auto itr = history_by_id_idx.rbegin();
+        auto itr_stop = history_by_id_idx.rend();
+
+        while ((itr != itr_stop) && (result.size() < limit))
+        {
+            result.push_back( *itr );
+            ++itr;
+        }
+
+        return result;
+    }
+
     crypto_api::crypto_api(){};
 
     blind_signature crypto_api::blind_sign( const extended_private_key_type& key, const blinded_hash& hash, int i )

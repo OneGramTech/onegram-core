@@ -585,4 +585,65 @@ BOOST_AUTO_TEST_CASE(get_account_history_operations) {
    }
 }
 
+BOOST_AUTO_TEST_CASE(get_last_operations_history)
+{
+   try
+   {
+      int OperationHistoryObjectsLimit = 100;
+      graphene::app::history_api hist_api(app);
+
+      // no history at all in the chain
+      vector<operation_history_object> histories = hist_api.get_last_operations_history(OperationHistoryObjectsLimit);
+      BOOST_CHECK_EQUAL(histories.size(), 0);
+
+      create_bitasset("USD", account_id_type()); // create op 0
+      generate_block();
+
+      // what if the account only has one history entry and it is 0?
+      histories = hist_api.get_last_operations_history(OperationHistoryObjectsLimit);
+      BOOST_CHECK_EQUAL(histories.size(), 1);
+      BOOST_CHECK_EQUAL(histories[0].id.instance(), 0);
+      
+      const account_object& dan = create_account("dan"); // create op 1
+      auto dan_id = dan.id;
+
+      create_bitasset("CNY", dan.id); // create op 2
+      create_bitasset("BTC", account_id_type()); // create op 3
+      create_bitasset("XMR", dan.id); // create op 4
+      create_bitasset("EUR", account_id_type()); // create op 5
+      create_bitasset("OIL", dan.id); // create op 6
+
+      generate_block();
+
+      // get the last operation
+      histories = hist_api.get_last_operations_history(1);
+      BOOST_CHECK_EQUAL(histories.size(), 1);
+      BOOST_CHECK_EQUAL(histories[0].id.instance(), 6);
+
+      // get the last two operations
+      histories = hist_api.get_last_operations_history(2);
+      BOOST_CHECK_EQUAL(histories.size(), 2);
+
+      BOOST_CHECK_EQUAL(histories[0].id.instance(), 6);
+      BOOST_CHECK_EQUAL(histories[1].id.instance(), 5);
+
+      // get the entire history
+      histories = hist_api.get_last_operations_history(OperationHistoryObjectsLimit);
+      BOOST_CHECK_EQUAL(histories.size(), 7);
+
+      BOOST_CHECK_EQUAL(histories[0].id.instance(), 6);
+      BOOST_CHECK_EQUAL(histories[1].id.instance(), 5);
+      BOOST_CHECK_EQUAL(histories[2].id.instance(), 4);
+      BOOST_CHECK_EQUAL(histories[3].id.instance(), 3);
+      BOOST_CHECK_EQUAL(histories[4].id.instance(), 2);
+      BOOST_CHECK_EQUAL(histories[5].id.instance(), 1);
+      BOOST_CHECK_EQUAL(histories[6].id.instance(), 0);
+   }
+   catch (fc::exception &e)
+   {
+      edump((e.to_detail_string()));
+      throw;
+   }
+}
+   
 BOOST_AUTO_TEST_SUITE_END()

@@ -377,6 +377,15 @@ class wallet_api
        */
      vector<operation_detail>  get_relative_account_history(string name, uint32_t stop, int limit, uint32_t start)const;
 
+     /**
+      * @brief Gets the last operations history.
+      *
+      * @param limit The maximum entries to be retrieved.
+      *
+      * @return The last operations history.
+      */
+     vector<operation_detail> get_last_operations_history(unsigned limit) const;     
+
       /**
        * @brief Fetch all objects relevant to the specified account
        * @param name_or_id Must be the name or ID of an account to retrieve
@@ -1760,6 +1769,7 @@ FC_API( graphene::wallet::wallet_api,
         (get_block)
         (get_account_count)
         (get_account_history)
+        (get_last_operations_history)
         (get_relative_account_history)
         (get_account_history_by_operations)
         (get_collateral_bids)
