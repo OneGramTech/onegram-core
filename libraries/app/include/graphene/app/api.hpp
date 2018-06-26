@@ -116,6 +116,12 @@ namespace graphene { namespace app {
    class history_api
    {
       public:
+
+         /**
+          * @brief The maximum operation history objects which can be retrieved per request
+          */
+         static const unsigned OperationHistoryObjectsLimit = 100;
+
          history_api(application& app):_app(app){}
 
          /**
@@ -180,6 +186,16 @@ namespace graphene { namespace app {
          vector<bucket_object> get_market_history( asset_id_type a, asset_id_type b, uint32_t bucket_seconds,
                                                    fc::time_point_sec start, fc::time_point_sec end )const;
          flat_set<uint32_t> get_market_history_buckets()const;
+
+         /**
+          * @brief Gets the history of last operations performed on blockchain
+          *
+          * @param limit Maximum number of operations to retrieve (must not exceed OperationHistoryObjectsLimit)
+          *
+          * @return A list of operations performed on blockchain, ordered from most recent to oldest.
+          */
+         vector<operation_history_object> get_last_operations_history(unsigned limit = OperationHistoryObjectsLimit) const;
+
       private:
            application& _app;
    };
@@ -474,6 +490,7 @@ FC_API(graphene::app::history_api,
        (get_fill_order_history)
        (get_market_history)
        (get_market_history_buckets)
+       (get_last_operations_history)
      )
 FC_API(graphene::app::block_api,
        (get_blocks)

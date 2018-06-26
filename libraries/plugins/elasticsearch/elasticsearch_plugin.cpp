@@ -169,6 +169,13 @@ void elasticsearch_plugin_impl::add_elasticsearch( const account_id_type account
       obj.total_ops = ath.sequence;
    });
 
+   // update the last operation id in the dynamic global properties
+   const dynamic_global_property_object& dpo = db.get_dynamic_global_properties();
+   db.modify(dpo, [&]( dynamic_global_property_object& _dpo )
+   {
+      _dpo.last_operation_id = oho->id;
+   });
+
    // operation_type
    int op_type = -1;
    if (!oho->id.is_null())

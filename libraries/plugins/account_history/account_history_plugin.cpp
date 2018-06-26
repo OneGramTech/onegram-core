@@ -209,6 +209,14 @@ void account_history_plugin_impl::add_account_history( const account_id_type acc
        obj.most_recent_op = ath.id;
        obj.total_ops = ath.sequence;
    });
+
+   // update the last operation id in the dynamic global properties
+   const dynamic_global_property_object& dpo = db.get_dynamic_global_properties();
+   db.modify(dpo, [&]( dynamic_global_property_object& _dpo )
+   {
+      _dpo.last_operation_id = op_id;
+   });
+
    // remove the earliest account history entry if too many
    // _max_ops_per_account is guaranteed to be non-zero outside
    if( stats_obj.total_ops - stats_obj.removed_ops > _max_ops_per_account )
