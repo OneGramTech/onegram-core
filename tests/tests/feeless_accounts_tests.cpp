@@ -54,7 +54,7 @@ BOOST_AUTO_TEST_CASE(check_set_fee_with_feeless_account_ids_argument_when_transf
       asset fee = trx.operations.front().get<transfer_operation>().fee;
       // verify the preconditions - fee non null
       auto flat_fee = db.get_global_properties().parameters.current_fees->get<transfer_operation>().fee;
-      BOOST_CHECK_EQUAL(fee.amount.value, flat_fee);
+      BOOST_CHECK_EQUAL(static_cast<uint64_t>(fee.amount.value ), flat_fee);
 
       int64_t pre_transfer_to_account_balance = get_balance(nathan_account, asset_id_type()(db));
       // verify the preconditions - "to" account balance state
@@ -70,7 +70,7 @@ BOOST_AUTO_TEST_CASE(check_set_fee_with_feeless_account_ids_argument_when_transf
 
       int64_t post_transfer_to_account_balance = get_balance(nathan_account, asset_id_type()(db));
       // verify the postconditions - the "to" balance
-      BOOST_CHECK_EQUAL(post_transfer_to_account_balance, transfer_amount);
+      BOOST_CHECK_EQUAL(post_transfer_to_account_balance, static_cast<int64_t>(transfer_amount));
 
       // transfer a half of amount from nathan (feeless account) to alice
       trx.clear();
@@ -102,7 +102,7 @@ BOOST_AUTO_TEST_CASE(check_set_fee_with_feeless_account_ids_argument_when_transf
 
       post_transfer_to_account_balance = get_balance(alice_account, asset_id_type()(db));
       // verify the postconditions - the "to" balance
-      BOOST_CHECK_EQUAL(post_transfer_to_account_balance, transfer_amount / 2);
+      BOOST_CHECK_EQUAL(static_cast<uint64_t>(post_transfer_to_account_balance), transfer_amount / 2);
 
 
    } FC_LOG_AND_RETHROW()

@@ -52,7 +52,7 @@ BOOST_FIXTURE_TEST_SUITE(wallet_tests, database_fixture)
           /***
            * Assert: Check the number of derived keys
            */
-          BOOST_CHECK_EQUAL(nbr_keys_desired, derived_keys.size());
+          BOOST_CHECK_EQUAL(static_cast<uint64_t>(nbr_keys_desired), derived_keys.size());
 
           /***
            * Assert: Check that each derived key is unique
@@ -62,7 +62,7 @@ BOOST_FIXTURE_TEST_SUITE(wallet_tests, database_fixture)
               string description = (string) info.pub_key;
               set_derived_public_keys.emplace(description);
           }
-          BOOST_CHECK_EQUAL(nbr_keys_desired, set_derived_public_keys.size());
+          BOOST_CHECK_EQUAL(static_cast<uint64_t>(nbr_keys_desired), set_derived_public_keys.size());
 
           /***
            * Assert: Check whether every public key begins with the expected prefix
@@ -70,7 +70,7 @@ BOOST_FIXTURE_TEST_SUITE(wallet_tests, database_fixture)
           string expected_prefix = GRAPHENE_ADDRESS_PREFIX;
           for (auto info : derived_keys) {
               string description = (string) info.pub_key;
-              BOOST_CHECK_EQUAL(0, description.find(expected_prefix));
+              BOOST_CHECK_EQUAL(0u, description.find(expected_prefix));
           }
 
       } FC_LOG_AND_RETHROW()

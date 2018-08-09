@@ -28,7 +28,7 @@ struct vesting_balance_fixture {
 BOOST_FIXTURE_TEST_CASE(when_vesting_seconds_passed_withdraw_full_balance_is_allowed, vesting_balance_fixture)
 {
    BOOST_CHECK(!vesting_balance.is_withdraw_allowed(beginning, initial_balance));
-   for (int sec = 1; sec < vesting_seconds; ++sec) {
+   for (uint32_t sec = 1; sec < vesting_seconds; ++sec) {
       BOOST_CHECK(!vesting_balance.is_withdraw_allowed(beginning + sec, initial_balance));
    }
    BOOST_CHECK(vesting_balance.is_withdraw_allowed(beginning + vesting_seconds, initial_balance));
@@ -38,7 +38,7 @@ BOOST_FIXTURE_TEST_CASE(when_seconds_passes_allowed_withdraw_increases_proportio
 {
    BOOST_CHECK_EQUAL(vesting_balance.get_allowed_withdraw(beginning).amount.value, 0);
    // initial vesting balance and vesting seconds set to 100 for easy testing
-   for (int i = 1; i < vesting_seconds; ++i) {
+   for (uint32_t i = 1; i < vesting_seconds; ++i) {
       BOOST_CHECK_EQUAL(vesting_balance.get_allowed_withdraw(beginning + i).amount.value, i);
    }
    BOOST_CHECK_EQUAL(vesting_balance.get_allowed_withdraw(beginning + vesting_seconds).amount.value, initial_balance.amount.value);
@@ -80,7 +80,7 @@ BOOST_FIXTURE_TEST_CASE(when_deposit_is_added_allowed_withdraw_increases, vestin
    asset previous_allowed_withdraw = asset(0);
    /// reset initial balance
    vesting_balance.balance = asset(0);
-   for (int step = delta_seconds; step < vesting_seconds;) {
+   for (uint32_t step = delta_seconds; step < vesting_seconds;) {
       fc::time_point_sec point = beginning + step;
       vesting_balance.deposit(point, asset(deposit_amount));
       if (step > delta_seconds)
@@ -103,7 +103,7 @@ BOOST_FIXTURE_TEST_CASE(when_witdraw_total_vested_amount_withdraw_not_allowed, v
 BOOST_FIXTURE_TEST_CASE(when_vested_portion_withdrawn_no_exception, vesting_balance_fixture)
 {
    uint32_t delta_seconds = 10;
-   for (int step = delta_seconds; step < vesting_seconds;) {
+   for (uint32_t step = delta_seconds; step < vesting_seconds;) {
       share_type withdraw_amount = vesting_balance.get_allowed_withdraw(beginning + step).amount;
       vesting_balance.withdraw(beginning + step, asset(withdraw_amount));
       step += delta_seconds;
