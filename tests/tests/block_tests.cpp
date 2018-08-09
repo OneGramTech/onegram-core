@@ -273,22 +273,22 @@ BOOST_AUTO_TEST_CASE( fork_blocks )
       //The two databases are on distinct forks now, but at the same height. Make a block on db2, make it invalid, then
       //pass it to db1 and assert that db1 doesn't switch to the new fork.
       signed_block good_block;
-      BOOST_CHECK_EQUAL(db1.head_block_num(), 13);
-      BOOST_CHECK_EQUAL(db2.head_block_num(), 13);
+      BOOST_CHECK_EQUAL(db1.head_block_num(), 13u);
+      BOOST_CHECK_EQUAL(db2.head_block_num(), 13u);
       {
          auto b = db2.generate_block(db2.get_slot_time(1), db2.get_scheduled_witness(1), init_account_priv_key, database::skip_nothing);
          good_block = b;
          b.transactions.emplace_back(signed_transaction());
          b.transactions.back().operations.emplace_back(transfer_operation());
          b.sign( init_account_priv_key );
-         BOOST_CHECK_EQUAL(b.block_num(), 14);
+         BOOST_CHECK_EQUAL(b.block_num(), 14u);
          GRAPHENE_CHECK_THROW(PUSH_BLOCK( db1, b ), fc::exception);
       }
-      BOOST_CHECK_EQUAL(db1.head_block_num(), 13);
+      BOOST_CHECK_EQUAL(db1.head_block_num(), 13u);
       BOOST_CHECK_EQUAL(db1.head_block_id().str(), db1_tip);
 
       // assert that db1 switches to new fork with good block
-      BOOST_CHECK_EQUAL(db2.head_block_num(), 14);
+      BOOST_CHECK_EQUAL(db2.head_block_num(), 14u);
       PUSH_BLOCK( db1, good_block );
       BOOST_CHECK_EQUAL(db1.head_block_id().str(), db2.head_block_id().str());
    } catch (fc::exception& e) {
@@ -672,7 +672,7 @@ BOOST_FIXTURE_TEST_CASE( maintenance_interval, database_fixture )
 {
    try {
       generate_block();
-      BOOST_CHECK_EQUAL(db.head_block_num(), 2);
+      BOOST_CHECK_EQUAL(db.head_block_num(), 2u);
 
       fc::time_point_sec maintenence_time = db.get_dynamic_global_properties().next_maintenance_time;
       BOOST_CHECK_GT(maintenence_time.sec_since_epoch(), db.head_block_time().sec_since_epoch());
@@ -850,29 +850,29 @@ BOOST_FIXTURE_TEST_CASE( change_block_interval, database_fixture )
    }
    BOOST_TEST_MESSAGE( "Verifying that the interval didn't change immediately" );
 
-   BOOST_CHECK_EQUAL(db.get_global_properties().parameters.block_interval, 5);
+   BOOST_CHECK_EQUAL(db.get_global_properties().parameters.block_interval, 5u);
    auto past_time = db.head_block_time().sec_since_epoch();
    generate_block();
-   BOOST_CHECK_EQUAL(db.head_block_time().sec_since_epoch() - past_time, 5);
+   BOOST_CHECK_EQUAL(db.head_block_time().sec_since_epoch() - past_time, 5u);
    generate_block();
-   BOOST_CHECK_EQUAL(db.head_block_time().sec_since_epoch() - past_time, 10);
+   BOOST_CHECK_EQUAL(db.head_block_time().sec_since_epoch() - past_time, 10u);
 
    BOOST_TEST_MESSAGE( "Generating blocks until proposal expires" );
    generate_blocks(proposal_id_type()(db).expiration_time + 5);
    BOOST_TEST_MESSAGE( "Verify that the block interval is still 5 seconds" );
-   BOOST_CHECK_EQUAL(db.get_global_properties().parameters.block_interval, 5);
+   BOOST_CHECK_EQUAL(db.get_global_properties().parameters.block_interval, 5u);
 
    BOOST_TEST_MESSAGE( "Generating blocks until next maintenance interval" );
    generate_blocks(db.get_dynamic_global_properties().next_maintenance_time);
    generate_block();   // get the maintenance skip slots out of the way
 
    BOOST_TEST_MESSAGE( "Verify that the new block interval is 1 second" );
-   BOOST_CHECK_EQUAL(db.get_global_properties().parameters.block_interval, 1);
+   BOOST_CHECK_EQUAL(db.get_global_properties().parameters.block_interval, 1u);
    past_time = db.head_block_time().sec_since_epoch();
    generate_block();
-   BOOST_CHECK_EQUAL(db.head_block_time().sec_since_epoch() - past_time, 1);
+   BOOST_CHECK_EQUAL(db.head_block_time().sec_since_epoch() - past_time, 1u);
    generate_block();
-   BOOST_CHECK_EQUAL(db.head_block_time().sec_since_epoch() - past_time, 2);
+   BOOST_CHECK_EQUAL(db.head_block_time().sec_since_epoch() - past_time, 2u);
 } FC_LOG_AND_RETHROW() }
 
 BOOST_FIXTURE_TEST_CASE( pop_block_twice, database_fixture )
@@ -949,7 +949,7 @@ BOOST_FIXTURE_TEST_CASE( rsf_missed_blocks, database_fixture )
          "1111111111111111111111111111111111111111111111111111111111111111"
          "1111111111111111111111111111111111111111111111111111111111111111"
       );
-      BOOST_CHECK_EQUAL( db.witness_participation_rate(), GRAPHENE_100_PERCENT );
+      BOOST_CHECK_EQUAL( db.witness_participation_rate(), static_cast<uint32_t>(GRAPHENE_100_PERCENT) );
 
       generate_block( ~0, init_account_priv_key, 1 );
       BOOST_CHECK_EQUAL( rsf(),
