@@ -967,7 +967,7 @@ BOOST_AUTO_TEST_CASE( mia_feeds )
    }
    {
       const asset_bitasset_data_object& obj = bit_usd_id(db).bitasset_data(db);
-      BOOST_CHECK_EQUAL(obj.feeds.size(), 3);
+      BOOST_CHECK_EQUAL(obj.feeds.size(), 3u);
       BOOST_CHECK(obj.current_feed == price_feed());
    }
    {

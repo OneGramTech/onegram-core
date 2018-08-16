@@ -1731,7 +1731,7 @@ BOOST_AUTO_TEST_CASE( witness_feeds )
       vector<account_id_type> active_witnesses;
       for( const witness_id_type& wit_id : global_props.active_witnesses )
          active_witnesses.emplace_back( wit_id(db).witness_account );
-      BOOST_REQUIRE_EQUAL(active_witnesses.size(), 10);
+      BOOST_REQUIRE_EQUAL(active_witnesses.size(), 10u);
 
       asset_publish_feed_operation op;
       op.publisher = active_witnesses[0];
