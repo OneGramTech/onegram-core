@@ -53,7 +53,7 @@ struct witness_tests_fixture: public database_fixture {
    
    void upgrade_nathan_account_to_lifetime_member() {
       BOOST_TEST_MESSAGE( "Upgrading nathan account to LTM" );
-      BOOST_CHECK_GT(membership_lifetime_fee(), 0); // fee must be set
+      BOOST_CHECK_GT(membership_lifetime_fee(), 0u); // fee must be set
 
       account_upgrade_operation uop;
       uop.account_to_upgrade = nathan_account().get_id();
@@ -67,7 +67,7 @@ struct witness_tests_fixture: public database_fixture {
       trx.clear();
 
       BOOST_CHECK(nathan_account().is_lifetime_member());
-      BOOST_CHECK_EQUAL(get_balance(nathan_account(), core()), nathan_init_assets.amount.value - membership_lifetime_fee());
+      BOOST_CHECK_EQUAL(get_balance(nathan_account(), core()), nathan_init_assets.amount.value - static_cast<int64_t>(membership_lifetime_fee()));
    }
 
    void create_nathan_account_and_transfer_assets(const asset &nathan_init_assets) {
@@ -98,7 +98,7 @@ struct witness_tests_fixture: public database_fixture {
    void generate_block_times(int block_count) {
       BOOST_TEST_MESSAGE("Generating some blocks");
       const auto start_head_block_time = db.head_block_time().sec_since_epoch();
-      const int target_interval = block_count * block_interval;
+      const uint32_t target_interval = block_count * block_interval;
       while(db.head_block_time().sec_since_epoch() - start_head_block_time < target_interval)
       {
          generate_block();
@@ -141,9 +141,9 @@ BOOST_FIXTURE_TEST_CASE(check_witness_budget_and_pay_per_block_calculations, wit
       upgrade_nathan_account_to_lifetime_member();
 
       // lifetime fee network cut goes to  accumulated_fees
-      BOOST_CHECK_EQUAL(core_accumulated_fees().value, nathan_lifetime_fee_network_cut());
+      BOOST_CHECK_EQUAL(core_accumulated_fees().value, static_cast<int64_t>(nathan_lifetime_fee_network_cut()));
       // lifetime referral fee cut went to the committee account, which burned it -> goes to reserve
-      BOOST_CHECK_EQUAL(core_reserve().value, nathan_lifetime_fee_referral_cut());
+      BOOST_CHECK_EQUAL(core_reserve().value, static_cast<int64_t>(nathan_lifetime_fee_referral_cut()));
       BOOST_CHECK_LT(core_current_supply().value, core_max_supply);
 
       // the 1st maintenance interval pending - no witness budget yet

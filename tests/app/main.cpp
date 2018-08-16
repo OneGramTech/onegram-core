@@ -93,7 +93,7 @@ BOOST_AUTO_TEST_CASE( two_node_network )
       app2.startup();
       fc::usleep(fc::milliseconds(500));
 
-      BOOST_REQUIRE_EQUAL(app1.p2p_node()->get_connection_count(), 1);
+      BOOST_REQUIRE_EQUAL(app1.p2p_node()->get_connection_count(), 1u);
       BOOST_CHECK_EQUAL(std::string(app1.p2p_node()->get_connected_peers().front().host.get_address()), "127.0.0.1");
       BOOST_TEST_MESSAGE( "app1 and app2 successfully connected" );
 
@@ -158,8 +158,8 @@ BOOST_AUTO_TEST_CASE( two_node_network )
 
       fc::usleep(fc::milliseconds(500));
       BOOST_TEST_MESSAGE( "Verifying nodes are still connected" );
-      BOOST_CHECK_EQUAL(app1.p2p_node()->get_connection_count(), 1);
-      BOOST_CHECK_EQUAL(app1.chain_database()->head_block_num(), 1);
+      BOOST_CHECK_EQUAL(app1.p2p_node()->get_connection_count(), 1u);
+      BOOST_CHECK_EQUAL(app1.chain_database()->head_block_num(), 1u);
 
       BOOST_TEST_MESSAGE( "Checking GRAPHENE_NULL_ACCOUNT has balance" );
    } catch( fc::exception& e ) {
