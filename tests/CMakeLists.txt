@@ -9,9 +9,6 @@ endif()
 file(GLOB UNIT_TESTS "tests/*.cpp")
 add_executable( chain_test ${COMMON_SOURCES} ${UNIT_TESTS} )
 target_link_libraries( chain_test graphene_chain graphene_app graphene_account_history graphene_egenesis_none fc graphene_wallet ${PLATFORM_SPECIFIC_LIBS} )
-if(MSVC)
-  set_source_files_properties( tests/serialization_tests.cpp PROPERTIES COMPILE_FLAGS "/bigobj" )
-endif(MSVC)
 
 file(GLOB PERFORMANCE_TESTS "performance/*.cpp")
 add_executable( performance_test ${COMMON_SOURCES} ${PERFORMANCE_TESTS} )
@@ -38,3 +35,19 @@ add_executable( vesting_balance_test ${VESTING_BALANCE_SOURCES} )
 target_link_libraries( vesting_balance_test graphene_chain fc ${PLATFORM_SPECIFIC_LIBS} )
 
 add_subdirectory( generate_empty_blocks )
+
+if(MSVC)
+	# Souce code level configuration
+	set_source_files_properties(
+			tests/serialization_tests.cpp
+			tests/block_tests.cpp
+			app/main.cpp
+			common/database_fixture.cpp
+			PROPERTIES COMPILE_FLAGS "/bigobj" )
+
+	# Project level configruation
+	set_target_properties(
+		chain_test
+		cli_test
+		PROPERTIES COMPILE_FLAGS "/bigobj" )
+endif(MSVC)

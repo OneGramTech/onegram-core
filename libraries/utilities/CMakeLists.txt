@@ -39,9 +39,12 @@ list(APPEND sources "${CMAKE_CURRENT_BINARY_DIR}/git_revision.cpp")
 add_library( graphene_utilities
              ${sources}
              ${HEADERS} )
+
+find_package( CURL REQUIRED )
+
 target_link_libraries( graphene_utilities fc )
 target_include_directories( graphene_utilities
-                            PUBLIC "${CMAKE_CURRENT_SOURCE_DIR}/include" )
+                            PUBLIC "${CMAKE_CURRENT_SOURCE_DIR}/include" ${CURL_INCLUDE_DIR} )
 if (USE_PCH)
   set_target_properties(graphene_utilities PROPERTIES COTIRE_ADD_UNITY_BUILD FALSE)
   cotire(graphene_utilities)
