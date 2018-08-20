@@ -38,8 +38,14 @@
 #include <fc/rpc/websocket_api.hpp>
 #include <fc/rpc/cli.hpp>
 
+#ifdef WIN32 
+#include <winsock2.h>
+#include <ws2tcpip.h>
+#else
 #include <sys/socket.h>
 #include <netinet/ip.h>
+#endif
+
 #include <sys/types.h>
 
 #include <boost/filesystem/path.hpp>

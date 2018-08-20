@@ -753,7 +753,7 @@ namespace graphene { namespace chain {
             });
 
             // pre-allocate blocks history to achieve TaPOS (Transaction Proof Of Stake) feature
-            for([[gnu::unused]] auto x : boost::irange(0, 0x10000))
+            for(auto x : boost::irange(0, 0x10000))
             {
                create<block_summary_object>([&](block_summary_object&) {});
             }
