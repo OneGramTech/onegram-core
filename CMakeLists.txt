@@ -84,7 +84,8 @@ ENDIF()
 # enforce more strict compiler warnings and errors
 SET(CMAKE_ADDITIONAL_CXX_FLAGS)
 STRING(CONCAT CMAKE_ADDITIONAL_CXX_FLAGS
-                                         " -Wclobbered")
+                                         " -Wclobbered"
+                                         " -Wempty-body")
 
 if( WIN32 )
 
