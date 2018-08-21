@@ -85,7 +85,8 @@ ENDIF()
 SET(CMAKE_ADDITIONAL_CXX_FLAGS)
 STRING(CONCAT CMAKE_ADDITIONAL_CXX_FLAGS
                                          " -Wclobbered"
-                                         " -Wempty-body")
+                                         " -Wempty-body"
+                                         " -Wformat-security")
 
 if( WIN32 )
 
