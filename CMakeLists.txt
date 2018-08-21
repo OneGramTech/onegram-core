@@ -88,7 +88,8 @@ STRING(CONCAT CMAKE_ADDITIONAL_CXX_FLAGS
                                          " -Wempty-body"
                                          " -Wformat-security"
                                          " -Wignored-qualifiers"
-                                         " -Wimplicit-fallthrough=5")
+                                         " -Wimplicit-fallthrough=5"
+                                         " -Wmissing-field-initializers")
 
 if( WIN32 )
 
