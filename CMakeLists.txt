@@ -81,6 +81,10 @@ IF(NOT "${Boost_VERSION}" MATCHES "1.53(.*)")
    SET(Boost_LIBRARIES ${BOOST_LIBRARIES_TEMP} ${Boost_LIBRARIES})
 ENDIF()
 
+# enforce more strict compiler warnings and errors
+SET(CMAKE_ADDITIONAL_CXX_FLAGS)
+STRING(CONCAT CMAKE_ADDITIONAL_CXX_FLAGS)
+
 if( WIN32 )
 
     message( STATUS "Configuring BitShares on WIN32")
@@ -123,7 +127,7 @@ else( WIN32 ) # Apple AND Linux
     else( APPLE )
         # Linux Specific Options Here
         message( STATUS "Configuring BitShares on Linux" )
-        set( CMAKE_CXX_FLAGS "${CMAKE_C_FLAGS} -std=c++11 -Wall" )
+        set( CMAKE_CXX_FLAGS "${CMAKE_C_FLAGS} -std=c++11 -Wall ${CMAKE_ADDITIONAL_CXX_FLAGS}" )
         set( rt_library rt )
         set( pthread_library pthread)
         if ( NOT DEFINED crypto_library )
