@@ -22,14 +22,14 @@ struct witness_tests_fixture: public database_fixture {
    const uint32_t blocks_to_maintain = maintenance_interval / block_interval;
 
 
-   const time_point_sec next_maintenance_time() const { return db.get_dynamic_global_properties().next_maintenance_time; }
+   time_point_sec next_maintenance_time() const { return db.get_dynamic_global_properties().next_maintenance_time; }
 
-   const uint64_t membership_lifetime_fee() const { return db.current_fee_schedule().get<account_upgrade_operation>().membership_lifetime_fee; }
+   uint64_t membership_lifetime_fee() const { return db.current_fee_schedule().get<account_upgrade_operation>().membership_lifetime_fee; }
 
    const asset_object& core() const { return asset_id_type()(db); }
-   const share_type core_reserve() const { return core().reserved(db); }
-   const share_type core_current_supply() const { return core().dynamic_data(db).current_supply; }
-   const share_type core_accumulated_fees() const { return core().dynamic_asset_data_id(db).accumulated_fees; }
+   share_type core_reserve() const { return core().reserved(db); }
+   share_type core_current_supply() const { return core().dynamic_data(db).current_supply; }
+   share_type core_accumulated_fees() const { return core().dynamic_asset_data_id(db).accumulated_fees; }
 
    const share_type witness_budget() const { return db.get_dynamic_global_properties().witness_budget; }
    const share_type witness_pay() const { return db.get_dynamic_global_properties().witness_pay; }
@@ -39,17 +39,17 @@ struct witness_tests_fixture: public database_fixture {
    const account_object& nathan_account() const { return get_account("nathan"); }
    const account_object& committee_account() const { return account_id_type()(db); }
 
-   const uint64_t nathan_lifetime_fee_network_cut() const { return lifetime_fee_network_cut_for_account(nathan_account()); }
-   const uint64_t nathan_lifetime_fee_referral_cut() const { return lifetime_fee_referral_cut_for_account(nathan_account()); }
+   uint64_t nathan_lifetime_fee_network_cut() const { return lifetime_fee_network_cut_for_account(nathan_account()); }
+   uint64_t nathan_lifetime_fee_referral_cut() const { return lifetime_fee_referral_cut_for_account(nathan_account()); }
 
-   const uint64_t lifetime_fee_network_cut_for_account(const account_object& account) const { return account.network_fee_percentage * membership_lifetime_fee() / GRAPHENE_100_PERCENT; }
-   const uint64_t lifetime_fee_referral_cut_for_account(const account_object &account) const { return account.lifetime_referrer(db).lifetime_referrer_fee_percentage * membership_lifetime_fee() / GRAPHENE_100_PERCENT; }
+   uint64_t lifetime_fee_network_cut_for_account(const account_object& account) const { return account.network_fee_percentage * membership_lifetime_fee() / GRAPHENE_100_PERCENT; }
+   uint64_t lifetime_fee_referral_cut_for_account(const account_object &account) const { return account.lifetime_referrer(db).lifetime_referrer_fee_percentage * membership_lifetime_fee() / GRAPHENE_100_PERCENT; }
 
-   const share_type pending_fees_for_account(const account_object& account) const {
+   share_type pending_fees_for_account(const account_object& account) const {
       const account_statistics_object &statistics = account.statistics(db);
       return statistics.pending_vested_fees + statistics.pending_fees;
    }
-   const share_type fees_paid_from_account(const account_object& account) const { return account.statistics(db).lifetime_fees_paid; }
+   share_type fees_paid_from_account(const account_object& account) const { return account.statistics(db).lifetime_fees_paid; }
    
    void upgrade_nathan_account_to_lifetime_member() {
       BOOST_TEST_MESSAGE( "Upgrading nathan account to LTM" );
