@@ -90,7 +90,8 @@ STRING(CONCAT CMAKE_ADDITIONAL_CXX_FLAGS
                                          " -Wignored-qualifiers"
                                          " -Wimplicit-fallthrough=5"
                                          " -Wmissing-field-initializers"
-                                         " -Wpointer-arith")
+                                         " -Wpointer-arith"
+                                         " -Wshift-negative-value")
 
 if( WIN32 )
 
