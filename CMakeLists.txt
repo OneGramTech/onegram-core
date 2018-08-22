@@ -91,7 +91,8 @@ STRING(CONCAT CMAKE_ADDITIONAL_CXX_FLAGS
                                          " -Wimplicit-fallthrough=5"
                                          " -Wmissing-field-initializers"
                                          " -Wpointer-arith"
-                                         " -Wshift-negative-value")
+                                         " -Wshift-negative-value"
+                                         " -Wtype-limits")
 
 if( WIN32 )
 
