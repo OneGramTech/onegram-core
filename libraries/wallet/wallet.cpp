@@ -82,7 +82,7 @@
 
 // explicit instantiation for later use
 namespace fc {
-	template class api<graphene::wallet::wallet_api, identity_member>;
+template class api<graphene::wallet::wallet_api, identity_member>;
 }
 
 #define BRAIN_KEY_WORD_COUNT 16
@@ -2162,6 +2162,23 @@ public:
 
          return ss.str();
       };
+      m["get_last_operations_history"] = [this](variant result, const fc::variants& a)
+      {
+         auto r = result.as<vector<operation_detail>>( GRAPHENE_MAX_NESTED_OBJECTS );
+         std::stringstream ss;
+
+         for( operation_detail& d : r )
+         {
+            operation_history_object& i = d.op;
+            auto b = _remote_db->get_block_header(i.block_num);
+            FC_ASSERT(b);
+            ss << b->timestamp.to_iso_string() << " ";
+            i.op.visit(operation_printer(ss, *this, i.result));
+            ss << " \n";
+         }
+
+         return ss.str();
+      };
       m["get_relative_account_history"] = [this](variant result, const fc::variants& a)
       {
          auto r = result.as<vector<operation_detail>>( GRAPHENE_MAX_NESTED_OBJECTS );
@@ -2926,6 +2943,40 @@ vector<operation_detail> wallet_api::get_account_history(string name, int limit)
       if( int(current.size()) < std::min(100,limit) )
          break;
       limit -= current.size();
+   }
+
+   return result;
+}
+
+vector<operation_detail> wallet_api::get_last_operations_history(unsigned limit) const
+{
+   int OperationHistoryObjectsLimit = 100;
+   auto maxEntries = std::min(OperationHistoryObjectsLimit, int(limit));
+   vector<operation_detail> result;
+
+   while (maxEntries > 0)
+   {
+      operation_history_id_type start;
+      if (result.size())
+      {
+         start = result.back().op.id;
+         start = start + 1;
+      }
+
+      vector<operation_history_object> current = my->_remote_hist->get_last_operations_history(maxEntries);
+      for (auto& o : current)
+      {
+         std::stringstream ss;
+         auto memo = o.op.visit(detail::operation_printer(ss, *my, o.result));
+         result.push_back(operation_detail{ memo, ss.str(), o });
+      }
+
+      if (int(current.size()) < maxEntries)
+      {
+         break;
+      }
+
+      maxEntries -= current.size();
    }
 
    return result;
