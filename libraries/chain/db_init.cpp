@@ -67,6 +67,7 @@
 
 #include <graphene/chain/feeless_accounts.hpp>
 
+#include <fc/platform_independence.hpp>
 #include <fc/smart_ref_impl.hpp>
 #include <fc/uint128.hpp>
 #include <fc/crypto/digest.hpp>
@@ -753,7 +754,7 @@ namespace graphene { namespace chain {
             });
 
             // pre-allocate blocks history to achieve TaPOS (Transaction Proof Of Stake) feature
-            for(auto x : boost::irange(0, 0x10000))
+            for(UNUSED auto x : boost::irange(0, 0x10000))
             {
                create<block_summary_object>([&](block_summary_object&) {});
             }
