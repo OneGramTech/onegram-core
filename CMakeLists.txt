@@ -32,6 +32,8 @@ endif()
 
 list( APPEND CMAKE_MODULE_PATH "${CMAKE_CURRENT_SOURCE_DIR}/CMakeModules" )
 
+include(Utils)
+
 set(CMAKE_EXPORT_COMPILE_COMMANDS "ON")
 set(GRAPHENE_EGENESIS_JSON "${CMAKE_CURRENT_SOURCE_DIR}/genesis.json" )
 include_directories(SYSTEM ${CMAKE_CURRENT_SOURCE_DIR})
@@ -82,18 +84,17 @@ IF(NOT "${Boost_VERSION}" MATCHES "1.53(.*)")
 ENDIF()
 
 # enforce more strict compiler warnings and errors
-SET(CMAKE_ADDITIONAL_CXX_FLAGS)
-STRING(CONCAT CMAKE_ADDITIONAL_CXX_FLAGS
-                                         " -Wclobbered"
-                                         " -Wempty-body"
-                                         " -Wformat-security"
-                                         " -Wignored-qualifiers"
-                                         " -Wimplicit-fallthrough=5"
-                                         " -Wmissing-field-initializers"
-                                         " -Wpointer-arith"
-                                         " -Wshift-negative-value"
-                                         " -Wtype-limits"
-                                         " -Wunused-but-set-parameter")
+add_compiler_flag_if_available("-Wall")
+add_compiler_flag_if_available("-Wclobbered")
+add_compiler_flag_if_available("-Wempty-body")
+add_compiler_flag_if_available("-Wformat-security")
+add_compiler_flag_if_available("-Wignored-qualifiers")
+add_compiler_flag_if_available("-Wimplicit-fallthrough=5")
+add_compiler_flag_if_available("-Wmissing-field-initializers")
+add_compiler_flag_if_available("-Wpointer-arith")
+add_compiler_flag_if_available("-Wshift-negative-value")
+add_compiler_flag_if_available("-Wtype-limits")
+add_compiler_flag_if_available("-Wunused-but-set-parameter")
 
 if( WIN32 )
 
@@ -133,11 +134,11 @@ else( WIN32 ) # Apple AND Linux
     if( APPLE )
         # Apple Specific Options Here
         message( STATUS "Configuring BitShares on OS X" )
-        set( CMAKE_CXX_FLAGS "${CMAKE_C_FLAGS} -std=c++11 -stdlib=libc++ -Wall" )
+        set( CMAKE_CXX_FLAGS "${CMAKE_C_FLAGS} ${CMAKE_CXX_FLAGS} -std=c++11 -stdlib=libc++" )
     else( APPLE )
         # Linux Specific Options Here
         message( STATUS "Configuring BitShares on Linux" )
-        set( CMAKE_CXX_FLAGS "${CMAKE_C_FLAGS} -std=c++11 -Wall ${CMAKE_ADDITIONAL_CXX_FLAGS}" )
+        set( CMAKE_CXX_FLAGS "${CMAKE_C_FLAGS} ${CMAKE_CXX_FLAGS} -std=c++11" )
         set( rt_library rt )
         set( pthread_library pthread)
         if ( NOT DEFINED crypto_library )
