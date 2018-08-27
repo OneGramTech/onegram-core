@@ -76,6 +76,7 @@ private:
    void schedule_production_loop();
    block_production_condition::block_production_condition_enum block_production_loop();
    block_production_condition::block_production_condition_enum maybe_produce_block( fc::limited_mutable_variant_object& capture );
+   void add_private_key(const std::string& key_id_to_wif_pair_string);
 
    boost::program_options::variables_map _options;
    bool _production_enabled = false;
