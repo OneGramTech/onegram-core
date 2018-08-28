@@ -30,6 +30,9 @@
 
 #include <fc/smart_ref_impl.hpp>
 #include <fc/thread/thread.hpp>
+#include <fc/io/fstream.hpp>
+
+#include <boost/filesystem/path.hpp>
 
 #include <iostream>
 
@@ -67,6 +70,8 @@ void witness_plugin::plugin_set_program_options(
          ("private-key", bpo::value<vector<string>>()->composing()->multitoken()->
           DEFAULT_VALUE_VECTOR(std::make_pair(chain::public_key_type(default_priv_key.get_public_key()), graphene::utilities::key_to_wif(default_priv_key))),
           "Tuple of [PublicKey, WIF private key] (may specify multiple times)")
+         ("private-key-file", bpo::value<vector<boost::filesystem::path>>()->composing()->multitoken(),
+          "Path to file, which consists of tuple of [PublicKey, WIF private key] (may specify multiple times)")
          ;
    config_file_options.add(command_line_options);
 }
@@ -76,37 +81,69 @@ std::string witness_plugin::plugin_name()const
    return "witness";
 }
 
-void witness_plugin::plugin_initialize(const boost::program_options::variables_map& options)
-{ try {
-   ilog("witness plugin:  plugin_initialize() begin");
-   _options = &options;
-   LOAD_VALUE_SET(options, "witness-id", _witnesses, chain::witness_id_type)
-
-   if( options.count("private-key") )
+void witness_plugin::add_private_key(const std::string& key_id_to_wif_pair_string)
+{
+   auto key_id_to_wif_pair = graphene::app::dejsonify<std::pair<chain::public_key_type, std::string> >(key_id_to_wif_pair_string, 5);
+   fc::optional<fc::ecc::private_key> private_key = graphene::utilities::wif_to_key(key_id_to_wif_pair.second);
+   if (!private_key)
    {
-      const std::vector<std::string> key_id_to_wif_pair_strings = options["private-key"].as<std::vector<std::string>>();
-      for (const std::string& key_id_to_wif_pair_string : key_id_to_wif_pair_strings)
+      // the key isn't in WIF format; see if they are still passing the old native private key format.  This is
+      // just here to ease the transition, can be removed soon
+      try
       {
-         auto key_id_to_wif_pair = graphene::app::dejsonify<std::pair<chain::public_key_type, std::string> >(key_id_to_wif_pair_string, 5);
-         ilog("Public Key: ${public}", ("public", key_id_to_wif_pair.first));
-         fc::optional<fc::ecc::private_key> private_key = graphene::utilities::wif_to_key(key_id_to_wif_pair.second);
-         if (!private_key)
-         {
-            // the key isn't in WIF format; see if they are still passing the old native private key format.  This is
-            // just here to ease the transition, can be removed soon
-            try
-            {
-               private_key = fc::variant(key_id_to_wif_pair.second, 2).as<fc::ecc::private_key>(1);
-            }
-            catch (const fc::exception&)
-            {
-               FC_THROW("Invalid WIF-format private key ${key_string}", ("key_string", key_id_to_wif_pair.second));
-            }
-         }
-         _private_keys[key_id_to_wif_pair.first] = *private_key;
+         private_key = fc::variant(key_id_to_wif_pair.second, 2).as<fc::ecc::private_key>(1);
+      }
+      catch (const fc::exception&)
+      {
+         FC_THROW("Invalid WIF-format private key ${key_string}", ("key_string", key_id_to_wif_pair.second));
       }
    }
-   ilog("witness plugin:  plugin_initialize() end");
+
+   if (_private_keys.find(key_id_to_wif_pair.first) == _private_keys.end())
+   {
+      ilog("Public Key: ${public}", ("public", key_id_to_wif_pair.first));
+      _private_keys[key_id_to_wif_pair.first] = *private_key;
+   }
+}
+
+void witness_plugin::plugin_initialize(const boost::program_options::variables_map& options)
+{ try {
+      ilog("witness plugin:  plugin_initialize() begin");
+      _options = &options;
+      LOAD_VALUE_SET(options, "witness-id", _witnesses, chain::witness_id_type)
+
+         if (options.count("private-key"))
+         {
+            const std::vector<std::string> key_id_to_wif_pair_strings = options["private-key"].as<std::vector<std::string>>();
+            for (const std::string& key_id_to_wif_pair_string : key_id_to_wif_pair_strings)
+            {
+               add_private_key(key_id_to_wif_pair_string);
+            }
+         }
+
+      if (options.count("private-key-file"))
+      {
+         const std::vector<boost::filesystem::path> key_id_to_wif_pair_files = options["private-key-file"].as<std::vector<boost::filesystem::path>>();
+         for (const boost::filesystem::path& key_id_to_wif_pair_file : key_id_to_wif_pair_files)
+         {
+            if (fc::exists(key_id_to_wif_pair_file))
+            {
+               std::string key_id_to_wif_pair_string;
+
+               fc::read_file_contents(key_id_to_wif_pair_file, key_id_to_wif_pair_string);
+
+               add_private_key(key_id_to_wif_pair_string);
+            }
+            else
+            {
+               elog("Failed to load private key file from ${path}",
+                  ("path", key_id_to_wif_pair_file.string()));
+               std::exit(EXIT_FAILURE);
+            }
+         }
+      }
+
+      ilog("witness plugin:  plugin_initialize() end");
 } FC_LOG_AND_RETHROW() }
 
 void witness_plugin::plugin_startup()
