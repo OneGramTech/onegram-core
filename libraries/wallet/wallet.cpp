@@ -261,6 +261,7 @@ class wallet_api_impl
 public:
    api_documentation method_documentation;
 private:
+   const int64_t transaction_expiration_time_sec = 3600;
    void claim_registered_account(const account_object& account)
    {
       auto it = _wallet.pending_account_registrations.find( account.name );
@@ -961,7 +962,7 @@ public:
 
       auto dyn_props = get_dynamic_global_properties();
       tx.set_reference_block( dyn_props.head_block_id );
-      tx.set_expiration( dyn_props.time + fc::seconds(30) );
+      tx.set_expiration( dyn_props.time + fc::seconds(transaction_expiration_time_sec) );
       tx.validate();
 
       for( public_key_type& key : paying_keys )
@@ -1087,7 +1088,7 @@ public:
 
          auto dyn_props = get_dynamic_global_properties();
          tx.set_reference_block( dyn_props.head_block_id );
-         tx.set_expiration( dyn_props.time + fc::seconds(30) );
+         tx.set_expiration( dyn_props.time + fc::seconds(transaction_expiration_time_sec) );
          tx.validate();
 
          for( public_key_type& key : paying_keys )
@@ -1889,7 +1890,7 @@ public:
       uint32_t expiration_time_offset = 0;
       for (;;)
       {
-         tx.set_expiration( dyn_props.time + fc::seconds(30 + expiration_time_offset) );
+         tx.set_expiration( dyn_props.time + fc::seconds(transaction_expiration_time_sec + expiration_time_offset) );
          tx.signatures.clear();
 
          for( const public_key_type& key : approving_key_set )
