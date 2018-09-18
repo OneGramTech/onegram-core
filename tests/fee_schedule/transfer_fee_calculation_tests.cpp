@@ -5,6 +5,9 @@
 #include <boost/test/unit_test.hpp>
 
 #include <graphene/chain/protocol/fee_schedule.hpp>
+#include <graphene/chain/protocol/operations_permissions.hpp>
+
+#include <fc/smart_ref_impl.hpp>
 
 using namespace graphene::chain;
 
@@ -39,7 +42,7 @@ BOOST_AUTO_TEST_CASE(calculate_flat_transfer_fee)
 
     // expected value
     uint64_t expected_fee = fee * quote_amount * scale / (base_amount * GRAPHENE_100_PERCENT);
-    BOOST_CHECK_EQUAL(calculatedFee.amount.value, expected_fee);
+    BOOST_CHECK_EQUAL(static_cast<uint64_t>(calculatedFee.amount.value), expected_fee);
 }
 
 BOOST_AUTO_TEST_CASE(when_transfer_amount_is_0_calculated_fee_is_flat_fee)
@@ -60,7 +63,7 @@ BOOST_AUTO_TEST_CASE(when_transfer_amount_is_0_calculated_fee_is_flat_fee)
     operation.amount = asset();
     auto calculatedFee = schedule.calculate_fee(operation, price::unit_price());
 
-    BOOST_CHECK_EQUAL(calculatedFee.amount.value, flat_fee);
+    BOOST_CHECK_EQUAL(static_cast<uint64_t>(calculatedFee.amount.value), flat_fee);
 }
 
 BOOST_AUTO_TEST_CASE(when_percentage_is_0_calculated_fee_is_flat_fee)
@@ -81,7 +84,7 @@ BOOST_AUTO_TEST_CASE(when_percentage_is_0_calculated_fee_is_flat_fee)
     operation.amount = asset(1000 * GRAPHENE_BLOCKCHAIN_PRECISION);
     auto calculatedFee = schedule.calculate_fee(operation, price::unit_price());
 
-    BOOST_CHECK_EQUAL(calculatedFee.amount.value, flat_fee);
+    BOOST_CHECK_EQUAL(static_cast<uint64_t>(calculatedFee.amount.value), flat_fee);
 }
 
 BOOST_AUTO_TEST_CASE(when_percentage_and_transfer_amount_are_not_0_calculated_fee_is_percentage_fee)
@@ -106,7 +109,7 @@ BOOST_AUTO_TEST_CASE(when_percentage_and_transfer_amount_are_not_0_calculated_fe
     auto calculatedFee = schedule.calculate_fee(operation, price::unit_price());
 
     uint64_t expected_fee = amount * percentage / GRAPHENE_100_PERCENT;
-    BOOST_CHECK_EQUAL(calculatedFee.amount.value, expected_fee);
+    BOOST_CHECK_EQUAL(static_cast<uint64_t>(calculatedFee.amount.value), expected_fee);
 }
 
 BOOST_AUTO_TEST_CASE(when_calculated_percentage_fee_is_more_than_max_fee_return_max_fee)
@@ -131,7 +134,7 @@ BOOST_AUTO_TEST_CASE(when_calculated_percentage_fee_is_more_than_max_fee_return_
     auto calculatedFee = schedule.calculate_fee(operation, price::unit_price());
 
     uint64_t expected_fee = max_fee;
-    BOOST_CHECK_EQUAL(calculatedFee.amount.value, expected_fee);
+    BOOST_CHECK_EQUAL(static_cast<uint64_t>(calculatedFee.amount.value), expected_fee);
 }
 
 BOOST_AUTO_TEST_CASE(when_calculated_percentage_fee_is_less_than_min_fee_return_min_fee)
@@ -156,7 +159,7 @@ BOOST_AUTO_TEST_CASE(when_calculated_percentage_fee_is_less_than_min_fee_return_
     auto calculatedFee = schedule.calculate_fee(operation, price::unit_price());
 
     uint64_t expected_fee = min_fee;
-    BOOST_CHECK_EQUAL(calculatedFee.amount.value, expected_fee);
+    BOOST_CHECK_EQUAL(static_cast<uint64_t>(calculatedFee.amount.value), expected_fee);
 }
 
 BOOST_AUTO_TEST_SUITE_END()

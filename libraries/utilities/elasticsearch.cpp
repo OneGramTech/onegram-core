@@ -28,33 +28,53 @@
 
 namespace graphene { namespace utilities {
 
+static size_t WriteCallback(void *contents, size_t size, size_t nmemb, void *userp)
+{
+    ((std::string*)userp)->append((char*)contents, size * nmemb);
+    return size * nmemb;
+}
+
+std::string PrepareBulkRequestData( const std::vector<std::string>& bulk )
+{
+    std::string bulking = "";
+    bulking = boost::algorithm::join(bulk, "\n");
+    bulking = bulking + "\n";
+    return bulking;
+}
+
+long SendElasticRequest( CURL *curl, const std::string& data, const std::string& url, std::string& responseData )
+{
+    struct curl_slist *headers = NULL;
+    headers = curl_slist_append(headers, "Content-Type: application/json");
+    curl_easy_setopt(curl, CURLOPT_URL, url.c_str());
+    curl_easy_setopt(curl, CURLOPT_POST, true);
+    curl_easy_setopt(curl, CURLOPT_HTTPHEADER, headers);
+    curl_easy_setopt(curl, CURLOPT_POSTFIELDS, data.c_str());
+    curl_easy_setopt(curl, CURLOPT_WRITEFUNCTION, WriteCallback);
+    curl_easy_setopt(curl, CURLOPT_WRITEDATA, (void *) &responseData );
+    curl_easy_setopt(curl, CURLOPT_USERAGENT, "libcrp/0.1");
+    //curl_easy_setopt(curl, CURLOPT_VERBOSE, true);
+    curl_easy_perform(curl);
+
+    long http_code = 0;
+    curl_easy_getinfo (curl, CURLINFO_RESPONSE_CODE, &http_code);
+
+    return http_code;
+}
+
+
 bool SendBulk(CURL *curl, std::vector<std::string>& bulk, std::string elasticsearch_url, bool do_logs, std::string logs_index)
 {
   // curl buffers to read
   std::string readBuffer;
   std::string readBuffer_logs;
 
-  std::string bulking = "";
-
-  bulking = boost::algorithm::join(bulk, "\n");
-  bulking = bulking + "\n";
+  std::string bulking = PrepareBulkRequestData(bulk);
   bulk.clear();
 
-  struct curl_slist *headers = NULL;
-  headers = curl_slist_append(headers, "Content-Type: application/json");
   std::string url = elasticsearch_url + "_bulk";
-  curl_easy_setopt(curl, CURLOPT_URL, url.c_str());
-  curl_easy_setopt(curl, CURLOPT_POST, true);
-  curl_easy_setopt(curl, CURLOPT_HTTPHEADER, headers);
-  curl_easy_setopt(curl, CURLOPT_POSTFIELDS, bulking.c_str());
-  curl_easy_setopt(curl, CURLOPT_WRITEFUNCTION, WriteCallback);
-  curl_easy_setopt(curl, CURLOPT_WRITEDATA, (void *)&readBuffer);
-  curl_easy_setopt(curl, CURLOPT_USERAGENT, "libcrp/0.1");
-  //curl_easy_setopt(curl, CURLOPT_VERBOSE, true);
-  curl_easy_perform(curl);
+  long http_code = SendElasticRequest(curl, bulking, url, readBuffer);
 
-  long http_code = 0;
-  curl_easy_getinfo (curl, CURLINFO_RESPONSE_CODE, &http_code);
    if(http_code == 200) {
       // all good, do nothing
    }
@@ -63,7 +83,7 @@ bool SendBulk(CURL *curl, std::vector<std::string>& bulk, std::string elasticsea
       return 0;
    }
    else {
-      elog(std::to_string(http_code) + "error: Unknown error");
+      elog(std::to_string(http_code) + " error: Unknown error");
       return 0;
    }
 
@@ -71,17 +91,7 @@ bool SendBulk(CURL *curl, std::vector<std::string>& bulk, std::string elasticsea
     auto logs = readBuffer;
     // do logs
     std::string url_logs = elasticsearch_url + logs_index + "/data/";
-    curl_easy_setopt(curl, CURLOPT_URL, url_logs.c_str());
-    curl_easy_setopt(curl, CURLOPT_POST, true);
-    curl_easy_setopt(curl, CURLOPT_HTTPHEADER, headers);
-    curl_easy_setopt(curl, CURLOPT_POSTFIELDS, logs.c_str());
-    curl_easy_setopt(curl, CURLOPT_WRITEFUNCTION, WriteCallback);
-    curl_easy_setopt(curl, CURLOPT_WRITEDATA, (void *) &readBuffer_logs);
-    curl_easy_setopt(curl, CURLOPT_USERAGENT, "libcrp/0.1");
-    curl_easy_perform(curl);
-
-    http_code = 0;
-    curl_easy_getinfo (curl, CURLINFO_RESPONSE_CODE, &http_code);
+    http_code = SendElasticRequest(curl, logs, url_logs, readBuffer_logs);
     if(http_code == 200) {
       // all good, do nothing
        return 1;
@@ -99,7 +109,7 @@ bool SendBulk(CURL *curl, std::vector<std::string>& bulk, std::string elasticsea
        return 0;
     }
     else {
-       elog(std::to_string(http_code) + "error: Unknown error");
+       elog(std::to_string(http_code) + " error: Unknown error");
        return 0;
     }
   }
