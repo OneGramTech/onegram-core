@@ -34,6 +34,8 @@
 #include <graphene/chain/operation_history_object.hpp>
 #include <graphene/chain/transaction_evaluation_state.hpp>
 
+#include <graphene/utilities/elasticsearch.hpp>
+
 #include <fc/smart_ref_impl.hpp>
 #include <fc/thread/thread.hpp>
 
@@ -167,6 +169,13 @@ void elasticsearch_plugin_impl::add_elasticsearch( const account_id_type account
       obj.total_ops = ath.sequence;
    });
 
+   // update the last operation id in the dynamic global properties
+   const dynamic_global_property_object& dpo = db.get_dynamic_global_properties();
+   db.modify(dpo, [&]( dynamic_global_property_object& _dpo )
+   {
+      _dpo.last_operation_id = oho->id;
+   });
+
    // operation_type
    int op_type = -1;
    if (!oho->id.is_null())
@@ -272,29 +281,13 @@ void elasticsearch_plugin_impl::sendBulk(std::string _elasticsearch_node_url, bo
    std::string readBuffer;
    std::string readBuffer_logs;
 
-   std::string bulking = "";
-
-   bulking = boost::algorithm::join(bulk, "\n");
-   bulking = bulking + "\n";
+   std::string bulking = graphene::utilities::PrepareBulkRequestData(bulk);
    bulk.clear();
 
    //wlog((bulking));
 
-   struct curl_slist *headers = NULL;
-   headers = curl_slist_append(headers, "Content-Type: application/json");
    std::string url = _elasticsearch_node_url + "_bulk";
-   curl_easy_setopt(curl, CURLOPT_URL, url.c_str());
-   curl_easy_setopt(curl, CURLOPT_POST, true);
-   curl_easy_setopt(curl, CURLOPT_HTTPHEADER, headers);
-   curl_easy_setopt(curl, CURLOPT_POSTFIELDS, bulking.c_str());
-   curl_easy_setopt(curl, CURLOPT_WRITEFUNCTION, WriteCallback);
-   curl_easy_setopt(curl, CURLOPT_WRITEDATA, (void *)&readBuffer);
-   curl_easy_setopt(curl, CURLOPT_USERAGENT, "libcrp/0.1");
-   //curl_easy_setopt(curl, CURLOPT_VERBOSE, true);
-   curl_easy_perform(curl);
-
-   long http_code = 0;
-   curl_easy_getinfo (curl, CURLINFO_RESPONSE_CODE, &http_code);
+   long http_code = graphene::utilities::SendElasticRequest(curl, bulking, url, readBuffer);
    if(http_code == 200) {
       // all good, do nothing
    }
@@ -309,19 +302,8 @@ void elasticsearch_plugin_impl::sendBulk(std::string _elasticsearch_node_url, bo
       auto logs = readBuffer;
       // do logs
       std::string url_logs = _elasticsearch_node_url + "logs/data/";
-      curl_easy_setopt(curl, CURLOPT_URL, url_logs.c_str());
-      curl_easy_setopt(curl, CURLOPT_POST, true);
-      curl_easy_setopt(curl, CURLOPT_HTTPHEADER, headers);
-      curl_easy_setopt(curl, CURLOPT_POSTFIELDS, logs.c_str());
-      curl_easy_setopt(curl, CURLOPT_WRITEFUNCTION, WriteCallback);
-      curl_easy_setopt(curl, CURLOPT_WRITEDATA, (void *) &readBuffer_logs);
-      curl_easy_setopt(curl, CURLOPT_USERAGENT, "libcrp/0.1");
-      //curl_easy_setopt(curl, CURLOPT_VERBOSE, true);
+      http_code = graphene::utilities::SendElasticRequest(curl, logs, url_logs, readBuffer_logs);
       //ilog("log here curl: ${output}", ("output", readBuffer_logs));
-      curl_easy_perform(curl);
-
-      http_code = 0;
-      curl_easy_getinfo (curl, CURLINFO_RESPONSE_CODE, &http_code);
       if(http_code == 200) {
          // all good, do nothing
       }
