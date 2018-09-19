@@ -23,8 +23,11 @@ before_script:
     - docker run --rm $IMG_NAME fee_schedule_test
     - docker run --rm $IMG_NAME vesting_balance_test
 
+# BUILD=Release doesn't produce the unit test executables, temp here (we plan to run acceptance test suite in the future)
 build_release:
-  <<: *script_definition
+  script:
+    - docker build --build-arg BUILD=$BUILD_TARGET --build-arg REVISION_SHA=$CI_COMMIT_SHA -t $IMG_NAME -f Dockerfile.OGC .
+    - docker image ls
   stage: build
   variables:
     BUILD_TARGET: Release

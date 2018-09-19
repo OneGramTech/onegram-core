@@ -28,14 +28,11 @@
 
 #include <curl/curl.h>
 
-static size_t WriteCallback(void *contents, size_t size, size_t nmemb, void *userp)
-{
-   ((std::string*)userp)->append((char*)contents, size * nmemb);
-   return size * nmemb;
-}
+
 
 namespace graphene { namespace utilities {
-
+   std::string PrepareBulkRequestData( const std::vector<std::string>& bulk );
+   long SendElasticRequest( CURL *curl, const std::string &data, const std::string &url, std::string &responseData );
    bool SendBulk(CURL *curl, std::vector <std::string>& bulk, std::string elasticsearch_url, bool do_logs, std::string logs_index);
    std::vector<std::string> createBulk(std::string type, std::string data, std::string id, bool onlycreate);
 
