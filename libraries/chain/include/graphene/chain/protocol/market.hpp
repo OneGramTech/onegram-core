@@ -23,6 +23,7 @@
  */
 #pragma once
 #include <graphene/chain/protocol/base.hpp>
+#include <graphene/chain/protocol/ext.hpp>
 
 namespace graphene { namespace chain { 
 
@@ -110,6 +111,16 @@ namespace graphene { namespace chain {
     */
    struct call_order_update_operation : public base_operation
    {
+      /**
+       * Options to be used in @ref call_order_update_operation.
+       *
+       * @note this struct can be expanded by adding more options in the end.
+       */
+      struct options_type
+      {
+         optional<uint16_t> target_collateral_ratio; ///< maximum CR to maintain when selling collateral on margin call
+      };
+
       /** this is slightly more expensive than limit orders, this pricing impacts prediction markets */
       struct fee_parameters_type { uint64_t fee = 20 * GRAPHENE_BLOCKCHAIN_PRECISION; };
       struct operation_permissions_type { operation_permissions_container_type rules; };
@@ -118,6 +129,8 @@ namespace graphene { namespace chain {
       account_id_type     funding_account; ///< pays fee, collateral, and cover
       asset               delta_collateral; ///< the amount of collateral to add to the margin position
       asset               delta_debt; ///< the amount of the debt to be paid off, may be negative to issue new debt
+
+      typedef extension<options_type> extensions_type; // note: this will be jsonified to {...} but no longer [...]
       extensions_type     extensions;
 
       account_id_type fee_payer()const { return funding_account; }
@@ -224,6 +237,10 @@ FC_REFLECT( graphene::chain::call_order_update_operation::operation_permissions_
 FC_REFLECT( graphene::chain::bid_collateral_operation::operation_permissions_type, (rules) )
 FC_REFLECT( graphene::chain::fill_order_operation::operation_permissions_type, (rules) )
 FC_REFLECT( graphene::chain::execute_bid_operation::operation_permissions_type, (rules) )
+
+FC_REFLECT( graphene::chain::call_order_update_operation::options_type, (target_collateral_ratio) )
+
+FC_REFLECT_TYPENAME( graphene::chain::call_order_update_operation::extensions_type )
 
 FC_REFLECT( graphene::chain::limit_order_create_operation,(fee)(seller)(amount_to_sell)(min_to_receive)(expiration)(fill_or_kill)(extensions))
 FC_REFLECT( graphene::chain::limit_order_cancel_operation,(fee)(fee_paying_account)(order)(extensions) )

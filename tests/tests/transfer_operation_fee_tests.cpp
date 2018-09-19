@@ -59,7 +59,7 @@ BOOST_AUTO_TEST_CASE(when_transfer_percentage_fee_is_set_the_from_account_balanc
 
         asset fee = trx.operations.front().get<transfer_operation>().fee;
         // verify the preconditions - fee is calculated as expected
-        BOOST_CHECK_EQUAL(fee.amount.value, expected_fee_amount);
+        BOOST_CHECK_EQUAL(static_cast<uint64_t>(fee.amount.value), expected_fee_amount);
 
         int64_t pre_transfer_to_account_balance = get_balance(nathan_account, asset_id_type()(db));
         // verify the preconditions - "to" account balance state
@@ -75,7 +75,7 @@ BOOST_AUTO_TEST_CASE(when_transfer_percentage_fee_is_set_the_from_account_balanc
 
         int64_t post_transfer_to_account_balance = get_balance(nathan_account, asset_id_type()(db));
         // verify the postconditions - the "to" balance
-        BOOST_CHECK_EQUAL(post_transfer_to_account_balance, transfer_amount);
+        BOOST_CHECK_EQUAL(static_cast<uint64_t>(post_transfer_to_account_balance), transfer_amount);
     } catch (fc::exception& e) {
         edump((e.to_detail_string()));
         throw;
@@ -108,7 +108,7 @@ BOOST_AUTO_TEST_CASE(when_default_transfer_fee_is_used_the_from_account_balance_
       asset fee = trx.operations.front().get<transfer_operation>().fee;
       // verify the preconditions - fee non null
       auto flat_fee = db.get_global_properties().parameters.current_fees->get<transfer_operation>().fee;
-      BOOST_CHECK_EQUAL(fee.amount.value, flat_fee);
+      BOOST_CHECK_EQUAL(static_cast<uint64_t>(fee.amount.value), flat_fee);
 
       int64_t pre_transfer_to_account_balance = get_balance(nathan_account, asset_id_type()(db));
       // verify the preconditions - "to" account balance state
@@ -124,7 +124,7 @@ BOOST_AUTO_TEST_CASE(when_default_transfer_fee_is_used_the_from_account_balance_
 
       int64_t post_transfer_to_account_balance = get_balance(nathan_account, asset_id_type()(db));
       // verify the postconditions - the "to" balance
-      BOOST_CHECK_EQUAL(post_transfer_to_account_balance, transfer_amount);
+      BOOST_CHECK_EQUAL(static_cast<uint64_t>(post_transfer_to_account_balance), transfer_amount);
    } catch (fc::exception& e) {
       edump((e.to_detail_string()));
       throw;
