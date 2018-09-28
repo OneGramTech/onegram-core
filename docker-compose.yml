@@ -10,6 +10,9 @@ services:
     build:
       context: .
       dockerfile: Dockerfile.OGC
+      args:
+        TARGET_ENV: TESTNET
+        BUILD: Release
     ports:
       - 8540:8540
     restart: unless-stopped
