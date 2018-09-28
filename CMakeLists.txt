@@ -32,8 +32,10 @@ endif()
 
 list( APPEND CMAKE_MODULE_PATH "${CMAKE_CURRENT_SOURCE_DIR}/CMakeModules" )
 
+include(Configuration)
 include(CheckCCompilerFlag)
 include(Utils)
+include(ExternalDependencies)
 
 # Fortify source
 if (CMAKE_COMPILER_IS_GNUCXX)
@@ -98,8 +100,9 @@ endif()
 # position independent code (PIC)
 add_definitions (-fPIC)
 set(CMAKE_EXPORT_COMPILE_COMMANDS "ON")
-set(GRAPHENE_EGENESIS_JSON "${CMAKE_CURRENT_SOURCE_DIR}/genesis.json" )
-include_directories(SYSTEM ${CMAKE_CURRENT_SOURCE_DIR})
+set(GRAPHENE_EGENESIS_JSON "${CMAKE_CURRENT_BINARY_DIR}/genesis.json" )
+
+include_directories(SYSTEM ${CMAKE_CURRENT_SOURCE_DIR} ${CMAKE_CURRENT_BINARY_DIR})
 
 #set (ENABLE_INSTALLER 1)
 #set (USE_PCH 1)
