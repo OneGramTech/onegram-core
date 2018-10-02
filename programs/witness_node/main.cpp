@@ -183,7 +183,7 @@ static void create_new_config_file
 
        if (name == "max-ops-per-account")
        {
-          return new_option_description( name, bpo::value<int>()->default_value(1000), o->description() );
+          return new_option_description( name, bpo::value<int>()->default_value(100), o->description() );
        }
 
        return o;

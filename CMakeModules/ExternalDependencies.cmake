@@ -11,7 +11,7 @@ else ()
     FetchContent_Declare (
 	libFC
 	GIT_REPOSITORY https://gitlab.com/onegram-developers/onegram-fc.git
-	GIT_TAG 87e1774
+	GIT_TAG 965217c5
     )
 endif ()
 
@@ -26,7 +26,7 @@ endif()
 FetchContent_Declare (
 docs
 GIT_REPOSITORY https://github.com/bitshares/bitshares-core.wiki.git
-GIT_TAG bd792d02
+GIT_TAG 00bd507
 )
 
 FetchContent_GetProperties(docs)
