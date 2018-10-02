@@ -16,7 +16,7 @@ before_script:
 
 .script_template: &script_definition
   script:
-    - docker build --build-arg BUILD=$BUILD_TARGET --build-arg REVISION_SHA=$CI_COMMIT_SHA -t $IMG_NAME -f Dockerfile.OGC .
+    - docker build --build-arg TARGET_ENV=$TARGET_ENV  --build-arg BUILD=$BUILD_TARGET --build-arg REVISION_SHA=$CI_COMMIT_SHA -t $IMG_NAME -f Dockerfile.OGC .
     - docker image ls
     - docker run --rm $IMG_NAME bash -c "ls -l /usr/local/bin/"
     - docker run --rm $IMG_NAME chain_test
@@ -28,11 +28,12 @@ build_mainnet_release:
   only:
     - master
   script:
-    - docker build --build-arg TARGET_ENV=MAINNET --build-arg BUILD=$BUILD_TARGET --build-arg REVISION_SHA=$CI_COMMIT_SHA -t $IMG_NAME -f Dockerfile.OGC .
+    - docker build --build-arg TARGET_ENV=$TARGET_ENV --build-arg BUILD=$BUILD_TARGET --build-arg REVISION_SHA=$CI_COMMIT_SHA -t $IMG_NAME -f Dockerfile.OGC .
     - docker image ls
   stage: build
   variables:
     BUILD_TARGET: Release
+    TARGET_ENV: MAINNET
     GIT_SUBMODULE_STRATEGY: recursive
   tags:
     - docker
@@ -41,11 +42,12 @@ build_testnet_release:
   except:
     - master
   script:
-    - docker build --build-arg TARGET_ENV=TESTNET --build-arg BUILD=$BUILD_TARGET --build-arg REVISION_SHA=$CI_COMMIT_SHA -t $IMG_NAME -f Dockerfile.OGC .
+    - docker build --build-arg TARGET_ENV=$TARGET_ENV --build-arg BUILD=$BUILD_TARGET --build-arg REVISION_SHA=$CI_COMMIT_SHA -t $IMG_NAME -f Dockerfile.OGC .
     - docker image ls
   stage: build
   variables:
     BUILD_TARGET: Release
+    TARGET_ENV: TESTNET
     GIT_SUBMODULE_STRATEGY: recursive
   tags:
     - docker
@@ -57,6 +59,7 @@ build_mainnet_debug:
   stage: build
   variables:
     BUILD_TARGET: Debug
+    TARGET_ENV: MAINNET
     GIT_SUBMODULE_STRATEGY: recursive
   tags:
     - docker
@@ -68,6 +71,7 @@ build_testnet_debug:
   stage: build
   variables:
     BUILD_TARGET: Debug
+    TARGET_ENV: TESTNET
     GIT_SUBMODULE_STRATEGY: recursive
   tags:
     - docker

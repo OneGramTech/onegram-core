@@ -1,17 +1,3 @@
-# Use BUILD=Release for production builds
-ARG BUILD=Debug
-
-# Use TARGET=witness_node to only build witness_node
-ARG TARGET=
-
-# Use TARGET_ENV=MAINNET to produce mainnet build (using mainnet genesis file, seed-nodes, and other environment specific options)
-# Use TARGET_ENV=TESTNET to produce testnet build (using testnet genesis file, seed-nodes, and other environment specific options)
-ARG TARGET_ENV=TESTNET
-
-# Fill these args from version control system in your build script
-ARG REVISION_SHA=a1b2c3d4
-ARG REVISION_TIMESTAMP=1521619797
-
 FROM ubuntu:17.10 as builder
 MAINTAINER Jozef Knaperek <jozef.knaperek@01cryptohouse.com>
 
@@ -66,6 +52,20 @@ RUN apt-get update \
 # Note: the build requires access to .git (repo metadata) - fails otherwise!
 
 COPY . /src
+
+# Use BUILD=Release for production builds
+ARG BUILD=Debug
+
+# Use TARGET=witness_node to only build witness_node
+ARG TARGET=
+
+# Use TARGET_ENV=MAINNET to produce mainnet build (using mainnet genesis file, seed-nodes, and other environment specific options)
+# Use TARGET_ENV=TESTNET to produce testnet build (using testnet genesis file, seed-nodes, and other environment specific options)
+ARG TARGET_ENV=TESTNET
+
+# Fill these args from version control system in your build script
+ARG REVISION_SHA=a1b2c3d4
+ARG REVISION_TIMESTAMP=1521619797
 
 RUN cd /src \
 	&& cmake -G Ninja -DTARGET_ENV=$TARGET_ENV -DCMAKE_BUILD_TYPE=$BUILD -DREVISION_SHA=$REVISION_SHA -DREVISION_TIMESTAMP=$REVISION_TIMESTAMP . \
