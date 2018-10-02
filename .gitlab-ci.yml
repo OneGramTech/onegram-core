@@ -24,9 +24,11 @@ before_script:
     - docker run --rm $IMG_NAME vesting_balance_test
 
 # BUILD=Release doesn't produce the unit test executables, temp here (we plan to run acceptance test suite in the future)
-build_release:
+build_mainnet_release:
+  only:
+    - master
   script:
-    - docker build --build-arg BUILD=$BUILD_TARGET --build-arg REVISION_SHA=$CI_COMMIT_SHA -t $IMG_NAME -f Dockerfile.OGC .
+    - docker build --build-arg TARGET_ENV=MAINNET --build-arg BUILD=$BUILD_TARGET --build-arg REVISION_SHA=$CI_COMMIT_SHA -t $IMG_NAME -f Dockerfile.OGC .
     - docker image ls
   stage: build
   variables:
@@ -35,8 +37,34 @@ build_release:
   tags:
     - docker
 
-build_debug:
+build_testnet_release:
+  except:
+    - master
+  script:
+    - docker build --build-arg TARGET_ENV=TESTNET --build-arg BUILD=$BUILD_TARGET --build-arg REVISION_SHA=$CI_COMMIT_SHA -t $IMG_NAME -f Dockerfile.OGC .
+    - docker image ls
+  stage: build
+  variables:
+    BUILD_TARGET: Release
+    GIT_SUBMODULE_STRATEGY: recursive
+  tags:
+    - docker
+
+build_mainnet_debug:
   <<: *script_definition
+  only:
+    - master
+  stage: build
+  variables:
+    BUILD_TARGET: Debug
+    GIT_SUBMODULE_STRATEGY: recursive
+  tags:
+    - docker
+
+build_testnet_debug:
+  <<: *script_definition
+  except:
+    - master
   stage: build
   variables:
     BUILD_TARGET: Debug
