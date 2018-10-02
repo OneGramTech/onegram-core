@@ -1,12 +1,12 @@
 {
-  "initial_timestamp": "2018-03-21T12:00:00",
+  "initial_timestamp": "2018-06-15T00:00:00",
   "max_core_supply": 12400786000000,
   "initial_parameters": {
     "current_fees": {
       "parameters": [[
           0,{
             "fee": 0,
-            "price_per_kbyte": 500000,
+            "price_per_kbyte": 640000,
             "percentage_max_fee": 1000000,
             "percentage": 100
           }
@@ -26,14 +26,14 @@
           4,{}
         ],[
           5,{
-            "basic_fee": 100000,
-            "premium_fee": 1000000,
-            "price_per_kbyte": 500000
+            "basic_fee": 500000,
+            "premium_fee": 500000,
+            "price_per_kbyte": 640000
           }
         ],[
           6,{
-            "fee": 20000,
-            "price_per_kbyte": 500000
+            "fee": 10000,
+            "price_per_kbyte": 640000
           }
         ],[
           7,{
@@ -53,12 +53,12 @@
             "symbol3": 10000000,
             "symbol4": 5000000,
             "long_symbol": 1000000,
-            "price_per_kbyte": 100000
+            "price_per_kbyte": 640000
           }
         ],[
           11,{
             "fee": 500000,
-            "price_per_kbyte": 100000
+            "price_per_kbyte": 640000
           }
         ],[
           12,{
@@ -71,7 +71,7 @@
         ],[
           14,{
             "fee": 5000000,
-            "price_per_kbyte": 100000
+            "price_per_kbyte": 640000
           }
         ],[
           15,{
@@ -104,12 +104,12 @@
         ],[
           22,{
             "fee": 5000000,
-            "price_per_kbyte": 10000
+            "price_per_kbyte": 640000
           }
         ],[
           23,{
             "fee": 2000000,
-            "price_per_kbyte": 10000
+            "price_per_kbyte": 640000
           }
         ],[
           24,{
@@ -126,7 +126,7 @@
         ],[
           27,{
             "fee": 10000,
-            "price_per_kbyte": 5000
+            "price_per_kbyte": 640000
           }
         ],[
           28,{
@@ -150,7 +150,7 @@
           }
         ],[
           33,{
-            "fee": 100000
+            "fee": 2000
           }
         ],[
           34,{
@@ -159,7 +159,7 @@
         ],[
           35,{
             "fee": 10000,
-            "price_per_kbyte": 10000
+            "price_per_kbyte": 640000
           }
         ],[
           36,{
@@ -170,7 +170,7 @@
         ],[
           38,{
             "fee": 2000000,
-            "price_per_kbyte": 100000
+            "price_per_kbyte": 640000
           }
         ],[
           39,{
@@ -550,10 +550,10 @@
         ]
       ]
     },
-    "block_interval": 10,
-    "maintenance_interval": 1800,
-    "maintenance_skip_slots": 3,
-    "committee_proposal_review_period": 14400,
+    "block_interval": 60,
+    "maintenance_interval": 86400,
+    "maintenance_skip_slots": 1,
+    "committee_proposal_review_period": 1209600,
     "maximum_transaction_size": 2048,
     "maximum_block_size": 1024000000,
     "maximum_time_until_expiration": 86400,
@@ -572,7 +572,7 @@
     "allow_non_member_whitelists": false,
     "witness_pay_per_block": 1000000,
     "witness_pay_vesting_seconds": 21600,
-    "worker_budget_per_day": "0",
+    "worker_budget_per_day": 0,
     "max_predicate_opcode": 1,
     "fee_liquidation_threshold": 100000000,
     "accounts_per_fee_scale": 10000,
@@ -581,208 +581,362 @@
     "extensions": []
   },
   "initial_accounts": [{
-      "name": "ico1",
-      "owner_key": "OGC7qhTxTrfCBtU9NHPwcGLZvpjEYHgdVtDmizj5AFuDMHEMWHnVb",
-      "active_key": "OGC7qhTxTrfCBtU9NHPwcGLZvpjEYHgdVtDmizj5AFuDMHEMWHnVb",
+      "name": "ico",
+      "owner_key": "OGC5vJcxqBfrq8Vn9cccR4cCDqFuEGwjstBPndctDRxK3atPx6yuU",
+      "active_key": "OGC7QntVp1z4g91YizJQKG2LY9md7RVSkncxeqDGTwHsma553CbRi",
       "is_lifetime_member": true
     },{
-      "name": "ico2",
-      "owner_key": "OGC6wVZSJtpjWqzBsfJ7e6fE73b42k2NYh1p4TQY6H3H8fKzWopUu",
-      "active_key": "OGC6wVZSJtpjWqzBsfJ7e6fE73b42k2NYh1p4TQY6H3H8fKzWopUu",
+      "name": "sco",
+      "owner_key": "OGC67WrnZAsKHDRSeX5SqYFaPweCmRh5Kaw2jg6rN8nxm8p8AjoYw",
+      "active_key": "OGC5DKSPiePqwxhJAedZ6PyxV2PNZkcU1s958jHFVQ4hgxjtWqm2v",
       "is_lifetime_member": true
     },{
       "name": "fees",
-      "owner_key": "OGC6FU5LDp8oUnE3XnMqJxQMZc68Ywwucwj1JD9YKc5adh1aduh6J",
-      "active_key": "OGC6FU5LDp8oUnE3XnMqJxQMZc68Ywwucwj1JD9YKc5adh1aduh6J",
+      "owner_key": "OGC5wGX2YGzMvrff7j2PM87ryXocs9T8r5CZkvs4UL5gmj2SvGiAb",
+      "active_key": "OGC6dSq2bWc986tWnYF55eDn4FpEjZSbzqFr31hnS6Z9bUDnBALZz",
+      "is_lifetime_member": true
+    },{
+      "name": "registrar",
+      "owner_key": "OGC8erQqPBY7oqmwZKjFZWdsgipqQ8N4NYPYzSVc3bFJW5zGcJDPw",
+      "active_key": "OGC8WnanS9FmGr9HXwexjrEPzuTs37MRPoh9AV5HkL6kgFWxcaTKT",
+      "is_lifetime_member": true
+    },{
+      "name": "management",
+      "owner_key": "OGC7TGdBWAyVjWrAanxn7P7e9QEA35GuBEYfjadTuS4BSzzwEGuQg",
+      "active_key": "OGC7exBbdv9Atr19izbjNnkHBZkP51mygsJXAhyehJxZhm9t2Qm4E",
       "is_lifetime_member": true
     },{
       "name": "wit1",
-      "owner_key": "OGC5LxoH4GeXzpAHYUEqAMUfDWQnWKVmUe3uDNNQ9cjkjbvV82NjM",
-      "active_key": "OGC5LxoH4GeXzpAHYUEqAMUfDWQnWKVmUe3uDNNQ9cjkjbvV82NjM",
+      "owner_key": "OGC8Z3EnnzQbN3yx8VbatBq1h4umWkseDYv3nTwcBJQzpcUF1CjEu",
+      "active_key": "OGC8VhS2UfLCoK8jRpY8DB2HirNhZ5VJtQwu3HxEdQ7efmHTWzVJN",
       "is_lifetime_member": true
     },{
       "name": "wit2",
-      "owner_key": "OGC5LxoH4GeXzpAHYUEqAMUfDWQnWKVmUe3uDNNQ9cjkjbvV82NjM",
-      "active_key": "OGC5LxoH4GeXzpAHYUEqAMUfDWQnWKVmUe3uDNNQ9cjkjbvV82NjM",
+      "owner_key": "OGC4xj7VtvxdcyRKcRMxCizbJJqZLCMAXBUzYQG2pTvAPqYwwYv3q",
+      "active_key": "OGC8JxzQb9BQ5RjjA7ipV4yZez6rStCDpjJ5x8uzT1ph5F1kFEH4d",
       "is_lifetime_member": true
     },{
       "name": "wit3",
-      "owner_key": "OGC5LxoH4GeXzpAHYUEqAMUfDWQnWKVmUe3uDNNQ9cjkjbvV82NjM",
-      "active_key": "OGC5LxoH4GeXzpAHYUEqAMUfDWQnWKVmUe3uDNNQ9cjkjbvV82NjM",
+      "owner_key": "OGC88Noq7rQqUc8n3wyo9Jf9c2qdDAeKpYgCGZ4P3quzX9th8tV6b",
+      "active_key": "OGC7HRxHrwxTqnGEatr1nrT3dmd1fAKcjzHQdcA7uriMBD64BU5ks",
       "is_lifetime_member": true
     },{
       "name": "wit4",
-      "owner_key": "OGC5LxoH4GeXzpAHYUEqAMUfDWQnWKVmUe3uDNNQ9cjkjbvV82NjM",
-      "active_key": "OGC5LxoH4GeXzpAHYUEqAMUfDWQnWKVmUe3uDNNQ9cjkjbvV82NjM",
+      "owner_key": "OGC53DCPkvN8NhDBgtDLC7b799zaWcB8dBdzTUenmyqSqDT7U2C82",
+      "active_key": "OGC5UTyyd62ASH9RxvnkPFcG4kTRfxkee6kKQXrJARCWapPUEgFhb",
       "is_lifetime_member": true
     },{
       "name": "wit5",
-      "owner_key": "OGC5LxoH4GeXzpAHYUEqAMUfDWQnWKVmUe3uDNNQ9cjkjbvV82NjM",
-      "active_key": "OGC5LxoH4GeXzpAHYUEqAMUfDWQnWKVmUe3uDNNQ9cjkjbvV82NjM",
+      "owner_key": "OGC66aUebS8dbT6V96T8uHSHxGn7SEMABTrwWs3fzpSVR7fAAheNX",
+      "active_key": "OGC7jmTHMtNXHD5J8SLk2fjQpFzb2CEeBJHENYEoLr39ywZJ8Bcya",
       "is_lifetime_member": true
     },{
       "name": "wit6",
-      "owner_key": "OGC5LxoH4GeXzpAHYUEqAMUfDWQnWKVmUe3uDNNQ9cjkjbvV82NjM",
-      "active_key": "OGC5LxoH4GeXzpAHYUEqAMUfDWQnWKVmUe3uDNNQ9cjkjbvV82NjM",
+      "owner_key": "OGC8TvfhfBSKF44AQd6di8s4tmpmjDtB91MokyxaPwHLgrMh22EM4",
+      "active_key": "OGC5X3DyVuRy2jvdSBrQFwGM372F4ivyHYyiM1LrbrDF3jGPcPW6m",
       "is_lifetime_member": true
     },{
       "name": "wit7",
-      "owner_key": "OGC5LxoH4GeXzpAHYUEqAMUfDWQnWKVmUe3uDNNQ9cjkjbvV82NjM",
-      "active_key": "OGC5LxoH4GeXzpAHYUEqAMUfDWQnWKVmUe3uDNNQ9cjkjbvV82NjM",
+      "owner_key": "OGC7KVyTc1y8dUMtYvKHbCcGMiUEnsymyWDU1cV5f83ZLG6PbKWmb",
+      "active_key": "OGC563NkpHyfVkEmNBMe7edjv7irJWytJdySSEFC3oT6zUASf9pbX",
       "is_lifetime_member": true
     },{
       "name": "wit8",
-      "owner_key": "OGC5LxoH4GeXzpAHYUEqAMUfDWQnWKVmUe3uDNNQ9cjkjbvV82NjM",
-      "active_key": "OGC5LxoH4GeXzpAHYUEqAMUfDWQnWKVmUe3uDNNQ9cjkjbvV82NjM",
+      "owner_key": "OGC83zyMwwp5JnftENJaxE2nrgc7mQFSNNKE5hqvsVf6TvYbqJsyW",
+      "active_key": "OGC5tEKuw4y4Uq8B4YoqfBNKRJK1As3wv5CMTiHSwbVLaCgyDjaQU",
       "is_lifetime_member": true
     },{
       "name": "wit9",
-      "owner_key": "OGC5LxoH4GeXzpAHYUEqAMUfDWQnWKVmUe3uDNNQ9cjkjbvV82NjM",
-      "active_key": "OGC5LxoH4GeXzpAHYUEqAMUfDWQnWKVmUe3uDNNQ9cjkjbvV82NjM",
+      "owner_key": "OGC6DsGFmB8mamU1NdzPwr565PoRyFfkQeuF9wNW2LcUqs2AVCta8",
+      "active_key": "OGC6LsLogJjPoXLYrJPGvaE9VT9JpAqistwXvS8Xk1zFG1dGbYuZv",
       "is_lifetime_member": true
     },{
       "name": "wit10",
-      "owner_key": "OGC5LxoH4GeXzpAHYUEqAMUfDWQnWKVmUe3uDNNQ9cjkjbvV82NjM",
-      "active_key": "OGC5LxoH4GeXzpAHYUEqAMUfDWQnWKVmUe3uDNNQ9cjkjbvV82NjM",
+      "owner_key": "OGC5th4zAHFVRiHam8ZXpHitV9Jr7V92fvBGQw23gbakihKPFiduM",
+      "active_key": "OGC8T1wU8eZwAQaoQhuLFucpKv1DDxqtcmcGJvvaqngnKuC8pYT4d",
       "is_lifetime_member": true
     },{
       "name": "wit11",
-      "owner_key": "OGC5LxoH4GeXzpAHYUEqAMUfDWQnWKVmUe3uDNNQ9cjkjbvV82NjM",
-      "active_key": "OGC5LxoH4GeXzpAHYUEqAMUfDWQnWKVmUe3uDNNQ9cjkjbvV82NjM",
+      "owner_key": "OGC5R59hvEQhvLD7vFnQ9cPz49cD3nZA4akg4hJQnhyftYqW4caTb",
+      "active_key": "OGC6FfddEibHNZV622myvhe3vk1uLoyToQX1ypdRWKzdjYzDUtdqZ",
       "is_lifetime_member": true
     },{
       "name": "wit12",
-      "owner_key": "OGC5LxoH4GeXzpAHYUEqAMUfDWQnWKVmUe3uDNNQ9cjkjbvV82NjM",
-      "active_key": "OGC5LxoH4GeXzpAHYUEqAMUfDWQnWKVmUe3uDNNQ9cjkjbvV82NjM",
+      "owner_key": "OGC5TUV4fkCN7tA3g6q3WKCK24umF6VXxvjRUcmZnNncc1Xqz6Wyu",
+      "active_key": "OGC7gkfvvcfrRwV2KdUrw9DacRR76k1mmU1cK8rvdcuE3ptPY4q12",
       "is_lifetime_member": true
     },{
       "name": "wit13",
-      "owner_key": "OGC5LxoH4GeXzpAHYUEqAMUfDWQnWKVmUe3uDNNQ9cjkjbvV82NjM",
-      "active_key": "OGC5LxoH4GeXzpAHYUEqAMUfDWQnWKVmUe3uDNNQ9cjkjbvV82NjM",
+      "owner_key": "OGC8WhomBteH2ysLuuTEGXNJjJJBu6KJp32MEa3mhHRgaDjt58xGJ",
+      "active_key": "OGC8kDkvo3DNBV3JgnLEJNQHw5X5YWDH5iq59GYxoWuJiSC92sqdC",
       "is_lifetime_member": true
     },{
       "name": "wit14",
-      "owner_key": "OGC5LxoH4GeXzpAHYUEqAMUfDWQnWKVmUe3uDNNQ9cjkjbvV82NjM",
-      "active_key": "OGC5LxoH4GeXzpAHYUEqAMUfDWQnWKVmUe3uDNNQ9cjkjbvV82NjM",
+      "owner_key": "OGC5Lt2aRJJZFhLopFWAGST6GxPuf2GKZhJ9ZYwTQMC3RkUYThjpr",
+      "active_key": "OGC6im2qeXJbVF37azR4pooSvcedFHaQungaGQVHjhE7faWeuR7YL",
       "is_lifetime_member": true
     },{
       "name": "wit15",
-      "owner_key": "OGC5LxoH4GeXzpAHYUEqAMUfDWQnWKVmUe3uDNNQ9cjkjbvV82NjM",
-      "active_key": "OGC5LxoH4GeXzpAHYUEqAMUfDWQnWKVmUe3uDNNQ9cjkjbvV82NjM",
+      "owner_key": "OGC6p8k2Kc5Up4ddCHH6mnrvHbTj1C4x2zkVumGBnTJgDz4YhyChj",
+      "active_key": "OGC8DuWCwZZ71RUKmrz9bfohTzbKWoJRXnBU3Zd8HL48qGJiD4y9c",
       "is_lifetime_member": true
     },{
       "name": "wit16",
-      "owner_key": "OGC5LxoH4GeXzpAHYUEqAMUfDWQnWKVmUe3uDNNQ9cjkjbvV82NjM",
-      "active_key": "OGC5LxoH4GeXzpAHYUEqAMUfDWQnWKVmUe3uDNNQ9cjkjbvV82NjM",
+      "owner_key": "OGC7aZPbWpx46RWp6Kd9cmJ811UEm3RXJurrT6EBj2tfHTb1uvNTB",
+      "active_key": "OGC68R8u42Pip6THwGgFNCR8afM8K8QgqQ2K8XBosc7PJnCwREKXu",
       "is_lifetime_member": true
     },{
       "name": "wit17",
-      "owner_key": "OGC5LxoH4GeXzpAHYUEqAMUfDWQnWKVmUe3uDNNQ9cjkjbvV82NjM",
-      "active_key": "OGC5LxoH4GeXzpAHYUEqAMUfDWQnWKVmUe3uDNNQ9cjkjbvV82NjM",
+      "owner_key": "OGC87iHKCtXCEfnxAtxN8jdNQiYhBjbFbzDfFFsinh9sjevq7YgXR",
+      "active_key": "OGC5wmjmxYmvDLEADmTFRicdWctBi1FeigbSL7nMQsb1zuX6W4bRn",
       "is_lifetime_member": true
     },{
       "name": "wit18",
-      "owner_key": "OGC5LxoH4GeXzpAHYUEqAMUfDWQnWKVmUe3uDNNQ9cjkjbvV82NjM",
-      "active_key": "OGC5LxoH4GeXzpAHYUEqAMUfDWQnWKVmUe3uDNNQ9cjkjbvV82NjM",
+      "owner_key": "OGC6MecBLpYFA5EtFi5A79JkEV4utuwECPBhpmQtiLWSmYdpb4krf",
+      "active_key": "OGC4yPUaqfDzEjVJv1ALV5947qnGKeFeGRe2FN8DvWCCkXEMnB7WB",
       "is_lifetime_member": true
     },{
       "name": "wit19",
-      "owner_key": "OGC5LxoH4GeXzpAHYUEqAMUfDWQnWKVmUe3uDNNQ9cjkjbvV82NjM",
-      "active_key": "OGC5LxoH4GeXzpAHYUEqAMUfDWQnWKVmUe3uDNNQ9cjkjbvV82NjM",
+      "owner_key": "OGC5fJWdRuPjYcphkt3wWbq4h6k4bCZPpKU27RWeerBT9ggYZTSXT",
+      "active_key": "OGC8BN8MWDAvwQXtb2qqo9oVzoCmwhGVgsx3C9YFUzAsGGJxfThNm",
       "is_lifetime_member": true
     },{
       "name": "wit20",
-      "owner_key": "OGC5LxoH4GeXzpAHYUEqAMUfDWQnWKVmUe3uDNNQ9cjkjbvV82NjM",
-      "active_key": "OGC5LxoH4GeXzpAHYUEqAMUfDWQnWKVmUe3uDNNQ9cjkjbvV82NjM",
+      "owner_key": "OGC7hJwGeJ6pTQSVGZYFM3evrTdZ343nKgHicYsZFLrxQEjXMnSQK",
+      "active_key": "OGC68TQ9Mpb4vJkN4TAWELXvnq1wJQNHK3C96qwpr8nY7EQN2QSxt",
       "is_lifetime_member": true
     },{
       "name": "wit21",
-      "owner_key": "OGC5LxoH4GeXzpAHYUEqAMUfDWQnWKVmUe3uDNNQ9cjkjbvV82NjM",
-      "active_key": "OGC5LxoH4GeXzpAHYUEqAMUfDWQnWKVmUe3uDNNQ9cjkjbvV82NjM",
+      "owner_key": "OGC4zxN86oPQXps5GLZo5rUFqjyton38xPKsLJLF9tP3AyeMA7xEA",
+      "active_key": "OGC6qf2jFMVE9cb7gnb9Mexp8T9Jk3CYL3SEHo6RjXxoQerfApE19",
       "is_lifetime_member": true
     },{
       "name": "com1",
-      "owner_key": "OGC5LxoH4GeXzpAHYUEqAMUfDWQnWKVmUe3uDNNQ9cjkjbvV82NjM",
-      "active_key": "OGC5LxoH4GeXzpAHYUEqAMUfDWQnWKVmUe3uDNNQ9cjkjbvV82NjM",
+      "owner_key": "OGC84tC49VBz4UjwXPa74heacxqVjJQeQ8xZdysANGCG2KEJtZytM",
+      "active_key": "OGC68dPo6fb1rSsnvJ9JWDBLzqNvGRoEqQWrjYVajBq22Fx8niYdt",
       "is_lifetime_member": true
     },{
       "name": "com2",
-      "owner_key": "OGC5LxoH4GeXzpAHYUEqAMUfDWQnWKVmUe3uDNNQ9cjkjbvV82NjM",
-      "active_key": "OGC5LxoH4GeXzpAHYUEqAMUfDWQnWKVmUe3uDNNQ9cjkjbvV82NjM",
+      "owner_key": "OGC7W3YwuqNQ5jxmCaf2sz6WG5uiwKTHCYc8xMxUW3tLFnsEPyS7g",
+      "active_key": "OGC5V4Mt6VSVcgz7RiwxFEeWv2ja9tqYCWpREoorK1nm6LTQxDPWM",
       "is_lifetime_member": true
     },{
       "name": "com3",
-      "owner_key": "OGC5LxoH4GeXzpAHYUEqAMUfDWQnWKVmUe3uDNNQ9cjkjbvV82NjM",
-      "active_key": "OGC5LxoH4GeXzpAHYUEqAMUfDWQnWKVmUe3uDNNQ9cjkjbvV82NjM",
+      "owner_key": "OGC8DtP5kjmRbH3LT9nqcDDbSpJwBxuBhyNx2BYNXBJmC6TAbpRH9",
+      "active_key": "OGC4y976JwJYsSE1cPMCFE1LrX7jgNnM8BEsAgdMvxrC7z84T7xiw",
       "is_lifetime_member": true
     },{
       "name": "ext1",
-      "owner_key": "OGC5LxoH4GeXzpAHYUEqAMUfDWQnWKVmUe3uDNNQ9cjkjbvV82NjM",
-      "active_key": "OGC5LxoH4GeXzpAHYUEqAMUfDWQnWKVmUe3uDNNQ9cjkjbvV82NjM",
+      "owner_key": "OGC6YKAM9NCdxhRquFE5VX4xyUTTpZAvkwkiioWQSktV7USnxVauC",
+      "active_key": "OGC5BymokQfHJHiUv5vj2Rk69J6mYRAM5DsZnC1FzdHVAnAQnfpsZ",
       "is_lifetime_member": true
     },{
-      "name": "user1",
-      "owner_key": "OGC6xjRMmya4m2EomXsENb1uRVXofsduWNUXYkhUNP2GQUF1EdR4u",
-      "active_key": "OGC6xjRMmya4m2EomXsENb1uRVXofsduWNUXYkhUNP2GQUF1EdR4u",
-      "is_lifetime_member": true
-    },{
-      "name": "user2",
-      "owner_key": "OGC5S39KcXYPS7szekpn7X1HXJ2aSf1oCXvrCoYpXkuBhpwibU7Kr",
-      "active_key": "OGC5S39KcXYPS7szekpn7X1HXJ2aSf1oCXvrCoYpXkuBhpwibU7Kr",
-      "is_lifetime_member": false
-    },{
-      "name": "user3",
-      "owner_key": "OGC6Ws3kPhisBqTUSjZvLXvGcs6ShPGJFnucwMHycv8ALCQRVuz7p",
-      "active_key": "OGC6Ws3kPhisBqTUSjZvLXvGcs6ShPGJFnucwMHycv8ALCQRVuz7p",
+      "name": "zeroone",
+      "owner_key": "OGC6p6xPBuEBSZ4oiyrKXgxRsKPSAEJDwVx4trCMaGPaVD6g2b9xt",
+      "active_key": "OGC5wm4ZnH5AvTB36odFfiGm3gLWXWoj1QpaN1vMJ8s9o91XsjkK9",
       "is_lifetime_member": false
     }
   ],
   "initial_assets": [],
   "initial_balances": [{
-      "owner": "OGCGJPnWRFcCCijvyV6QZJCAt7xARp7NA2pJ",
+      "owner": "OGC35sofMdVqUy4yyEwubwANHMhwVBvN5P8v",
       "asset_symbol": "OGC",
-      "amount": 6200393000000
+      "amount": 387524562500
     },{
-      "owner": "OGC4zNBt6W2eHEa1jTSMwDVRgZzwUMvvU5Ns",
+      "owner": "OGCAT9JLLdLkujLsNosnvG6dF7ZngLfTcVkS",
       "asset_symbol": "OGC",
-      "amount": 6200393000000
+      "amount": 387524562500
+    },{
+      "owner": "OGC2WgAonj4Aw7uBaxJoGpQaPk3JqHH3d4ba",
+      "asset_symbol": "OGC",
+      "amount": 387524562500
+    },{
+      "owner": "OGC4eBjJRYAs8ASMB22LxJ6sKANuHzcBYMkA",
+      "asset_symbol": "OGC",
+      "amount": 387524562500
+    },{
+      "owner": "OGC7qvLU1qsNxYJd7JdgjMjR8tdKYdwznAuT",
+      "asset_symbol": "OGC",
+      "amount": 387524562500
+    },{
+      "owner": "OGCKu79PJoo5Gu8sGeV533Sx92JYPrQjn9ZQ",
+      "asset_symbol": "OGC",
+      "amount": 387524562500
+    },{
+      "owner": "OGC32eqrS2j6mUqGJZAUz6BsiN5twzAYLXPw",
+      "asset_symbol": "OGC",
+      "amount": 387524562500
+    },{
+      "owner": "OGC5UqTUQzGpLA9TAgMZdz5nzbVo6zQh5Yk4",
+      "asset_symbol": "OGC",
+      "amount": 387524562500
+    },{
+      "owner": "OGCKxnZfBwzQW4w3kAoyPCmZrQrvFnCUs7JT",
+      "asset_symbol": "OGC",
+      "amount": 387524562500
+    },{
+      "owner": "OGCNPe7Ffaz74V2oabLX4fq7UwuC4dSLefC1",
+      "asset_symbol": "OGC",
+      "amount": 387524562500
+    },{
+      "owner": "OGC14mbVxFuaE6P4NKGzxuDtVfyhJ4GW5g4d",
+      "asset_symbol": "OGC",
+      "amount": 387524562500
+    },{
+      "owner": "OGCJM2LvPrfr9NNT4SxuG6nUymKyjMiFP6Fy",
+      "asset_symbol": "OGC",
+      "amount": 387524562500
+    },{
+      "owner": "OGCCHVGv6TMgY76Fy6cJLiixU52M7PXZQFqf",
+      "asset_symbol": "OGC",
+      "amount": 387524562500
+    },{
+      "owner": "OGC7R6QcHJsXJNTeJZgmJ8uPnfpAWt3k8dkv",
+      "asset_symbol": "OGC",
+      "amount": 387524562500
+    },{
+      "owner": "OGCEMQwYAwZ1E3CiwBK5M3JnTgNurL3oyhku",
+      "asset_symbol": "OGC",
+      "amount": 387524562500
+    },{
+      "owner": "OGC5DZFhXHpnjRYn7Jo4FJr4t77LNSyy6N6K",
+      "asset_symbol": "OGC",
+      "amount": 387524562500
+    },{
+      "owner": "OGCJHGxzV65ooVcABStw9KHp8eF6Pa1QGL4J",
+      "asset_symbol": "OGC",
+      "amount": 387524562500
+    },{
+      "owner": "OGC6Z2CLTBXj878XUDMUZN733duUTQnbGLxB",
+      "asset_symbol": "OGC",
+      "amount": 387524562500
+    },{
+      "owner": "OGCA4fEoG6uFMzzuyeTxBfM1pavjHxrcnUn9",
+      "asset_symbol": "OGC",
+      "amount": 387524562500
+    },{
+      "owner": "OGCDKkVDe2jsMTWm8szVtByFvstwCkqYBXFD",
+      "asset_symbol": "OGC",
+      "amount": 387524562500
+    },{
+      "owner": "OGCLndZ1Upch75FHs5zZoXvoDVZhbXCkBy6T",
+      "asset_symbol": "OGC",
+      "amount": 387524562500
+    },{
+      "owner": "OGC4tVdgkZQNB5jyBH1V3SGiKq9QJHFUut88",
+      "asset_symbol": "OGC",
+      "amount": 387524562500
+    },{
+      "owner": "OGCMo8R7k964h3y7mXkpGNxnWXBN5MzxpiDz",
+      "asset_symbol": "OGC",
+      "amount": 387524562500
+    },{
+      "owner": "OGCAQzSTLUgNe2u5TA1nmnCajY6gYzqibTFu",
+      "asset_symbol": "OGC",
+      "amount": 387524562500
+    },{
+      "owner": "OGCBxPU7hniDkKuALzq3oPaytHTFSPXv5equ",
+      "asset_symbol": "OGC",
+      "amount": 387524562500
+    },{
+      "owner": "OGC25qSzRP7y1sTjok1rdSjua3at9HnBwcrX",
+      "asset_symbol": "OGC",
+      "amount": 387524562500
+    },{
+      "owner": "OGC2aoZKi4eefGkVJ7DkT43tmwpXq5QLdGrV",
+      "asset_symbol": "OGC",
+      "amount": 387524562500
+    },{
+      "owner": "OGCKgWnZxFNC83QRKmQxshf7Pv4wpbyTFMpZ",
+      "asset_symbol": "OGC",
+      "amount": 387524562500
+    },{
+      "owner": "OGC4SQjymWzQm7vv4etz7LggRhfR6DAD2yk1",
+      "asset_symbol": "OGC",
+      "amount": 387524562500
+    },{
+      "owner": "OGC9SdqN3uRHUrBCAmjJ5DxiQVvNJVE6BJKJ",
+      "asset_symbol": "OGC",
+      "amount": 387524562500
+    },{
+      "owner": "OGC51QEHSRgJxrZsDtSqY9vwEj2oyEhSZbSS",
+      "asset_symbol": "OGC",
+      "amount": 387524562500
+    },{
+      "owner": "OGCLExpNzVGVSvQ8hPH7g1tceVuwzhwmHW8y",
+      "asset_symbol": "OGC",
+      "amount": 387504562500
+    },{
+      "owner": "OGCGHdMUwXi2Ut5nJsRC7vRabDGB2YGsd62s",
+      "asset_symbol": "OGC",
+      "amount": 20000000
     },
   ],
   "initial_vesting_balances": [],
-  "initial_active_witnesses": 11,
+  "initial_active_witnesses": 21,
   "initial_witness_candidates": [{
       "owner_name": "wit1",
-      "block_signing_key": "OGC8CAY9y2yQvYN3djfVQWLyCAT2k4qcTCDdKzBnpTCiJJ6HKjW7U"
+      "block_signing_key": "OGC7dABHWVuks8sXJbKhXni3igZiR2JKrhtcyRzYLYsDgTLx9jCKX"
     },{
       "owner_name": "wit2",
-      "block_signing_key": "OGC8CAY9y2yQvYN3djfVQWLyCAT2k4qcTCDdKzBnpTCiJJ6HKjW7U"
+      "block_signing_key": "OGC5LwMP2c7eCFSmo4gPp71Uz86xD9Hbj4BW5fHpW72zaMC39XVqt"
     },{
       "owner_name": "wit3",
-      "block_signing_key": "OGC8CAY9y2yQvYN3djfVQWLyCAT2k4qcTCDdKzBnpTCiJJ6HKjW7U"
+      "block_signing_key": "OGC82zTFJZzg3PyJjr7dE1jAAojLe5XC9X6d9CkiTrJnDCU2a7Y9R"
     },{
       "owner_name": "wit4",
-      "block_signing_key": "OGC8CAY9y2yQvYN3djfVQWLyCAT2k4qcTCDdKzBnpTCiJJ6HKjW7U"
+      "block_signing_key": "OGC5UyqD1nC4vNana3rfMKRJ5nn64NZCMaXpEN1RivHWtgt4HvDKY"
     },{
       "owner_name": "wit5",
-      "block_signing_key": "OGC8CAY9y2yQvYN3djfVQWLyCAT2k4qcTCDdKzBnpTCiJJ6HKjW7U"
+      "block_signing_key": "OGC6T2KgHqxLchwgRDP2GyNEZJqH32jJj6Z83KapXqKMBUJPFaNib"
     },{
       "owner_name": "wit6",
-      "block_signing_key": "OGC8CAY9y2yQvYN3djfVQWLyCAT2k4qcTCDdKzBnpTCiJJ6HKjW7U"
+      "block_signing_key": "OGC7fCkZuJvj8TvHzomoGmamWCMQQoqpNZd3kA3XKWQq83DL3uB37"
     },{
       "owner_name": "wit7",
-      "block_signing_key": "OGC8CAY9y2yQvYN3djfVQWLyCAT2k4qcTCDdKzBnpTCiJJ6HKjW7U"
+      "block_signing_key": "OGC5qX7RmrNf3eZz2FetR3cQoHZaiYvucKYx4GeGTeWfmUwxr4PFt"
     },{
       "owner_name": "wit8",
-      "block_signing_key": "OGC8CAY9y2yQvYN3djfVQWLyCAT2k4qcTCDdKzBnpTCiJJ6HKjW7U"
+      "block_signing_key": "OGC7HLRnL4TqxMHPny9qmq1ehpdW8eyz789J6qmY74sHS5HsjQRqK"
     },{
       "owner_name": "wit9",
-      "block_signing_key": "OGC8CAY9y2yQvYN3djfVQWLyCAT2k4qcTCDdKzBnpTCiJJ6HKjW7U"
+      "block_signing_key": "OGC7s5XmLdMvugqQNQUUceMSCu5XZCYkAtGh6TeA4ArhtPouFNp6x"
     },{
       "owner_name": "wit10",
-      "block_signing_key": "OGC8CAY9y2yQvYN3djfVQWLyCAT2k4qcTCDdKzBnpTCiJJ6HKjW7U"
+      "block_signing_key": "OGC5ZW8GzQpDAGpeaVaK8SLqqmsLijX1eKvwLzhEBh9wGos81mSc6"
     },{
       "owner_name": "wit11",
-      "block_signing_key": "OGC8CAY9y2yQvYN3djfVQWLyCAT2k4qcTCDdKzBnpTCiJJ6HKjW7U"
+      "block_signing_key": "OGC5Wck93tJ9CQdBGrQAmwJGw6cCaTz4pJbVH56Phi54g981PdACS"
+    },{
+      "owner_name": "wit12",
+      "block_signing_key": "OGC8V3pneXMUXs27WEUFwzXttQf9XCFSa1QqFoKWKePQrPkbBULNd"
+    },{
+      "owner_name": "wit13",
+      "block_signing_key": "OGC7obLaMrYaVimJQcNABZeraf3NaxCQm14qLUZ15QjxzWfmQSTHC"
+    },{
+      "owner_name": "wit14",
+      "block_signing_key": "OGC5g9i7yX4k4uBdKeAna5hvbfZpLfHEbdzCCEUcwdfG7U2kq5HPo"
+    },{
+      "owner_name": "wit15",
+      "block_signing_key": "OGC8QJxMoHGdh4TJGLRc2uqk5W7GDMZKcCJ4G2tpd6X2Gh6UwqY2B"
+    },{
+      "owner_name": "wit16",
+      "block_signing_key": "OGC8EcXtd34X82fzCrpNpeq6Fbbp9GjRmodFWMpyJ5NNakKnVRw8A"
+    },{
+      "owner_name": "wit17",
+      "block_signing_key": "OGC6w2askZASi3NSX1Xrn3drY5h9A71AiEzUD1rntHo91afxJYkVN"
+    },{
+      "owner_name": "wit18",
+      "block_signing_key": "OGC6wqG7ZTkjMsSSwNFZhqkJzVfk3g5bkUwDhSNsQUmjFJua39zTd"
+    },{
+      "owner_name": "wit19",
+      "block_signing_key": "OGC61kA6EoEGpv647Y4qH7L1dk1YWnCFbVf8ED3EvRQgG8NdLPzDe"
+    },{
+      "owner_name": "wit20",
+      "block_signing_key": "OGC8AGJutLiqgvgii82aGw7e3sp6V6bDRoSkevPKQt1f139xFvoqv"
+    },{
+      "owner_name": "wit21",
+      "block_signing_key": "OGC5u5QJjoXjKit9ayWukravRauP31fq6nbdeLqXLnDvsVG1YkewG"
     }
   ],
   "initial_committee_candidates": [{
@@ -794,14 +948,14 @@
     }
   ],
   "initial_worker_candidates": [],
-  "initial_chain_id": "2cf445e06066532e7cb0f023599f5a516124ac632cf487fc5b052c565141e6d0",
+  "initial_chain_id": "face06c7b53b06562ba89a9b0d5fdb3bcf0f70ed9bfe914c0af7038294be8268",
   "immutable_parameters": {
     "min_committee_member_count": 3,
     "min_witness_count": 11,
     "num_special_accounts": 0,
     "num_special_assets": 0,
     "feeless_accounts": {
-      "account_names": ["ico1", "ico2", "fees", "com1", "com2", "com3"]
+      "account_names": ["ico", "sco", "fees", "registrar", "management", "com1", "com2", "com3"]
     },
     "eternal_committee_members": {
       "account_names": ["com1", "com2", "com3"]
