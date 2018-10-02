@@ -3,7 +3,9 @@ set (REVISION_TIMESTAMP "" CACHE STRING "git revision unix timestamp")
 set (REVISION_DESCRIPTION "" CACHE STRING "git revision description")
 
 if(REVISION_SHA STREQUAL "" OR REVISION_TIMESTAMP STREQUAL "")
-    list( APPEND CMAKE_MODULE_PATH "${CMAKE_SOURCE_DIR}/libraries/fc/GitVersionGen" )
+	get_property(FC_ROOT_PATH GLOBAL PROPERTY FC_ROOT_PATH)
+	set(FC_GIT_VERSION_GEN_PATH ${FC_ROOT_PATH}/GitVersionGen)
+    list( APPEND CMAKE_MODULE_PATH ${FC_GIT_VERSION_GEN_PATH} )
     include( GetGitRevisionDescription )
 
 	if(REVISION_SHA STREQUAL "")
