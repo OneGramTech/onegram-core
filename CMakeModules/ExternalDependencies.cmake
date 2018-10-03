@@ -5,7 +5,7 @@ if (TARGET_ENV STREQUAL "MAINNET")
     FetchContent_Declare (
 	libFC
 	GIT_REPOSITORY https://gitlab.com/onegram-developers/onegram-fc.git
-	GIT_TAG 83ef1c9
+	GIT_TAG b6d340d
     )
 else ()
     FetchContent_Declare (
