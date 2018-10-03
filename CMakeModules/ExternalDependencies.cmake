@@ -11,7 +11,7 @@ else ()
     FetchContent_Declare (
 	libFC
 	GIT_REPOSITORY https://gitlab.com/onegram-developers/onegram-fc.git
-	GIT_TAG d4205f70
+	GIT_TAG d497498d
     )
 endif ()
 
