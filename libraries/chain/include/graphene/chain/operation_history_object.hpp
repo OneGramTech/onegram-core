@@ -72,9 +72,9 @@ namespace graphene { namespace chain {
     *  Account history is important for users and wallets even though it is
     *  not part of "core validation".   Account history is maintained as
     *  a linked list stored on disk in a stack.  Each account will point to the
-    *  most recent account history object by ID.  When a new operation relativent
-    *  to that account is processed a new account history object is allcoated at
-    *  the end of the stack and intialized to point to the prior object.
+    *  most recent account history object by ID.  When a new operation relative
+    *  to that account is processed a new account history object is allocated at
+    *  the end of the stack and initialized to point to the prior object.
     *
     *  This data is never accessed as part of chain validation and therefore
     *  can be kept on disk as a memory mapped file.  Using a memory mapped file
@@ -82,7 +82,7 @@ namespace graphene { namespace chain {
     *  also accelerates load time.
     *
     *  When the transaction history for a particular account is requested the
-    *  linked list can be traversed with relatively effecient disk access because
+    *  linked list can be traversed with relatively efficient disk access because
     *  of the use of a memory mapped stack.
     */
    class account_transaction_history_object :  public abstract_object<account_transaction_history_object>
