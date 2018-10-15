@@ -58,10 +58,16 @@ namespace graphene { namespace chain {
       extensions_type        extensions;
 
       /// Whether this account is voting
-      inline bool is_voting() const
+      inline bool is_voting(const flat_set<vote_id_type> &votes) const
       {
          return ( voting_account != GRAPHENE_PROXY_TO_SELF_ACCOUNT || !votes.empty() );
       }
+      inline bool is_voting() const
+      {
+         return is_voting(votes);
+      }
+      /// checks whether this account is voting with excluding the votes done by the ignored_account_ids
+      bool is_voting(const std::set<vote_id_type> &ignored_account_ids) const;
 
       void validate()const;
    };

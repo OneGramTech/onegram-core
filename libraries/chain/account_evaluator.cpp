@@ -326,8 +326,11 @@ void_result account_update_evaluator::do_apply( const account_update_operation& 
 
    bool sa_before = acnt->has_special_authority();
 
+   // exclude eternalAccountIds from the check acnt->options.is_voting() otherwise the aso.is_voting is never set!!!
+   const auto eternalAccountIds = d.get_chain_properties().eternal_committee_account_ids();
    // update account statistics
-   if( o.new_options.valid() && o.new_options->is_voting() != acnt->options.is_voting() )
+   // TODO: check if the logic is correct, especially the case o.new_options->is_voting()=false and acnt->options.is_voting() = true, is_voting is not toggled!!!
+   if( o.new_options.valid() && o.new_options->is_voting() != acnt->options.is_voting(eternalAccountIds) )
    {
       d.modify( acnt->statistics( d ), []( account_statistics_object& aso )
       {
@@ -336,7 +339,7 @@ void_result account_update_evaluator::do_apply( const account_update_operation& 
    }
 
    // update account object
-   d.modify( *acnt, [&o,&d](account_object& a){
+   d.modify( *acnt, [&o,&d,&eternalAccountIds](account_object& a){
       if( o.owner )
       {
          a.owner = *o.owner;
@@ -352,7 +355,6 @@ void_result account_update_evaluator::do_apply( const account_update_operation& 
          a.options = *o.new_options;
 
          // vote for eternal committee members by default
-         const auto eternalAccountIds = d.get_chain_properties().eternal_committee_account_ids();
          a.options.votes.insert(eternalAccountIds.begin(), eternalAccountIds.end());
 
          const auto& gpo = d.get_global_properties();
