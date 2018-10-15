@@ -147,6 +147,14 @@ bool is_cheap_name( const string& n )
    return false;
 }
 
+bool account_options::is_voting(const std::set<vote_id_type> &ignored_account_ids) const {
+   flat_set<vote_id_type> diff = votes;
+   for (const auto &id: ignored_account_ids) {
+      diff.erase(id);
+   }
+   return is_voting(diff);
+}
+
 void account_options::validate() const
 {
    auto needed_witnesses = num_witness;
