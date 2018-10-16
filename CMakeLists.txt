@@ -112,6 +112,10 @@ endif(USE_PCH)
 
 option(USE_PROFILER "Build with GPROF support(Linux)." OFF)
 
+# FC  is an external dependency, and should not be placed into libraries folder
+# explicitly add FC submodule here to not loose focus on that
+add_subdirectory( libraries/fc )
+
 IF( NOT WIN32 )
     get_property(FC_ROOT_PATH GLOBAL PROPERTY FC_ROOT_PATH)
     set(FC_CMAKE_MODULE_PATH ${FC_ROOT_PATH}/CMakeModules)
