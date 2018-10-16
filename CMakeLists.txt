@@ -103,8 +103,6 @@ set(GRAPHENE_EGENESIS_JSON "${CMAKE_CURRENT_BINARY_DIR}/runtime/genesis.json" )
 
 include_directories(SYSTEM ${CMAKE_CURRENT_SOURCE_DIR} "${CMAKE_CURRENT_BINARY_DIR}/runtime")
 
-include(ExternalDependencies)
-
 #set (ENABLE_INSTALLER 1)
 #set (USE_PCH 1)
 
