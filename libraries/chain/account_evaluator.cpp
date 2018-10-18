@@ -329,7 +329,6 @@ void_result account_update_evaluator::do_apply( const account_update_operation& 
    // exclude eternalAccountIds from the check acnt->options.is_voting() otherwise the aso.is_voting is never set!!!
    const auto eternalAccountIds = d.get_chain_properties().eternal_committee_account_ids();
    // update account statistics
-   // TODO: check if the logic is correct, especially the case o.new_options->is_voting()=false and acnt->options.is_voting() = true, is_voting is not toggled!!!
    if( o.new_options.valid() && o.new_options->is_voting() != acnt->options.is_voting(eternalAccountIds) )
    {
       d.modify( acnt->statistics( d ), []( account_statistics_object& aso )
