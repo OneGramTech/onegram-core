@@ -1009,7 +1009,7 @@ vector<account_summary> database_api_impl::get_account_summaries(account_id_type
         FC_ASSERT(header.valid());
         if (header->timestamp < from)
             break;
-        if (header->timestamp < till && operation_history.op.which() == operation::tag<transfer_operation>::value) {
+        if ((header->timestamp < till) && (operation_history.op.which() == operation::tag<transfer_operation>::value)) {
             const auto& transfer = operation_history.op.get<transfer_operation>();
 
             auto& pair = summaries[transfer.amount.asset_id];
