@@ -355,6 +355,17 @@ class wallet_api
        * @returns a list of the given account's balances
        */
       vector<asset>                     list_account_balances(const string& id);
+      /** List the summaries of an account.
+       * Each account can have multiple balances, one for each type of asset. The returned list will
+       * contain the summaries of all debit and credit transactions of this account for the requested
+       * asset types.
+       * @param id the name or id of the account whose summaries are to be queried
+       * @param assets the list of queried asset types; if zero, query all asset types the account has operated with
+       * @param from the starting time from which the transfers shall be inclusively included in the summary
+       * @param till the ending time until which the transfers shall be exclusively included in the summary
+       * @returns a list of the queried account's summaries
+       */
+      vector<account_summary>           list_account_summaries(const string& id, const flat_set<asset_id_type>& assets, fc::time_point_sec from, fc::time_point_sec till);
       /** Lists all assets registered on the blockchain.
        * 
        * To list all assets, pass the empty string \c "" for the lowerbound to start
@@ -1764,6 +1775,7 @@ FC_API( graphene::wallet::wallet_api,
         (list_my_accounts)
         (list_accounts)
         (list_account_balances)
+        (list_account_summaries)
         (list_assets)
         (get_asset_count)
         (import_key)
