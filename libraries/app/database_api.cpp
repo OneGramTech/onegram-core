@@ -1048,7 +1048,8 @@ vector<account_summary> database_api_impl::get_named_account_summaries(const std
 {
    const auto& accounts_by_name = _db.get_index_type<account_index>().indices().get<by_name>();
    auto itr = accounts_by_name.find(name);
-   FC_ASSERT(itr != accounts_by_name.end());
+   if (itr == accounts_by_name.end())
+      return vector<account_summary>();
    return get_account_summaries(itr->get_id(), assets, from, till);
 }
 
