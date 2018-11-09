@@ -842,6 +842,47 @@ BOOST_AUTO_TEST_CASE(get_account_summaries)
     const auto& core = get_asset( GRAPHENE_SYMBOL );
     graphene::app::database_api db_api(db);
 
+    // test non-existent account/asset
+
+    {
+        flat_set<asset_id_type> assets;
+
+        auto nonexistent_id = joseph_id;
+        nonexistent_id.instance = GRAPHENE_DB_MAX_INSTANCE_ID;
+
+        const auto& result_numeric = db_api.get_account_summaries(nonexistent_id, assets);
+        const auto& result_named = db_api.get_named_account_summaries(string("unicorn"), assets);
+
+        BOOST_CHECK(result_numeric.size() == 0u);
+        BOOST_CHECK(result_named.size() == 0u);
+    }
+    {
+        flat_set<asset_id_type> assets;
+
+        auto nonexistent_id = core.get_id();
+        nonexistent_id.instance = GRAPHENE_DB_MAX_INSTANCE_ID;
+
+        assets.insert(nonexistent_id);
+
+        const auto& result = db_api.get_account_summaries(joseph_id, assets);
+
+        BOOST_CHECK(result.size() == 1u);
+    }
+
+    // explicitly test summary of an account with zero transactions
+
+    {
+        flat_set<asset_id_type> assets;
+        assets.insert(core.get_id());
+
+        const auto& result = db_api.get_account_summaries(joseph_id, assets);
+
+        BOOST_CHECK(result.size() == 1u);
+        BOOST_CHECK(result[0u].asset_id == core.get_id());
+        BOOST_CHECK(result[0u].debit_transfers == 0);
+        BOOST_CHECK(result[0u].credit_transfers == 0);
+    }
+
     // transfer default asset
 
     account_summary core_joseph, core_mario, core_mark;
@@ -867,14 +908,35 @@ BOOST_AUTO_TEST_CASE(get_account_summaries)
 
     generate_block();
 
-    // CHECK state
-
     {
         flat_set<asset_id_type> assets;
 
         const auto& result_joseph = db_api.get_account_summaries(joseph_id, assets);
         const auto& result_mario = db_api.get_account_summaries(mario_id, assets);
         const auto& result_mark = db_api.get_account_summaries(mark_id, assets);
+
+        BOOST_CHECK(result_joseph.size() == 1u);
+        BOOST_CHECK(result_joseph[0u].asset_id == core.get_id());
+        BOOST_CHECK(result_joseph[0u].debit_transfers == core_joseph.debit_transfers);
+        BOOST_CHECK(result_joseph[0u].credit_transfers == core_joseph.credit_transfers);
+
+        BOOST_CHECK(result_mario.size() == 1u);
+        BOOST_CHECK(result_mario[0u].asset_id == core.get_id());
+        BOOST_CHECK(result_mario[0u].debit_transfers == core_mario.debit_transfers);
+        BOOST_CHECK(result_mario[0u].credit_transfers == core_mario.credit_transfers);
+
+        BOOST_CHECK(result_mark.size() == 1u);
+        BOOST_CHECK(result_mark[0u].asset_id == core.get_id());
+        BOOST_CHECK(result_mark[0u].debit_transfers == core_mark.debit_transfers);
+        BOOST_CHECK(result_mark[0u].credit_transfers == core_mark.credit_transfers);
+    }
+    {
+        flat_set<asset_id_type> assets;
+
+        // explicit names - variables defined with the ACTOR(S) macro(s) have rotated content after generating a block
+        const auto& result_joseph = db_api.get_named_account_summaries(string("joseph"), assets);
+        const auto& result_mario = db_api.get_named_account_summaries(string("mario"), assets);
+        const auto& result_mark = db_api.get_named_account_summaries(string("mark"), assets);
 
         BOOST_CHECK(result_joseph.size() == 1u);
         BOOST_CHECK(result_joseph[0u].asset_id == core.get_id());
@@ -917,8 +979,6 @@ BOOST_AUTO_TEST_CASE(get_account_summaries)
     oil_mario.credit_transfers += value;
 
     generate_block();
-
-    // CHECK state
 
     {
         flat_set<asset_id_type> assets;
