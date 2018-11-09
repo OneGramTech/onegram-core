@@ -359,13 +359,13 @@ class wallet_api
        * Each account can have multiple balances, one for each type of asset. The returned list will
        * contain the summaries of all debit and credit transactions of this account for the requested
        * asset types.
-       * @param id the name or id of the account whose summaries are to be queried
+       * @param account_name_or_id the name or id of the account whose summaries are to be queried
        * @param assets the set of queried asset types; if empty, query all asset types the account has operated with
        * @param from the starting time from which the transfers shall be inclusively included in the summary
        * @param till the ending time until which the transfers shall be exclusively included in the summary
        * @returns a list of the queried account's summaries
        */
-      vector<account_summary>           list_account_summaries(const string& id, const flat_set<asset_id_type>& assets, fc::time_point_sec from, fc::time_point_sec till);
+      vector<account_summary>           list_account_summaries(const string& account_name_or_id, const flat_set<asset_id_type>& assets, fc::time_point_sec from, fc::time_point_sec till);
       /** Lists all assets registered on the blockchain.
        * 
        * To list all assets, pass the empty string \c "" for the lowerbound to start
