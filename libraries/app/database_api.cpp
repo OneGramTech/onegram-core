@@ -995,7 +995,7 @@ vector<account_summary> database_api_impl::get_account_summaries(account_id_type
     if (!stats)
         return vector<account_summary>();
 
-    if ((int64_t)stats->total_ops - (int64_t)stats->removed_ops <= 0)
+    if ((int64_t)stats->total_ops - (int64_t)stats->removed_ops < 0)
         return vector<account_summary>();
 
     account_transaction_history_id_type operation = stats->most_recent_op;
