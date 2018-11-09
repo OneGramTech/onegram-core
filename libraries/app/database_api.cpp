@@ -1030,12 +1030,12 @@ vector<account_summary> database_api_impl::get_account_summaries(account_id_type
         result.reserve(summaries.size());
         std::transform(summaries.begin(), summaries.end(), std::back_inserter(result),
                        [&](std::pair<const asset_id_type, std::pair<share_type,share_type>>& p)
-                       { return account_summary(p.first, p.second.first, p.second.second); });
+                       { return account_summary{p.first, p.second.first, p.second.second}; });
     } else {
         result.reserve(assets.size());
         std::transform(assets.begin(), assets.end(), std::back_inserter(result),
                        [&summaries](asset_id_type id)
-                       { return account_summary(id, summaries[id].first, summaries[id].second); });
+                       { return account_summary{id, summaries[id].first, summaries[id].second}; });
     }
     return result;
 }

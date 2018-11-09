@@ -112,10 +112,6 @@ namespace graphene { namespace chain {
 
     struct account_summary
     {
-        account_summary() : account_summary(asset_id_type(),share_type(),share_type()) {};
-        account_summary(asset_id_type asset_id, share_type debits, share_type credits)
-                        : asset_id(asset_id),debit_transfers(debits),credit_transfers(credits){}
-
         asset_id_type asset_id;
         share_type debit_transfers;
         share_type credit_transfers;
