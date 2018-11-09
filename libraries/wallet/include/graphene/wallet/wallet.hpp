@@ -360,7 +360,7 @@ class wallet_api
        * contain the summaries of all debit and credit transactions of this account for the requested
        * asset types.
        * @param id the name or id of the account whose summaries are to be queried
-       * @param assets the list of queried asset types; if zero, query all asset types the account has operated with
+       * @param assets the set of queried asset types; if empty, query all asset types the account has operated with
        * @param from the starting time from which the transfers shall be inclusively included in the summary
        * @param till the ending time until which the transfers shall be exclusively included in the summary
        * @returns a list of the queried account's summaries
