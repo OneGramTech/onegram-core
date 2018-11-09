@@ -1019,7 +1019,7 @@ vector<account_summary> database_api_impl::get_account_summaries(account_id_type
             else if (transfer.to == acc_id)
                 pair.second += transfer.amount.amount;
             else
-                FC_ASSERT(!"shall not happen");
+                FC_ASSERT(!"An account transaction history list contains a transfer operation not including the list owning account.");
         }
         mrt = ath.next;
     }
