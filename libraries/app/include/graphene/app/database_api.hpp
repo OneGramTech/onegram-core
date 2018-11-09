@@ -357,6 +357,19 @@ class database_api
       /// Semantically equivalent to @ref get_account_balances, but takes a name instead of an ID.
       vector<asset> get_named_account_balances(const std::string& name, const flat_set<asset_id_type>& assets)const;
 
+      /**
+       * @brief Get summaries of all credit and debit transactions of an account in various assets
+       * @param id ID of the account to get summaries for
+       * @param assets IDs of the assets to get summaries of; if empty, include all assets the account has operated with
+       * @param from Timestamp inclusively opening the time window for the summed transactions
+       * @param till Timestamp exclusively ending the time window for the summed transactions
+       * @return Summaries of the account
+       */
+      vector<account_summary> get_account_summaries(account_id_type acc_id, const flat_set<asset_id_type>& assets, fc::time_point_sec from = fc::time_point_sec::min(), fc::time_point_sec till = fc::time_point_sec::maximum())const;
+
+      /// Semantically equivalent to @ref get_account_summaries, but takes a name instead of an ID.
+      vector<account_summary> get_named_account_summaries(const std::string& name, const flat_set<asset_id_type>& assets, fc::time_point_sec from = fc::time_point_sec::min(), fc::time_point_sec till = fc::time_point_sec::maximum())const;
+
       /** @return all unclaimed balance objects for a set of addresses */
       vector<balance_object> get_balance_objects( const vector<address>& addrs )const;
 
@@ -772,6 +785,8 @@ FC_API(graphene::app::database_api,
    // Balances
    (get_account_balances)
    (get_named_account_balances)
+   (get_account_summaries)
+   (get_named_account_summaries)
    (get_balance_objects)
    (get_vested_balances)
    (get_vesting_balances)
