@@ -998,20 +998,20 @@ vector<account_summary> database_api_impl::get_account_summaries(account_id_type
     if ((int64_t)stats->total_ops - (int64_t)stats->removed_ops <= 0)
         return vector<account_summary>();
 
-    account_transaction_history_id_type mrt = stats->most_recent_op;
+    account_transaction_history_id_type operation = stats->most_recent_op;
 
     map<asset_id_type,std::pair<share_type,share_type>> summaries;
-    while (mrt.instance) {
-        const auto& ath = mrt(_db);
-        const auto& oho = ath.operation_id(_db);
-        const auto& bh = get_block_header(oho.block_num);
+    while (operation.instance) {
+        const auto& account_trx_history = operation(_db);
+        const auto& operation_history = account_trx_history.operation_id(_db);
+        const auto& header = get_block_header(operation_history.block_num);
 
-        FC_ASSERT(bh.valid());
-        if (bh->timestamp < from)
+        FC_ASSERT(header.valid());
+        if (header->timestamp < from)
             break;
-        if (bh->timestamp < till && oho.op.which() == operation::tag<transfer_operation>::value)
+        if (header->timestamp < till && operation_history.op.which() == operation::tag<transfer_operation>::value)
         {
-            const auto& transfer = oho.op.get<transfer_operation>();
+            const auto& transfer = operation_history.op.get<transfer_operation>();
 
             auto& pair = summaries[transfer.amount.asset_id];
             if (transfer.from == acc_id)
@@ -1021,7 +1021,7 @@ vector<account_summary> database_api_impl::get_account_summaries(account_id_type
             else
                 FC_ASSERT(!"An account transaction history list contains a transfer operation not including the list owning account.");
         }
-        mrt = ath.next;
+        operation = account_trx_history.next;
     }
 
     vector<account_summary> result;
