@@ -833,4 +833,440 @@ BOOST_AUTO_TEST_CASE( get_transaction_hex )
 
 } FC_LOG_AND_RETHROW() }
 
+BOOST_AUTO_TEST_CASE(get_account_summaries)
+{ try {
+    ACTORS((joseph)(mario)(mark));
+
+    share_type value;
+
+    const auto& core = get_asset( GRAPHENE_SYMBOL );
+    graphene::app::database_api db_api(db);
+
+    // test non-existent account/asset
+
+    {
+        flat_set<asset_id_type> assets;
+
+        auto nonexistent_id = joseph_id;
+        nonexistent_id.instance = GRAPHENE_DB_MAX_INSTANCE_ID;
+
+        const auto& result_numeric = db_api.get_account_summaries(nonexistent_id, assets);
+        const auto& result_named = db_api.get_named_account_summaries(string("unicorn"), assets);
+
+        BOOST_CHECK(result_numeric.size() == 0u);
+        BOOST_CHECK(result_named.size() == 0u);
+    }
+    {
+        flat_set<asset_id_type> assets;
+
+        auto nonexistent_id = core.get_id();
+        nonexistent_id.instance = GRAPHENE_DB_MAX_INSTANCE_ID;
+
+        assets.insert(nonexistent_id);
+
+        const auto& result = db_api.get_account_summaries(joseph_id, assets);
+
+        BOOST_CHECK(result.size() == 1u);
+    }
+
+    // explicitly test summary of an account with zero transactions
+
+    {
+        flat_set<asset_id_type> assets;
+        assets.insert(core.get_id());
+
+        const auto& result = db_api.get_account_summaries(joseph_id, assets);
+
+        BOOST_CHECK(result.size() == 1u);
+        BOOST_CHECK(result[0u].asset_id == core.get_id());
+        BOOST_CHECK(result[0u].debit_transfers == 0);
+        BOOST_CHECK(result[0u].credit_transfers == 0);
+    }
+
+    // transfer default asset
+
+    account_summary core_joseph, core_mario, core_mark;
+
+    value = 1000000;
+    fund(joseph, core.amount(value));
+    core_joseph.credit_transfers += value;
+
+    value = 10000;
+    transfer(joseph_id, mario_id, core.amount(value));
+    core_joseph.debit_transfers += value;
+    core_mario.credit_transfers += value;
+
+    value = 20000;
+    transfer(joseph_id, mark_id, core.amount(value));
+    core_joseph.debit_transfers += value;
+    core_mark.credit_transfers += value;
+
+    value = 5000;
+    transfer(mark_id, mario_id, core.amount(value));
+    core_mark.debit_transfers += value;
+    core_mario.credit_transfers += value;
+
+    generate_block();
+
+    {
+        flat_set<asset_id_type> assets;
+
+        const auto& result_joseph = db_api.get_account_summaries(joseph_id, assets);
+        const auto& result_mario = db_api.get_account_summaries(mario_id, assets);
+        const auto& result_mark = db_api.get_account_summaries(mark_id, assets);
+
+        BOOST_CHECK(result_joseph.size() == 1u);
+        BOOST_CHECK(result_joseph[0u].asset_id == core.get_id());
+        BOOST_CHECK(result_joseph[0u].debit_transfers == core_joseph.debit_transfers);
+        BOOST_CHECK(result_joseph[0u].credit_transfers == core_joseph.credit_transfers);
+
+        BOOST_CHECK(result_mario.size() == 1u);
+        BOOST_CHECK(result_mario[0u].asset_id == core.get_id());
+        BOOST_CHECK(result_mario[0u].debit_transfers == core_mario.debit_transfers);
+        BOOST_CHECK(result_mario[0u].credit_transfers == core_mario.credit_transfers);
+
+        BOOST_CHECK(result_mark.size() == 1u);
+        BOOST_CHECK(result_mark[0u].asset_id == core.get_id());
+        BOOST_CHECK(result_mark[0u].debit_transfers == core_mark.debit_transfers);
+        BOOST_CHECK(result_mark[0u].credit_transfers == core_mark.credit_transfers);
+    }
+    {
+        flat_set<asset_id_type> assets;
+
+        // explicit names - variables defined with the ACTOR(S) macro(s) have rotated content after generating a block
+        const auto& result_joseph = db_api.get_named_account_summaries(string("joseph"), assets);
+        const auto& result_mario = db_api.get_named_account_summaries(string("mario"), assets);
+        const auto& result_mark = db_api.get_named_account_summaries(string("mark"), assets);
+
+        BOOST_CHECK(result_joseph.size() == 1u);
+        BOOST_CHECK(result_joseph[0u].asset_id == core.get_id());
+        BOOST_CHECK(result_joseph[0u].debit_transfers == core_joseph.debit_transfers);
+        BOOST_CHECK(result_joseph[0u].credit_transfers == core_joseph.credit_transfers);
+
+        BOOST_CHECK(result_mario.size() == 1u);
+        BOOST_CHECK(result_mario[0u].asset_id == core.get_id());
+        BOOST_CHECK(result_mario[0u].debit_transfers == core_mario.debit_transfers);
+        BOOST_CHECK(result_mario[0u].credit_transfers == core_mario.credit_transfers);
+
+        BOOST_CHECK(result_mark.size() == 1u);
+        BOOST_CHECK(result_mark[0u].asset_id == core.get_id());
+        BOOST_CHECK(result_mark[0u].debit_transfers == core_mark.debit_transfers);
+        BOOST_CHECK(result_mark[0u].credit_transfers == core_mark.credit_transfers);
+    }
+
+    // create & transfer custom asset
+
+    account_summary oil_joseph, oil_mario, oil_mark;
+
+    value = 10000;
+    const auto oil = create_user_issued_asset("OIL", get_account("joseph"), override_authority);
+    issue_uia(joseph_id, oil.amount(value));
+    BOOST_REQUIRE_EQUAL(get_balance(joseph_id, oil.get_id()), value.value);
+
+    value = 1000;
+    transfer(joseph_id, mario_id, oil.amount(value));
+    oil_joseph.debit_transfers += value;
+    oil_mario.credit_transfers += value;
+
+    value = 2000;
+    transfer(joseph_id, mark_id, oil.amount(value));
+    oil_joseph.debit_transfers += value;
+    oil_mark.credit_transfers += value;
+
+    value = 500;
+    transfer(mark_id, mario_id, oil.amount(value));
+    oil_mark.debit_transfers += value;
+    oil_mario.credit_transfers += value;
+
+    generate_block();
+
+    {
+        flat_set<asset_id_type> assets;
+        assets.insert(core.get_id());
+
+        const auto& result_joseph = db_api.get_account_summaries(joseph_id, assets);
+        const auto& result_mario = db_api.get_account_summaries(mario_id, assets);
+        const auto& result_mark = db_api.get_account_summaries(mark_id, assets);
+
+        BOOST_CHECK(result_joseph.size() == 1u);
+        BOOST_CHECK(result_joseph[0u].asset_id == core.get_id());
+        BOOST_CHECK(result_joseph[0u].debit_transfers == core_joseph.debit_transfers);
+        BOOST_CHECK(result_joseph[0u].credit_transfers == core_joseph.credit_transfers);
+
+        BOOST_CHECK(result_mario.size() == 1u);
+        BOOST_CHECK(result_mario[0u].asset_id == core.get_id());
+        BOOST_CHECK(result_mario[0u].debit_transfers == core_mario.debit_transfers);
+        BOOST_CHECK(result_mario[0u].credit_transfers == core_mario.credit_transfers);
+
+        BOOST_CHECK(result_mark.size() == 1u);
+        BOOST_CHECK(result_mark[0u].asset_id == core.get_id());
+        BOOST_CHECK(result_mark[0u].debit_transfers == core_mark.debit_transfers);
+        BOOST_CHECK(result_mark[0u].credit_transfers == core_mark.credit_transfers);
+    }
+    {
+        flat_set<asset_id_type> assets;
+        assets.insert(oil.get_id());
+
+        const auto& result_joseph = db_api.get_account_summaries(joseph_id, assets);
+        const auto& result_mario = db_api.get_account_summaries(mario_id, assets);
+        const auto& result_mark = db_api.get_account_summaries(mark_id, assets);
+
+        BOOST_CHECK(result_joseph.size() == 1u);
+        BOOST_CHECK(result_joseph[0u].asset_id == oil.get_id());
+        BOOST_CHECK(result_joseph[0u].debit_transfers == oil_joseph.debit_transfers);
+        BOOST_CHECK(result_joseph[0u].credit_transfers == oil_joseph.credit_transfers);
+
+        BOOST_CHECK(result_mario.size() == 1u);
+        BOOST_CHECK(result_mario[0u].asset_id == oil.get_id());
+        BOOST_CHECK(result_mario[0u].debit_transfers == oil_mario.debit_transfers);
+        BOOST_CHECK(result_mario[0u].credit_transfers == oil_mario.credit_transfers);
+
+        BOOST_CHECK(result_mark.size() == 1u);
+        BOOST_CHECK(result_mark[0u].asset_id == oil.get_id());
+        BOOST_CHECK(result_mark[0u].debit_transfers == oil_mark.debit_transfers);
+        BOOST_CHECK(result_mark[0u].credit_transfers == oil_mark.credit_transfers);
+    }
+    {
+        flat_set<asset_id_type> assets;
+
+        const auto& result_joseph = db_api.get_account_summaries(joseph_id, assets);
+        const auto& result_mario = db_api.get_account_summaries(mario_id, assets);
+        const auto& result_mark = db_api.get_account_summaries(mark_id, assets);
+
+        BOOST_CHECK(result_joseph.size() == 2u);
+        BOOST_CHECK(result_joseph[0u].asset_id == core.get_id());
+        BOOST_CHECK(result_joseph[1u].asset_id == oil.get_id());
+        BOOST_CHECK(result_joseph[0u].debit_transfers == core_joseph.debit_transfers);
+        BOOST_CHECK(result_joseph[0u].credit_transfers == core_joseph.credit_transfers);
+        BOOST_CHECK(result_joseph[1u].debit_transfers == oil_joseph.debit_transfers);
+        BOOST_CHECK(result_joseph[1u].credit_transfers == oil_joseph.credit_transfers);
+
+        BOOST_CHECK(result_mario.size() == 2u);
+        BOOST_CHECK(result_mario[0u].asset_id == core.get_id());
+        BOOST_CHECK(result_mario[1u].asset_id == oil.get_id());
+        BOOST_CHECK(result_mario[0u].debit_transfers == core_mario.debit_transfers);
+        BOOST_CHECK(result_mario[0u].credit_transfers == core_mario.credit_transfers);
+        BOOST_CHECK(result_mario[1u].debit_transfers == oil_mario.debit_transfers);
+        BOOST_CHECK(result_mario[1u].credit_transfers == oil_mario.credit_transfers);
+
+        BOOST_CHECK(result_mark.size() == 2u);
+        BOOST_CHECK(result_mark[0u].asset_id == core.get_id());
+        BOOST_CHECK(result_mark[1u].asset_id == oil.get_id());
+        BOOST_CHECK(result_mark[0u].debit_transfers == core_mark.debit_transfers);
+        BOOST_CHECK(result_mark[0u].credit_transfers == core_mark.credit_transfers);
+        BOOST_CHECK(result_mark[1u].debit_transfers == oil_mark.debit_transfers);
+        BOOST_CHECK(result_mark[1u].credit_transfers == oil_mark.credit_transfers);
+    }
+    {
+        flat_set<asset_id_type> assets;
+        assets.insert(core.get_id());
+        assets.insert(oil.get_id());
+
+        const auto& result_joseph = db_api.get_account_summaries(joseph_id, assets);
+        const auto& result_mario = db_api.get_account_summaries(mario_id, assets);
+        const auto& result_mark = db_api.get_account_summaries(mark_id, assets);
+
+        BOOST_CHECK(result_joseph.size() == 2u);
+        BOOST_CHECK(result_joseph[0u].asset_id == core.get_id());
+        BOOST_CHECK(result_joseph[1u].asset_id == oil.get_id());
+        BOOST_CHECK(result_joseph[0u].debit_transfers == core_joseph.debit_transfers);
+        BOOST_CHECK(result_joseph[0u].credit_transfers == core_joseph.credit_transfers);
+        BOOST_CHECK(result_joseph[1u].debit_transfers == oil_joseph.debit_transfers);
+        BOOST_CHECK(result_joseph[1u].credit_transfers == oil_joseph.credit_transfers);
+
+        BOOST_CHECK(result_mario.size() == 2u);
+        BOOST_CHECK(result_mario[0u].asset_id == core.get_id());
+        BOOST_CHECK(result_mario[1u].asset_id == oil.get_id());
+        BOOST_CHECK(result_mario[0u].debit_transfers == core_mario.debit_transfers);
+        BOOST_CHECK(result_mario[0u].credit_transfers == core_mario.credit_transfers);
+        BOOST_CHECK(result_mario[1u].debit_transfers == oil_mario.debit_transfers);
+        BOOST_CHECK(result_mario[1u].credit_transfers == oil_mario.credit_transfers);
+
+        BOOST_CHECK(result_mark.size() == 2u);
+        BOOST_CHECK(result_mark[0u].asset_id == core.get_id());
+        BOOST_CHECK(result_mark[1u].asset_id == oil.get_id());
+        BOOST_CHECK(result_mark[0u].debit_transfers == core_mark.debit_transfers);
+        BOOST_CHECK(result_mark[0u].credit_transfers == core_mark.credit_transfers);
+        BOOST_CHECK(result_mark[1u].debit_transfers == oil_mark.debit_transfers);
+        BOOST_CHECK(result_mark[1u].credit_transfers == oil_mark.credit_transfers);
+    }
+
+    // query not used asset
+
+    const auto none = create_user_issued_asset("NONE", get_account("joseph"), override_authority);
+
+    generate_block();
+
+    {
+        flat_set<asset_id_type> assets;
+
+        const auto& result_joseph = db_api.get_account_summaries(joseph_id, assets);
+        const auto& result_mario = db_api.get_account_summaries(mario_id, assets);
+        const auto& result_mark = db_api.get_account_summaries(mark_id, assets);
+
+        BOOST_CHECK(result_joseph.size() == 2u);
+        BOOST_CHECK(result_joseph[0u].asset_id == core.get_id());
+        BOOST_CHECK(result_joseph[1u].asset_id == oil.get_id());
+        BOOST_CHECK(result_joseph[0u].debit_transfers == core_joseph.debit_transfers);
+        BOOST_CHECK(result_joseph[0u].credit_transfers == core_joseph.credit_transfers);
+        BOOST_CHECK(result_joseph[1u].debit_transfers == oil_joseph.debit_transfers);
+        BOOST_CHECK(result_joseph[1u].credit_transfers == oil_joseph.credit_transfers);
+
+        BOOST_CHECK(result_mario.size() == 2u);
+        BOOST_CHECK(result_mario[0u].asset_id == core.get_id());
+        BOOST_CHECK(result_mario[1u].asset_id == oil.get_id());
+        BOOST_CHECK(result_mario[0u].debit_transfers == core_mario.debit_transfers);
+        BOOST_CHECK(result_mario[0u].credit_transfers == core_mario.credit_transfers);
+        BOOST_CHECK(result_mario[1u].debit_transfers == oil_mario.debit_transfers);
+        BOOST_CHECK(result_mario[1u].credit_transfers == oil_mario.credit_transfers);
+
+        BOOST_CHECK(result_mark.size() == 2u);
+        BOOST_CHECK(result_mark[0u].asset_id == core.get_id());
+        BOOST_CHECK(result_mark[1u].asset_id == oil.get_id());
+        BOOST_CHECK(result_mark[0u].debit_transfers == core_mark.debit_transfers);
+        BOOST_CHECK(result_mark[0u].credit_transfers == core_mark.credit_transfers);
+        BOOST_CHECK(result_mark[1u].debit_transfers == oil_mark.debit_transfers);
+        BOOST_CHECK(result_mark[1u].credit_transfers == oil_mark.credit_transfers);
+    }
+    {
+        flat_set<asset_id_type> assets;
+        assets.insert(none.get_id());
+
+        const auto& result_joseph = db_api.get_account_summaries(joseph_id, assets);
+        const auto& result_mario = db_api.get_account_summaries(mario_id, assets);
+        const auto& result_mark = db_api.get_account_summaries(mark_id, assets);
+
+        BOOST_CHECK(result_joseph.size() == 1u);
+        BOOST_CHECK(result_joseph[0u].asset_id == none.get_id());
+        BOOST_CHECK(result_joseph[0u].debit_transfers == 0);
+        BOOST_CHECK(result_joseph[0u].credit_transfers == 0);
+
+        BOOST_CHECK(result_mario.size() == 1u);
+        BOOST_CHECK(result_mario[0u].asset_id == none.get_id());
+        BOOST_CHECK(result_mario[0u].debit_transfers == 0);
+        BOOST_CHECK(result_mario[0u].credit_transfers == 0);
+
+        BOOST_CHECK(result_mark.size() == 1u);
+        BOOST_CHECK(result_mark[0u].asset_id == none.get_id());
+        BOOST_CHECK(result_mark[0u].debit_transfers == 0);
+        BOOST_CHECK(result_mark[0u].credit_transfers == 0);
+    }
+
+    // test time-specific queries
+
+    auto const one = uint32_t(db.block_interval());
+
+    account_summary core_joseph_a, core_mario_a, core_mark_a;
+    account_summary core_joseph_b, core_mario_b, core_mark_b;
+
+    value = 1;
+
+    generate_blocks(2);
+
+    const auto start = db.head_block_time();
+
+    transfer(joseph_id, mario_id, core.amount(value));
+    core_joseph_a.debit_transfers += value;
+    core_mario_a.credit_transfers += value;
+    generate_block();
+
+    transfer(joseph_id, mark_id, core.amount(value));
+    core_joseph_a.debit_transfers += value;
+    core_mark_a.credit_transfers += value;
+    generate_block();
+
+    const auto middle = db.head_block_time();
+
+    transfer(mario_id, joseph_id, core.amount(value));
+    core_mario_b.debit_transfers += value;
+    core_joseph_b.credit_transfers += value;
+    generate_block();
+
+    transfer(joseph_id, mark_id, core.amount(value));
+    core_joseph_b.debit_transfers += value;
+    core_mark_b.credit_transfers += value;
+    generate_block();
+
+    const auto end = db.head_block_time();
+
+    generate_blocks(2);
+
+    {
+        flat_set<asset_id_type> assets;
+        {
+            const auto& result = db_api.get_account_summaries(joseph_id, assets, start, start - one);
+            BOOST_CHECK(result.size() == 0u);
+        }
+        {
+            const auto& result = db_api.get_account_summaries(joseph_id, assets, middle, middle);
+            BOOST_CHECK(result.size() == 0u);
+        }
+        {
+            const auto& result = db_api.get_account_summaries(joseph_id, assets, end + one, end + one + one);
+            BOOST_CHECK(result.size() == 0u);
+        }
+    }
+    {
+        flat_set<asset_id_type> assets;
+        assets.insert(core.get_id());
+
+        const auto& result_joseph = db_api.get_account_summaries(joseph_id, assets, start, end + one);
+        const auto& result_joseph_a = db_api.get_account_summaries(joseph_id, assets, start, middle + one);
+        const auto& result_joseph_b = db_api.get_account_summaries(joseph_id, assets, middle + one, end + one);
+
+        const auto& result_mario = db_api.get_account_summaries(mario_id, assets, start, end + one);
+        const auto& result_mario_a = db_api.get_account_summaries(mario_id, assets, start, middle + one);
+        const auto& result_mario_b = db_api.get_account_summaries(mario_id, assets, middle + one, end + one);
+
+        const auto& result_mark = db_api.get_account_summaries(mark_id, assets, start, end + one);
+        const auto& result_mark_a = db_api.get_account_summaries(mark_id, assets, start, middle + one);
+        const auto& result_mark_b = db_api.get_account_summaries(mark_id, assets, middle + one, end + one);
+
+        BOOST_CHECK(result_joseph.size() == 1u);
+        BOOST_CHECK(result_joseph[0u].asset_id == core.get_id());
+        BOOST_CHECK(result_joseph[0u].debit_transfers == core_joseph_a.debit_transfers + core_joseph_b.debit_transfers);
+        BOOST_CHECK(result_joseph[0u].credit_transfers == core_joseph_a.credit_transfers + core_joseph_b.credit_transfers);
+
+        BOOST_CHECK(result_joseph_a.size() == 1u);
+        BOOST_CHECK(result_joseph_a[0u].asset_id == core.get_id());
+        BOOST_CHECK(result_joseph_a[0u].debit_transfers == core_joseph_a.debit_transfers);
+        BOOST_CHECK(result_joseph_a[0u].credit_transfers == core_joseph_a.credit_transfers);
+
+        BOOST_CHECK(result_joseph_b.size() == 1u);
+        BOOST_CHECK(result_joseph_b[0u].asset_id == core.get_id());
+        BOOST_CHECK(result_joseph_b[0u].debit_transfers == core_joseph_b.debit_transfers);
+        BOOST_CHECK(result_joseph_b[0u].credit_transfers == core_joseph_b.credit_transfers);
+
+        BOOST_CHECK(result_mario.size() == 1u);
+        BOOST_CHECK(result_mario[0u].asset_id == core.get_id());
+        BOOST_CHECK(result_mario[0u].debit_transfers == core_mario_a.debit_transfers + core_mario_b.debit_transfers);
+        BOOST_CHECK(result_mario[0u].credit_transfers == core_mario_a.credit_transfers + core_mario_b.credit_transfers);
+
+        BOOST_CHECK(result_mario_a.size() == 1u);
+        BOOST_CHECK(result_mario_a[0u].asset_id == core.get_id());
+        BOOST_CHECK(result_mario_a[0u].debit_transfers == core_mario_a.debit_transfers);
+        BOOST_CHECK(result_mario_a[0u].credit_transfers == core_mario_a.credit_transfers);
+
+        BOOST_CHECK(result_mario_b.size() == 1u);
+        BOOST_CHECK(result_mario_b[0u].asset_id == core.get_id());
+        BOOST_CHECK(result_mario_b[0u].debit_transfers == core_mario_b.debit_transfers);
+        BOOST_CHECK(result_mario_b[0u].credit_transfers == core_mario_b.credit_transfers);
+
+        BOOST_CHECK(result_mark.size() == 1u);
+        BOOST_CHECK(result_mark[0u].asset_id == core.get_id());
+        BOOST_CHECK(result_mark[0u].debit_transfers == core_mark_a.debit_transfers + core_mark_b.debit_transfers);
+        BOOST_CHECK(result_mark[0u].credit_transfers == core_mark_a.credit_transfers + core_mark_b.credit_transfers);
+
+        BOOST_CHECK(result_mark_a.size() == 1u);
+        BOOST_CHECK(result_mark_a[0u].asset_id == core.get_id());
+        BOOST_CHECK(result_mark_a[0u].debit_transfers == core_mark_a.debit_transfers);
+        BOOST_CHECK(result_mark_a[0u].credit_transfers == core_mark_a.credit_transfers);
+
+        BOOST_CHECK(result_mark_b.size() == 1u);
+        BOOST_CHECK(result_mark_b[0u].asset_id == core.get_id());
+        BOOST_CHECK(result_mark_b[0u].debit_transfers == core_mark_b.debit_transfers);
+        BOOST_CHECK(result_mark_b[0u].credit_transfers == core_mark_b.credit_transfers);
+    }
+} FC_LOG_AND_RETHROW() }
+
 BOOST_AUTO_TEST_SUITE_END()
