@@ -110,6 +110,13 @@ namespace graphene { namespace chain {
       share_type      calculate_fee(const fee_parameters_type& k)const;
    };
 
+    struct account_summary
+    {
+        asset_id_type asset_id;
+        share_type debit_transfers;
+        share_type credit_transfers;
+    };
+
 }} // graphene::chain
 
 FC_REFLECT( graphene::chain::transfer_operation::fee_parameters_type, (fee)(price_per_kbyte)(percentage_max_fee)(percentage) )
@@ -119,3 +126,5 @@ FC_REFLECT( graphene::chain::override_transfer_operation::operation_permissions_
 
 FC_REFLECT( graphene::chain::override_transfer_operation, (fee)(issuer)(from)(to)(amount)(memo)(extensions) )
 FC_REFLECT( graphene::chain::transfer_operation, (fee)(from)(to)(amount)(memo)(extensions) )
+
+FC_REFLECT( graphene::chain::account_summary, (asset_id)(debit_transfers)(credit_transfers) )

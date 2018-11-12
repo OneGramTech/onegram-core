@@ -93,6 +93,8 @@ class database_api_impl : public std::enable_shared_from_this<database_api_impl>
       // Balances
       vector<asset> get_account_balances(const std::string& account_name_or_id, const flat_set<asset_id_type>& assets)const;
       vector<asset> get_named_account_balances(const std::string& name, const flat_set<asset_id_type>& assets)const;
+      vector<account_summary> get_account_summaries(account_id_type acc_id, const flat_set<asset_id_type>& assets, fc::time_point_sec from, fc::time_point_sec till)const;
+      vector<account_summary> get_named_account_summaries(const std::string& name, const flat_set<asset_id_type>& assets, fc::time_point_sec from, fc::time_point_sec till)const;
       vector<balance_object> get_balance_objects( const vector<address>& addrs )const;
       vector<asset> get_vested_balances( const vector<balance_id_type>& objs )const;
       vector<vesting_balance_object> get_vesting_balances( const std::string account_id_or_name )const;
@@ -973,6 +975,82 @@ vector<asset> database_api_impl::get_account_balances(const std::string& account
 vector<asset> database_api::get_named_account_balances(const std::string& name, const flat_set<asset_id_type>& assets)const
 {
    return my->get_account_balances( name, assets );
+}
+
+vector<account_summary> database_api::get_account_summaries(account_id_type acc_id, const flat_set<asset_id_type>& assets, fc::time_point_sec from, fc::time_point_sec till)const
+{
+    return my->get_account_summaries(acc_id, assets, from, till);
+}
+
+vector<account_summary> database_api_impl::get_account_summaries(account_id_type acc_id, const flat_set<asset_id_type>& assets, fc::time_point_sec from, fc::time_point_sec till)const
+{
+    if (from >= till)
+        return vector<account_summary>();
+
+    const account_object* acc = _db.find(acc_id);
+    if (!acc)
+        return vector<account_summary>();
+
+    const account_statistics_object* stats = _db.find(acc->statistics);
+    if (!stats)
+        return vector<account_summary>();
+
+    if ((int64_t)stats->total_ops - (int64_t)stats->removed_ops < 0)
+        return vector<account_summary>();
+
+    account_transaction_history_id_type operation = stats->most_recent_op;
+
+    map<asset_id_type,std::pair<share_type,share_type>> summaries;
+    while (operation.instance) {
+        const auto& account_trx_history = operation(_db);
+        const auto& operation_history = account_trx_history.operation_id(_db);
+        const auto& header = get_block_header(operation_history.block_num);
+
+        FC_ASSERT(header.valid());
+        if (header->timestamp < from)
+            break;
+        if ((header->timestamp < till) && (operation_history.op.which() == operation::tag<transfer_operation>::value)) {
+            const auto& transfer = operation_history.op.get<transfer_operation>();
+
+            auto& pair = summaries[transfer.amount.asset_id];
+            if (transfer.from == acc_id)
+                pair.first += transfer.amount.amount;
+            else if (transfer.to == acc_id)
+                pair.second += transfer.amount.amount;
+            else
+                FC_ASSERT(!"An account transaction history list contains a transfer operation not including the list owning account.");
+        }
+        operation = account_trx_history.next;
+    }
+
+    vector<account_summary> result;
+    if (assets.empty()) {
+        // sum all used assets
+        result.reserve(summaries.size());
+        std::transform(summaries.begin(), summaries.end(), std::back_inserter(result),
+                       [&](std::pair<const asset_id_type, std::pair<share_type,share_type>>& p)
+                       { return account_summary{p.first, p.second.first, p.second.second}; });
+    } else {
+        result.reserve(assets.size());
+        std::transform(assets.begin(), assets.end(), std::back_inserter(result),
+                       [&summaries](asset_id_type id)
+                       { return account_summary{id, summaries[id].first, summaries[id].second}; });
+    }
+    return result;
+}
+
+vector<account_summary> database_api::get_named_account_summaries(const std::string& name, const flat_set<asset_id_type>& assets, fc::time_point_sec from, fc::time_point_sec till)const
+{
+    return my->get_named_account_summaries(name, assets, from, till);
+}
+
+vector<account_summary> database_api_impl::get_named_account_summaries(const std::string& name, const flat_set<asset_id_type>& assets, fc::time_point_sec from, fc::time_point_sec till)const
+{
+   const auto& accounts_by_name = _db.get_index_type<account_index>().indices().get<by_name>();
+   auto itr = accounts_by_name.find(name);
+   if (itr == accounts_by_name.end())
+      return vector<account_summary>();
+   return get_account_summaries(itr->get_id(), assets, from, till);
 }
 
 vector<balance_object> database_api::get_balance_objects( const vector<address>& addrs )const
