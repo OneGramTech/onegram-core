@@ -2252,20 +2252,6 @@ public:
          return ss.str();
       };
 
-      m["list_account_summaries"] = [this](variant result, const fc::variants& a)
-      {
-          auto r = result.as<vector<account_summary>>(GRAPHENE_MAX_NESTED_OBJECTS);
-          std::stringstream ss;
-          for (const account_summary& s : r) {
-              const auto& a = get_asset(s.asset_id);
-              ss << a.symbol << " : ";
-              ss << " debits : " << a.amount_to_pretty_string(s.debit_transfers);
-              ss << " credits : " << a.amount_to_pretty_string(s.credit_transfers);
-              ss << " \n";
-          }
-          return ss.str();
-      };
-
       m["get_blind_balances"] = [this](variant result, const fc::variants& a)
       {
          auto r = result.as<vector<asset>>( GRAPHENE_MAX_NESTED_OBJECTS );
@@ -2971,13 +2957,6 @@ map<string,account_id_type> wallet_api::list_accounts(const string& lowerbound, 
 vector<asset> wallet_api::list_account_balances(const string& id)
 {
    return my->_remote_db->get_account_balances(id, flat_set<asset_id_type>());
-}
-
-vector<account_summary> wallet_api::list_account_summaries(const string& account_name_or_id, const flat_set<asset_id_type>& assets, fc::time_point_sec from, fc::time_point_sec till)
-{
-    if (auto numeric_id = detail::maybe_id<account_id_type>(account_name_or_id))
-        return my->_remote_db->get_account_summaries(*numeric_id, assets, from, till);
-    return my->_remote_db->get_named_account_summaries(account_name_or_id, assets, from, till);
 }
 
 vector<asset_object> wallet_api::list_assets(const string& lowerbound, uint32_t limit)const
