@@ -30,23 +30,21 @@ RUN apt-get update \
 		libicu-dev \
 		automake \
 		ncurses-dev \
-		nodejs \
-		npm \
 		git \
-		libboost1.63-dev \
-		libboost-thread1.63-dev \
-		libboost-date-time1.63-dev \
-		libboost-system1.63-dev \
-		libboost-filesystem1.63-dev \
-		libboost-program-options1.63-dev \
-		libboost-signals1.63-dev \
-		libboost-serialization1.63-dev \
-		libboost-chrono1.63-dev \
-		libboost-test1.63-dev \
-		libboost-context1.63-dev \
-		libboost-locale1.63-dev \
-		libboost-iostreams1.63-dev \
-		libboost-coroutine1.63-dev \
+		libboost-dev \
+		libboost-thread-dev \
+		libboost-date-time-dev \
+		libboost-system-dev \
+		libboost-filesystem-dev \
+		libboost-program-options-dev \
+		libboost-signals-dev \
+		libboost-serialization-dev \
+		libboost-chrono-dev \
+		libboost-test-dev \
+		libboost-context-dev \
+		libboost-locale-dev \
+		libboost-iostreams-dev \
+		libboost-coroutine-dev \
     && apt-get clean \
     && rm -rf /var/lib/apt/lists/* /tmp/* /var/tmp/*
 # Note: the build requires access to .git (repo metadata) - fails otherwise!
