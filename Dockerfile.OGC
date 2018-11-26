@@ -1,4 +1,4 @@
-FROM ubuntu:17.10 as builder
+FROM ubuntu:18.04 as builder
 MAINTAINER Jozef Knaperek <jozef.knaperek@01cryptohouse.com>
 
 ARG uid=1000
@@ -89,7 +89,7 @@ WORKDIR /home/onegram
 USER onegram
 
 # Make a clean runtime image
-FROM ubuntu:17.10
+FROM ubuntu:18.04
 RUN apt-get update \
 	&& apt-get install -y --no-install-recommends \
 		libcurl3 \
@@ -108,6 +108,6 @@ USER onegram
 
 EXPOSE 8540 11011
 
-VOLUME /var/onegram/data
+VOLUME data:/var/onegram/data
 
 CMD /usr/local/bin/onegram_witness
