@@ -91,6 +91,7 @@ FROM ubuntu:18.04
 RUN apt-get update \
 	&& apt-get install -y --no-install-recommends \
 		libcurl3 \
+		libssl \
     && apt-get clean \
     && rm -rf /var/lib/apt/lists/* /tmp/* /var/tmp/*
 COPY --from=builder /usr/local/bin/ /usr/local/bin/
