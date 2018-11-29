@@ -26,7 +26,7 @@ services:
 
   seed-node-2:
     hostname: ogc-seed-2
-    image: onegram/onegram-testnet
+    image: frankhorv/onegram-testnet
     command: onegram_fullnode --seed-nodes "[\"88.99.33.147:18540\"]"
     logging:
       options:
@@ -40,8 +40,8 @@ services:
 
   rpc-1:
     hostname: ogc-public-rpc-1
-    image: onegram/onegram-testnet
-    command: onegram_rpc --seed-node=195.201.133.26:18540
+    image: frankhorv/onegram-testnet
+    command: onegram_rpc --seed-node=195.201.133.26:18540 --replay-blockchain
     logging:
       options:
         max-size: "100k"
@@ -55,8 +55,8 @@ services:
 
   rpc-2:
     hostname: ogc-public-rpc-2
-    image: onegram/onegram-testnet
-    command: onegram_rpc --seed-node=88.99.124.68:18540
+    image: frankhorv/onegram-testnet
+    command: onegram_rpc --seed-node=88.99.124.68:18540 --replay-blockchain
     logging:
       options:
         max-size: "100k"
@@ -70,8 +70,8 @@ services:
 
   validator-1:
     hostname: ogc-validator-1
-    image: onegram/onegram-testnet
-    command: onegram_witness --seed-node=88.99.124.68:18540 --seed-node=195.201.133.26:18540 --enable-stale-production=true --witness-id="1.6.1" --witness-id="1.6.2" --witness-id="1.6.3" --witness-id="1.6.4" --witness-id="1.6.5" --witness-id="1.6.6" --witness-id="1.6.7" --witness-id="1.6.8" --witness-id="1.6.9" --witness-id="1.6.10" --witness-id="1.6.11" --private-key=["OGC8CAY9y2yQvYN3djfVQWLyCAT2k4qcTCDdKzBnpTCiJJ6HKjW7U","5KSi5P2RCESuKsvF56cq6mibY4HBVRsu7ycs9DRtr2L6VKFPRiK"]
+    image: frankhorv/onegram-testnet
+    command: onegram_witness --seed-node=88.99.124.68:18540 --seed-node=195.201.133.26:18540 --enable-stale-production true --witness-id "\"1.6.1\"" --witness-id "\"1.6.2\"" --witness-id "\"1.6.3\"" --witness-id "\"1.6.4\"" --witness-id "\"1.6.5\"" --witness-id "\"1.6.6\"" --witness-id "\"1.6.7\"" --witness-id "\"1.6.8\"" --witness-id "\"1.6.9\"" --witness-id "\"1.6.10\"" --witness-id "\"1.6.11\"" --private-key "[\"OGC8CAY9y2yQvYN3djfVQWLyCAT2k4qcTCDdKzBnpTCiJJ6HKjW7U\",\"5KSi5P2RCESuKsvF56cq6mibY4HBVRsu7ycs9DRtr2L6VKFPRiK\"]"
     logging:
       options:
         max-size: "100k"
