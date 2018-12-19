@@ -522,6 +522,12 @@ bool application_impl::handle_block(const graphene::net::block_message& blk_msg,
          }
       }
 
+      if( !_is_finished_syncing && !sync_mode )
+      {
+         _is_finished_syncing = true;
+         _self->syncing_finished();
+      }
+
       return result;
    } catch ( const graphene::chain::unlinkable_block_exception& e ) {
       // translate to a graphene::net exception
@@ -534,11 +540,6 @@ bool application_impl::handle_block(const graphene::net::block_message& blk_msg,
       throw;
    }
 
-   if( !_is_finished_syncing && !sync_mode )
-   {
-      _is_finished_syncing = true;
-      _self->syncing_finished();
-   }
 } FC_CAPTURE_AND_RETHROW( (blk_msg)(sync_mode) ) return false; }
 
 void application_impl::handle_transaction(const graphene::net::trx_message& transaction_message)
