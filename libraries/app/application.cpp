@@ -520,12 +520,12 @@ bool application_impl::handle_block(const graphene::net::block_message& blk_msg,
             graphene::net::trx_message transaction_message(transaction);
             contained_transaction_message_ids.push_back(graphene::net::message(transaction_message).id());
          }
-      }
 
-      if( !_is_finished_syncing && !sync_mode )
-      {
-         _is_finished_syncing = true;
-         _self->syncing_finished();
+         if ( !_is_finished_syncing )
+         {
+            _is_finished_syncing = true;
+            _self->syncing_finished();
+         }
       }
 
       return result;
