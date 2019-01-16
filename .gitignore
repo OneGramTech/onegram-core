@@ -44,6 +44,6 @@ object_database/*
 
 .idea
 build
-cmake-build-debug
+cmake-build-*
 
 .vscode
