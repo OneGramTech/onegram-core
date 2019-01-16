@@ -668,7 +668,11 @@ void database::init_genesis(const genesis_state_type& genesis_state)
       FC_ASSERT(genesis_state.initial_active_witnesses <= genesis_state.initial_witness_candidates.size(),
                 "initial_active_witnesses is larger than the number of candidate witnesses.");
       FC_ASSERT((genesis_state.immutable_parameters.min_witness_count & 1) == 1, "min_witness_count must be odd");
-            FC_ASSERT((genesis_state.immutable_parameters.min_committee_member_count & 1) == 1, "min_committee_member_count must be odd");
+      FC_ASSERT((genesis_state.immutable_parameters.min_committee_member_count & 1) == 1, "min_committee_member_count must be odd");
+      FC_ASSERT(genesis_state.max_core_supply > 0 && genesis_state.max_core_supply <= GRAPHENE_MAX_SHARE_SUPPLY,
+         "Invalid max core supply.");
+
+      genesis_state.initial_parameters.validate();
 
       _undo_db.disable();
       struct auth_inhibitor {
