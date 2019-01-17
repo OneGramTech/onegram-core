@@ -58,8 +58,8 @@ if [ -z $targetEnv ]; then
 fi
 
 # name the docker image
-imageName="onegram-testnet"
-[ $targetEnv == "MAINNET" ] && imageName="onegram-core"
+imageName="onegram/onegram-testnet"
+[ $targetEnv == "MAINNET" ] && imageName="onegram/onegram-core"
 
 # build docker image
 docker build -t $imageName --build-arg TARGET_ENV=$targetEnv --build-arg BUILD=$buildType --build-arg REVISION_SHA=`git rev-parse --short HEAD` --build-arg REVISION_TIMESTAMP=`git log -1 --format=%at` -f Dockerfile.OGC .
