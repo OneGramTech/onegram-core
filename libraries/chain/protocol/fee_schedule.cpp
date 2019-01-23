@@ -160,6 +160,7 @@ namespace graphene { namespace chain {
       auto result = asset( scaled.to_uint64(), asset_id_type(0) ) * core_exchange_rate;
       //FC_ASSERT( result * core_exchange_rate >= asset( scaled.to_uint64()) );
 
+      // round up fee after conversion. see discussion: https://gitlab.com/cryptohouse/OneGramDev/issues/31
       while( result * core_exchange_rate < asset( scaled.to_uint64()) )
         result.amount++;
 
