@@ -141,8 +141,10 @@ BOOST_AUTO_TEST_CASE( call_order_update_test )
       BOOST_REQUIRE_EQUAL( get_balance( dan, bitusd ), 5000 );
       BOOST_REQUIRE_EQUAL( get_balance( dan, core ), 10000000 - 20000  );
 
-      BOOST_TEST_MESSAGE( "increasing debt without increasing collateral again" );
+      BOOST_TEST_MESSAGE( "increasing debt a lot without increasing collateral, fails due to black swan" );
       GRAPHENE_REQUIRE_THROW( borrow( dan, bitusd.amount(80000), asset(0)), fc::exception );
+      BOOST_TEST_MESSAGE( "attempting to claim most of collateral without paying off debt, fails due to black swan" );
+      GRAPHENE_REQUIRE_THROW( cover( dan, bitusd.amount(0), asset(20000-1)), fc::exception );
       BOOST_TEST_MESSAGE( "attempting to claim all collateral without paying off debt" );
       GRAPHENE_REQUIRE_THROW( cover( dan, bitusd.amount(0), asset(20000)), fc::exception );
 
@@ -243,8 +245,10 @@ BOOST_AUTO_TEST_CASE( old_call_order_update_test_after_hardfork_583 )
       BOOST_REQUIRE_EQUAL( get_balance( dan, bitusd ), 5000 );
       BOOST_REQUIRE_EQUAL( get_balance( dan, core ), 10000000 - 20000  );
 
-      BOOST_TEST_MESSAGE( "increasing debt without increasing collateral again" );
+      BOOST_TEST_MESSAGE( "increasing debt a lot without increasing collateral, fails due to black swan" );
       GRAPHENE_REQUIRE_THROW( borrow( dan, bitusd.amount(80000), asset(0)), fc::exception );
+      BOOST_TEST_MESSAGE( "attempting to claim most of collateral without paying off debt, fails due to black swan" );
+      GRAPHENE_REQUIRE_THROW( cover( dan, bitusd.amount(0), asset(20000-1)), fc::exception );
       BOOST_TEST_MESSAGE( "attempting to claim all collateral without paying off debt" );
       GRAPHENE_REQUIRE_THROW( cover( dan, bitusd.amount(0), asset(20000)), fc::exception );
 
@@ -365,7 +369,7 @@ BOOST_AUTO_TEST_CASE( more_call_order_update_test )
       GRAPHENE_REQUIRE_THROW( borrow( bob, bitusd.amount(10000), core.amount(17500) ), fc::exception );
 
       BOOST_TEST_MESSAGE( "alice borrow using 4x collateral at 1:1 price" );
-      borrow( alice, bitusd.amount(100000), core.amount(400000) )->id;
+      borrow( alice, bitusd.amount(100000), core.amount(400000) );
       BOOST_REQUIRE_EQUAL( get_balance( alice, bitusd ), 100000 );
       BOOST_REQUIRE_EQUAL( get_balance( alice, core ), 10000000 - 400000 );
 
@@ -472,7 +476,7 @@ BOOST_AUTO_TEST_CASE( more_call_order_update_test_after_hardfork_583 )
       GRAPHENE_REQUIRE_THROW( borrow( bob, bitusd.amount(10000), core.amount(17500) ), fc::exception );
 
       BOOST_TEST_MESSAGE( "alice borrow using 4x collateral at 1:1 price" );
-      borrow( alice, bitusd.amount(100000), core.amount(400000) )->id;
+      borrow( alice, bitusd.amount(100000), core.amount(400000) );
       BOOST_REQUIRE_EQUAL( get_balance( alice, bitusd ), 100000 );
       BOOST_REQUIRE_EQUAL( get_balance( alice, core ), 10000000 - 400000 );
 
@@ -1132,8 +1136,8 @@ BOOST_AUTO_TEST_CASE( create_uia )
       creator.common_options.market_fee_percent = GRAPHENE_MAX_MARKET_FEE_PERCENT/100; /*1%*/
       creator.common_options.issuer_permissions = UIA_ASSET_ISSUER_PERMISSION_MASK;
       creator.common_options.flags = charge_market_fee;
-      creator.common_options.core_exchange_rate = price({asset(2),asset(1,asset_id_type(1))});
-      trx.operations.emplace_back(creator);
+      creator.common_options.core_exchange_rate = price(asset(2),asset(1,asset_id_type(1)));
+      trx.operations.push_back(std::move(creator));
       PUSH_TX( db, trx, ~0 );
 
       const asset_object& test_asset = test_asset_id(db);
@@ -1162,8 +1166,8 @@ BOOST_AUTO_TEST_CASE( create_uia )
       REQUIRE_THROW_WITH_VALUE(op, symbol, "AAA.");
       REQUIRE_THROW_WITH_VALUE(op, symbol, "AB CD");
       REQUIRE_THROW_WITH_VALUE(op, symbol, "ABCDEFGHIJKLMNOPQRSTUVWXYZ");
-      REQUIRE_THROW_WITH_VALUE(op, common_options.core_exchange_rate, price({asset(-100), asset(1)}));
-      REQUIRE_THROW_WITH_VALUE(op, common_options.core_exchange_rate, price({asset(100),asset(-1)}));
+      REQUIRE_THROW_WITH_VALUE(op, common_options.core_exchange_rate, price(asset(-100), asset(1)));
+      REQUIRE_THROW_WITH_VALUE(op, common_options.core_exchange_rate, price(asset(100),asset(-1)));
    } catch(fc::exception& e) {
       edump((e.to_detail_string()));
       throw;
