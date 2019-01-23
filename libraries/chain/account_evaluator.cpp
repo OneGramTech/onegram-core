@@ -72,6 +72,8 @@ void verify_account_votes( const database& db, const account_options& options )
    FC_ASSERT( options.num_committee <= chain_params.maximum_committee_count,
               "Voted for more committee members than currently allowed (${c})", ("c", chain_params.maximum_committee_count) );
 
+   FC_ASSERT( db.find_object(options.voting_account), "Invalid proxy account specified." );
+
    uint32_t max_vote_id = gpo.next_available_vote_id;
    bool has_worker_votes = false;
    for( auto id : options.votes )
@@ -135,7 +137,6 @@ void_result account_create_evaluator::do_evaluate( const account_create_operatio
       FC_ASSERT( !op.extensions.value.buyback_options.valid() );
    }
 
-   FC_ASSERT( d.find_object(op.options.voting_account), "Invalid proxy account specified." );
    FC_ASSERT( fee_paying_account->is_lifetime_member(), "Only Lifetime members may register an account." );
    FC_ASSERT( op.referrer(d).is_member(d.head_block_time()), "The referrer must be either a lifetime or annual subscriber." );
 
@@ -189,14 +190,18 @@ object_id_type account_create_evaluator::do_apply( const account_create_operatio
          referrer_percent = GRAPHENE_100_PERCENT;
    }
 
-   const auto& new_acnt_object = db().create<account_object>( [&]( account_object& obj ){
+   const auto& global_properties = d.get_global_properties();
+
+   const auto& new_acnt_object = d.create<account_object>( [&o,&d,&global_properties,referrer_percent]( account_object& obj )
+   {
          obj.registrar = o.registrar;
          obj.referrer = o.referrer;
+         obj.lifetime_referrer = o.referrer(d).lifetime_referrer;
 
-         auto& enforced_lifetime_referrer = db().get_chain_properties().enforced_lifetime_referrer;
-         obj.lifetime_referrer = enforced_lifetime_referrer ? *enforced_lifetime_referrer : o.referrer(db()).lifetime_referrer;
+         auto& enforced_lifetime_referrer = d.get_chain_properties().enforced_lifetime_referrer;
+         obj.lifetime_referrer = enforced_lifetime_referrer ? *enforced_lifetime_referrer : o.referrer(d).lifetime_referrer;
 
-         auto& params = db().get_global_properties().parameters;
+         const auto& params = global_properties.parameters;
          obj.network_fee_percentage = params.network_percent_of_fee;
          obj.lifetime_referrer_fee_percentage = params.lifetime_referrer_percent_of_fee;
          obj.referrer_rewards_percentage = referrer_percent;
@@ -205,7 +210,11 @@ object_id_type account_create_evaluator::do_apply( const account_create_operatio
          obj.owner            = o.owner;
          obj.active           = o.active;
          obj.options          = o.options;
-         obj.statistics = db().create<account_statistics_object>([&](account_statistics_object& s){s.owner = obj.id;}).id;
+         obj.statistics = d.create<account_statistics_object>([&obj](account_statistics_object& s){
+                             s.owner = obj.id;
+                             s.name = obj.name;
+                             s.is_voting = obj.options.is_voting();
+                          }).id;
 
          // vote for eternal committee members by default
          const auto eternalAccountIds = d.get_chain_properties().eternal_committee_account_ids();
@@ -234,17 +243,18 @@ object_id_type account_create_evaluator::do_apply( const account_create_operatio
    }
    */
 
-   const auto& dynamic_properties = db().get_dynamic_global_properties();
-   db().modify(dynamic_properties, [](dynamic_global_property_object& p) {
+   const auto& dynamic_properties = d.get_dynamic_global_properties();
+   d.modify(dynamic_properties, [](dynamic_global_property_object& p) {
       ++p.accounts_registered_this_interval;
    });
 
-   const auto& global_properties = db().get_global_properties();
-   if( dynamic_properties.accounts_registered_this_interval %
-       global_properties.parameters.accounts_per_fee_scale == 0 )
-      db().modify(global_properties, [](global_property_object& p) {
+   if( dynamic_properties.accounts_registered_this_interval % global_properties.parameters.accounts_per_fee_scale == 0
+         && global_properties.parameters.account_fee_scale_bitshifts != 0 )
+   {
+      d.modify(global_properties, [](global_property_object& p) {
          p.parameters.current_fees->get<account_create_operation>().basic_fee <<= p.parameters.account_fee_scale_bitshifts;
       });
+   }
 
    if(    o.extensions.value.owner_special_authority.valid()
        || o.extensions.value.active_special_authority.valid() )
@@ -313,8 +323,22 @@ void_result account_update_evaluator::do_evaluate( const account_update_operatio
 void_result account_update_evaluator::do_apply( const account_update_operation& o )
 { try {
    database& d = db();
-   bool sa_before, sa_after;
-   d.modify( *acnt, [&](account_object& a){
+
+   bool sa_before = acnt->has_special_authority();
+
+   // exclude eternalAccountIds from the check acnt->options.is_voting() otherwise the aso.is_voting is never set!!!
+   const auto eternalAccountIds = d.get_chain_properties().eternal_committee_account_ids();
+   // update account statistics
+   if( o.new_options.valid() && o.new_options->is_voting() != acnt->options.is_voting(eternalAccountIds) )
+   {
+      d.modify( acnt->statistics( d ), []( account_statistics_object& aso )
+      {
+         aso.is_voting = !aso.is_voting;
+      } );
+   }
+
+   // update account object
+   d.modify( *acnt, [&o,&d,&eternalAccountIds](account_object& a){
       if( o.owner )
       {
          a.owner = *o.owner;
@@ -330,9 +354,8 @@ void_result account_update_evaluator::do_apply( const account_update_operation& 
          a.options = *o.new_options;
 
          // vote for eternal committee members by default
-         const auto eternalAccountIds = d.get_chain_properties().eternal_committee_account_ids();
          a.options.votes.insert(eternalAccountIds.begin(), eternalAccountIds.end());
-         
+
          const auto& gpo = d.get_global_properties();
          auto max_vote_id = gpo.next_available_vote_id;
 
@@ -344,7 +367,6 @@ void_result account_update_evaluator::do_apply( const account_update_operation& 
             a.options.num_committee += (id.type() == vote_id_type::committee);
          }
       }
-      sa_before = a.has_special_authority();
       if( o.extensions.value.owner_special_authority.valid() )
       {
          a.owner_special_authority = *(o.extensions.value.owner_special_authority);
@@ -355,8 +377,9 @@ void_result account_update_evaluator::do_apply( const account_update_operation& 
          a.active_special_authority = *(o.extensions.value.active_special_authority);
          a.top_n_control_flags = 0;
       }
-      sa_after = a.has_special_authority();
    });
+
+   bool sa_after = acnt->has_special_authority();
 
    if( sa_before && (!sa_after) )
    {
