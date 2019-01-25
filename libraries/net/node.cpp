@@ -4144,6 +4144,17 @@ namespace graphene { namespace net { namespace detail {
       trigger_p2p_network_connect_loop();
     }
 
+    bool node_impl::cap_seed_nodes(size_t nodes_max_count)
+    {
+      if (nodes_max_count < _add_once_node_list.size())
+      {
+        _add_once_node_list.resize(nodes_max_count);
+        return true;
+      }
+
+      return false;
+    }
+
     void node_impl::initiate_connect_to(const peer_connection_ptr& new_peer)
     {
       new_peer->get_socket().open();
@@ -4685,6 +4696,11 @@ namespace graphene { namespace net { namespace detail {
   void node::add_node( const fc::ip::endpoint& ep )
   {
     INVOKE_IN_IMPL(add_node, ep);
+  }
+
+  bool node::cap_seed_nodes(size_t nodes_max_count)
+  {
+    INVOKE_IN_IMPL(cap_seed_nodes, nodes_max_count);
   }
 
   void node::connect_to_endpoint( const fc::ip::endpoint& remote_endpoint )

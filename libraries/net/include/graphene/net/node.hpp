@@ -212,6 +212,11 @@ namespace graphene { namespace net {
         void      add_node( const fc::ip::endpoint& ep );
 
         /**
+         *  Limit the number of initial seed nodes
+         */
+        bool      cap_seed_nodes(size_t nodes_max_count);
+
+        /**
          *  Attempt to connect to the specified endpoint immediately.
          */
         virtual void connect_to_endpoint( const fc::ip::endpoint& ep );
