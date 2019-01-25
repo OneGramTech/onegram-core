@@ -485,6 +485,7 @@ class node_impl : public peer_connection_delegate
       void initiate_connect_to(const peer_connection_ptr& peer);
       void connect_to_endpoint(const fc::ip::endpoint& ep);
       void listen_on_endpoint(const fc::ip::endpoint& ep , bool wait_if_not_available);
+      void peer_database_as_whitelisted(bool whitelisted);
       void accept_incoming_connections(bool accept);
       void listen_on_port( uint16_t port, bool wait_if_not_available );
 

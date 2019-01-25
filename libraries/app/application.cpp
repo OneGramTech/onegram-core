@@ -125,6 +125,8 @@ void application_impl::reset_p2p_node(const fc::path& data_dir)
    _p2p_network->load_configuration(data_dir / "p2p");
    _p2p_network->set_node_delegate(this);
 
+   vector<fc::ip::endpoint> seed_nodes;
+
    if( _options->count("seed-node") )
    {
       auto seeds = _options->at("seed-node").as<vector<string>>();
@@ -132,11 +134,9 @@ void application_impl::reset_p2p_node(const fc::path& data_dir)
       {
          try {
             std::vector<fc::ip::endpoint> endpoints = resolve_string_to_ip_endpoints(endpoint_string);
-            for (const fc::ip::endpoint& endpoint : endpoints)
+            for (const auto& endpoint : endpoints)
             {
-               ilog("Adding seed node ${endpoint}", ("endpoint", endpoint));
-               _p2p_network->add_node(endpoint);
-               _p2p_network->connect_to_endpoint(endpoint);
+               seed_nodes.push_back(endpoint);
             }
          } catch( const fc::exception& e ) {
             wlog( "caught exception ${e} while adding seed node ${endpoint}",
@@ -153,10 +153,9 @@ void application_impl::reset_p2p_node(const fc::path& data_dir)
       {
          try {
             std::vector<fc::ip::endpoint> endpoints = resolve_string_to_ip_endpoints(endpoint_string);
-            for (const fc::ip::endpoint& endpoint : endpoints)
+            for (const auto& endpoint : endpoints)
             {
-               ilog("Adding seed node ${endpoint}", ("endpoint", endpoint));
-               _p2p_network->add_node(endpoint);
+               seed_nodes.push_back(endpoint);
             }
          } catch( const fc::exception& e ) {
             wlog( "caught exception ${e} while adding seed node ${endpoint}",
@@ -175,16 +174,34 @@ void application_impl::reset_p2p_node(const fc::path& data_dir)
       {
          try {
             std::vector<fc::ip::endpoint> endpoints = resolve_string_to_ip_endpoints(endpoint_string);
-            for (const fc::ip::endpoint& endpoint : endpoints)
+            for (const auto& endpoint : endpoints)
             {
-               ilog("Adding seed node ${endpoint}", ("endpoint", endpoint));
-               _p2p_network->add_node(endpoint);
+               seed_nodes.push_back(endpoint);
             }
          } catch( const fc::exception& e ) {
             wlog( "caught exception ${e} while adding seed node ${endpoint}",
                      ("e", e.to_detail_string())("endpoint", endpoint_string) );
          }
       }
+   }
+
+   bool is_whitelisting_peers = _options->count("whitelist-seed-nodes") && _options->at("whitelist-seed-nodes").as<bool>();
+
+   if (is_whitelisting_peers)
+   {
+      ilog("Using peer whitelist: ${whitelist}", ("whitelist", seed_nodes));
+      _p2p_network->clear_peer_database();
+   }
+
+   for (const auto& endpoint : seed_nodes)
+   {
+      ilog("Adding seed node ${endpoint}", ("endpoint", endpoint));
+      _p2p_network->add_node(endpoint);
+   }
+
+   if (is_whitelisting_peers)
+   {
+      _p2p_network->peer_database_as_whitelisted(true);
    }
 
    if( _options->count("p2p-endpoint") )
@@ -917,6 +934,8 @@ void application::set_program_options(boost::program_options::options_descriptio
           "P2P nodes to connect to on startup (may specify multiple times)")
          ("seed-nodes", bpo::value<string>()->composing(),
           "JSON array of P2P nodes to connect to on startup")
+         ("whitelist-seed-nodes", bpo::value<bool>()->implicit_value(false),
+          "Whether to set the initial seed nodes list as whitelisted, all newly added peers will be ignored")
          ("checkpoint,c", bpo::value<vector<string>>()->composing(),
           "Pairs of [BLOCK_NUM,BLOCK_ID] that should be enforced as checkpoints.")
          ("rpc-endpoint", bpo::value<string>()->implicit_value("127.0.0.1:8090"),

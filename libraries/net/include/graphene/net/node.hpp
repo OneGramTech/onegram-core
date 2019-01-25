@@ -223,6 +223,12 @@ namespace graphene { namespace net {
         void      listen_on_endpoint( const fc::ip::endpoint& ep, bool wait_if_not_available );
 
         /**
+         *  Controls the peer database whitelisting functionality
+         *   - if set to true, the peer database cannot grow new entries
+         */
+        void      peer_database_as_whitelisted(bool whitelisted);
+
+        /**
          *  Call with true to enable listening for incoming connections
          */
         void accept_incoming_connections(bool accept);

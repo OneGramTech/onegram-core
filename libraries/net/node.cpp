@@ -3784,7 +3784,7 @@ namespace graphene { namespace net { namespace detail {
       shared_secret_encoder.write(shared_secret.data(), sizeof(shared_secret));
       fc::ecc::compact_signature signature = _node_configuration.private_key.sign_compact(shared_secret_encoder.result());
 
-      // in the hello messsage, we send three things:
+      // in the hello message, we send three things:
       //  ip address
       //  outbound port
       //  inbound port
@@ -3915,7 +3915,6 @@ namespace graphene { namespace net { namespace detail {
         // connection was successful and we want to stay connected
         fc::ip::endpoint local_endpoint = new_peer->get_local_endpoint();
         new_peer->inbound_address = local_endpoint.get_address();
-        new_peer->inbound_port = _node_configuration.accept_incoming_connections ? _actual_listening_endpoint.port() : 0;
         new_peer->outbound_port = local_endpoint.port();
 
         new_peer->our_state = peer_connection::our_connection_state::just_connected;
@@ -4333,6 +4332,11 @@ namespace graphene { namespace net { namespace detail {
       save_node_configuration();
     }
 
+    void node_impl::peer_database_as_whitelisted(bool whitelisted)
+    {
+      _potential_peer_db.peer_database_as_whitelisted(whitelisted);
+    }
+
     void node_impl::accept_incoming_connections(bool accept)
     {
       VERIFY_CORRECT_THREAD();
@@ -4691,6 +4695,11 @@ namespace graphene { namespace net { namespace detail {
   void node::listen_on_endpoint(const fc::ip::endpoint& ep , bool wait_if_not_available)
   {
     INVOKE_IN_IMPL(listen_on_endpoint, ep, wait_if_not_available);
+  }
+
+  void node::peer_database_as_whitelisted(bool whitelisted)
+  {
+    INVOKE_IN_IMPL(peer_database_as_whitelisted, whitelisted);
   }
 
   void node::accept_incoming_connections(bool accept)
