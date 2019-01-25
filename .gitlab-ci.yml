@@ -22,6 +22,7 @@ after_script:
 stages:
   - build
   - test
+  - publish
 
 .script_template: &build_script_definition
   script:
@@ -133,5 +134,29 @@ test_testnet_debug:
   variables:
     BUILD_TARGET: Debug
     TARGET_ENV: TESTNET
+  tags:
+    - docker
+
+# Publish stage
+
+# this stage is valid only for master branch with tagged commit
+publish_mainnet_release:
+  only:
+    - tags
+  script:
+    - IMG_TAG=`echo "$SHARED_IMG_TAG" | tr '[:upper:]' '[:lower:]'`
+    - echo "image "$IMG_TAG
+    - echo $CI_COMMIT_TAG
+    - echo "release image "$RELEASE_IMG_NAME
+    - docker image ls
+    - docker pull $IMG_TAG
+    - docker image ls
+    - docker tag $IMG_TAG $RELEASE_IMG_NAME
+    - docker push $RELEASE_IMG_NAME
+  stage: publish
+  variables:
+    TARGET_ENV: MAINNET
+    BUILD_TARGET: Release
+    RELEASE_IMG_NAME: ${CI_REGISTRY_IMAGE}/onegram:${CI_COMMIT_TAG}-${CI_COMMIT_SHORT_SHA}
   tags:
     - docker
