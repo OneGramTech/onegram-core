@@ -54,6 +54,7 @@
 #include <boost/algorithm/string.hpp>
 
 #include <iostream>
+#include <random>
 
 #include <fc/log/file_appender.hpp>
 #include <fc/log/logger.hpp>
@@ -185,6 +186,14 @@ void application_impl::reset_p2p_node(const fc::path& data_dir)
       }
    }
 
+   if (_options->count("randomize-seed-nodes") && _options->at("randomize-seed-nodes").as<bool>())
+   {
+      std::random_device random_device;
+      std::mt19937 mersenne_generator(random_device());
+
+      std::shuffle(seed_nodes.begin(), seed_nodes.end(), mersenne_generator);
+   }
+
    bool is_whitelisting_peers = _options->count("whitelist-seed-nodes") && _options->at("whitelist-seed-nodes").as<bool>();
 
    if (is_whitelisting_peers)
@@ -197,6 +206,16 @@ void application_impl::reset_p2p_node(const fc::path& data_dir)
    {
       ilog("Adding seed node ${endpoint}", ("endpoint", endpoint));
       _p2p_network->add_node(endpoint);
+   }
+
+   if (_options->count("limit-seed-nodes") && _options->at("limit-seed-nodes").as<size_t>())
+   {
+      size_t initial_node_count = _options->at("limit-seed-nodes").as<size_t>();
+
+      if (_p2p_network->cap_seed_nodes(initial_node_count))
+      {
+         ilog("Seed node list capped to ${count} endpoint(s)", ("count", initial_node_count));
+      }
    }
 
    if (is_whitelisting_peers)
@@ -936,6 +955,10 @@ void application::set_program_options(boost::program_options::options_descriptio
           "JSON array of P2P nodes to connect to on startup")
          ("whitelist-seed-nodes", bpo::value<bool>()->implicit_value(false),
           "Whether to set the initial seed nodes list as whitelisted, all newly added peers will be ignored")
+         ("randomize-seed-nodes", bpo::value<bool>()->implicit_value(true),
+          "Randomize order of seed nodes to distribute load")
+         ("limit-seed-nodes", bpo::value<size_t>()->implicit_value(GRAPHENE_NET_DEFAULT_DESIRED_CONNECTIONS),
+          "Limit the number of seed nodes to connect at startup")
          ("checkpoint,c", bpo::value<vector<string>>()->composing(),
           "Pairs of [BLOCK_NUM,BLOCK_ID] that should be enforced as checkpoints.")
          ("rpc-endpoint", bpo::value<string>()->implicit_value("127.0.0.1:8090"),
