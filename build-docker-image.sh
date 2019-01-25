@@ -17,8 +17,8 @@ echo $OPTS
 
 if [ $? != 0 ] ; then echo "Failed to parse options...exiting." >&2 ; exit 1 ; fi
 
-# target environment is mandatory
-targetEnv=""
+# target environment is optional, all targets are built if not parameter not provided
+targetEnv="ALL"
 # build type is optional, Release is default
 buildType="Release"
 
@@ -51,15 +51,17 @@ while [[ $# -gt 0  ]] ; do
 	esac
 done
 
-# check mandatory argument
-if [ -z $targetEnv ]; then
-        echo "Target environment must be set <MAINNET|TESTNET>"
-        exit 1;
+
+if [[ $targetEnv =~ ^(MAINNET|ALL)$ ]]; then
+	imageName="onegram/onegram-core"
+
+	# build MAINNET docker image
+	docker build -t $imageName --build-arg TARGET_ENV=MAINNET --build-arg BUILD=$buildType --build-arg REVISION_SHA=`git rev-parse --short HEAD` --build-arg REVISION_TIMESTAMP=`git log -1 --format=%at` -f Dockerfile.OGC .
 fi
 
-# name the docker image
-imageName="onegram/onegram-testnet"
-[ $targetEnv == "MAINNET" ] && imageName="onegram/onegram-core"
+if [[ $targetEnv =~ ^(TESTNET|ALL)$ ]]; then
+	imageName="onegram/onegram-testnet"
 
-# build docker image
-docker build -t $imageName --build-arg TARGET_ENV=$targetEnv --build-arg BUILD=$buildType --build-arg REVISION_SHA=`git rev-parse --short HEAD` --build-arg REVISION_TIMESTAMP=`git log -1 --format=%at` -f Dockerfile.OGC .
+	# build TESTNET docker image
+	docker build -t $imageName --build-arg TARGET_ENV=TESTNET --build-arg BUILD=$buildType --build-arg REVISION_SHA=`git rev-parse --short HEAD` --build-arg REVISION_TIMESTAMP=`git log -1 --format=%at` -f Dockerfile.OGC .
+fi
