@@ -60,6 +60,7 @@ namespace graphene { namespace net {
     private:
       potential_peer_set     _potential_peer_set;
       fc::path _peer_database_filename;
+      bool _is_whitelisting = false;
 
     public:
       void open(const fc::path& databaseFilename);
@@ -69,6 +70,8 @@ namespace graphene { namespace net {
       void update_entry(const potential_peer_record& updatedRecord);
       potential_peer_record lookup_or_create_entry_for_endpoint(const fc::ip::endpoint& endpointToLookup);
       fc::optional<potential_peer_record> lookup_entry_for_endpoint(const fc::ip::endpoint& endpointToLookup);
+
+      void peer_database_as_whitelisted(bool whitelist);
 
       peer_database::iterator begin() const;
       peer_database::iterator end() const;
@@ -130,7 +133,6 @@ namespace graphene { namespace net {
         elog("error saving peer database to file ${peer_database_filename}", 
              ("peer_database_filename", _peer_database_filename));
       }
-      _potential_peer_set.clear();
     }
 
     void peer_database_impl::clear()
@@ -151,7 +153,15 @@ namespace graphene { namespace net {
       if (iter != _potential_peer_set.get<endpoint_index>().end())
         _potential_peer_set.get<endpoint_index>().modify(iter, [&updatedRecord](potential_peer_record& record) { record = updatedRecord; });
       else
+      {
+         if (_is_whitelisting)
+         {
+           dlog("Node allows only whitelisted peers, rejecting: ${endpoint}", ("endpoint", updatedRecord.endpoint));
+           return;
+         }
+
         _potential_peer_set.get<endpoint_index>().insert(updatedRecord);
+      }
     }
 
     potential_peer_record peer_database_impl::lookup_or_create_entry_for_endpoint(const fc::ip::endpoint& endpointToLookup)
@@ -183,6 +193,12 @@ namespace graphene { namespace net {
     size_t peer_database_impl::size() const
     {
       return _potential_peer_set.size();
+    }
+
+
+    void peer_database_impl::peer_database_as_whitelisted(bool whitelisted)
+    {
+      _is_whitelisting = whitelisted;
     }
 
     peer_database_iterator::peer_database_iterator()
@@ -271,6 +287,11 @@ namespace graphene { namespace net {
   size_t peer_database::size() const
   {
     return my->size();
+  }
+
+  void peer_database::peer_database_as_whitelisted(bool whitelisted)
+  {
+      return my->peer_database_as_whitelisted(whitelisted);
   }
 
 } } // end namespace graphene::net
