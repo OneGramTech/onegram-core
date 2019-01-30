@@ -22,6 +22,7 @@
  * THE SOFTWARE.
  */
 #include <graphene/app/application.hpp>
+#include <graphene/app/config_util.hpp>
 
 #include <graphene/witness/witness.hpp>
 #include <graphene/debug_witness/debug_witness.hpp>
@@ -33,31 +34,18 @@
 #include <graphene/es_objects/es_objects.hpp>
 #include <graphene/grouped_orders/grouped_orders_plugin.hpp>
 
-#include <fc/exception/exception.hpp>
 #include <fc/thread/thread.hpp>
 #include <fc/interprocess/signals.hpp>
-#include <fc/log/console_appender.hpp>
-#include <fc/log/file_appender.hpp>
-#include <fc/log/logger.hpp>
-#include <fc/log/logger_config.hpp>
 
 #include <boost/filesystem.hpp>
-
 #include <boost/property_tree/ptree.hpp>
-#include <boost/property_tree/ini_parser.hpp>
-#include <boost/algorithm/string/predicate.hpp>
-#include <boost/algorithm/string/classification.hpp>
-#include <boost/algorithm/string/split.hpp>
 #include <boost/container/flat_set.hpp>
 
 #include <graphene/utilities/git_revision.hpp>
-#include <boost/version.hpp>
 #include <boost/algorithm/string/replace.hpp>
 #include <websocketpp/version.hpp>
 
 #include <iostream>
-#include <fstream>
-#include <boost/smart_ptr/make_shared.hpp>
 
 #ifdef WIN32
 # include <signal.h> 
@@ -67,195 +55,11 @@
 
 using namespace graphene;
 namespace bpo = boost::program_options;
-         
-void write_default_logging_config_to_stream(std::ostream& out);
-fc::optional<fc::logging_config> load_logging_config_from_ini_file(const fc::path& config_ini_filename);
 
-class deduplicator 
-{
-   public:
-      deduplicator() : modifier(nullptr) {}
-
-   explicit deduplicator
-      (
-         const boost::shared_ptr<bpo::option_description> (*mod_fn)(const boost::shared_ptr<bpo::option_description>&)
-      ) : modifier(mod_fn)
-      {
-      }
-
-   const boost::shared_ptr<bpo::option_description> next(const boost::shared_ptr<bpo::option_description>& o)
-      {
-         const auto name = o->long_name();
-         if (seen.find(name) != seen.end())
-         {
-            return nullptr;
-         }
-
-         seen.insert(name);
-
-         return modifier ? modifier(o) : o;
-      }
-
-   private:
-      boost::container::flat_set<std::string> seen;
-      const boost::shared_ptr<bpo::option_description> (*modifier)(const boost::shared_ptr<bpo::option_description>&);
-};
-
-static void load_config_file
-(
-   const fc::path& config_ini_path,
-   const bpo::options_description& cfg_options,
-   bpo::variables_map& options
-)
-{
-   deduplicator dedup;
-   bpo::options_description unique_options(GRAPHENE_WITNESS_NODE_TXT);
-   for (const auto& opt : cfg_options.options())
-   {
-      const auto od = dedup.next(opt);
-      if (!od)
-      {
-         continue;
-      }
-
-      unique_options.add(od);
-   }
-
-   // get the basic options
-   store(
-      bpo::parse_config_file<char>(config_ini_path.preferred_string().c_str(), unique_options, true),
-      options);
-}
-
-static void load_logging_config_file
-(
-   const fc::path& config_ini_path
-)
-{
-   // try to get logging options from the config file.
-   try
-   {
-      auto logging_config = load_logging_config_from_ini_file(config_ini_path);
-      if (logging_config)
-      {
-         configure_logging(*logging_config);
-      }
-   }
-   catch (const fc::exception& ex)
-   {
-      wlog("Error parsing logging config from logging config file ${config}, using default config", ("config", config_ini_path.preferred_string()));
-   }
-}
-
-boost::shared_ptr<bpo::option_description> new_option_description
-(
-   const std::string& name,
-   const bpo::value_semantic* value,
-   const std::string& description
-)
-{
-   return boost::make_shared<bpo::option_description>(name.c_str(), value, description.c_str());
-}
-
-static void create_new_config_file
-(
-   const fc::path& config_ini_path,
-   const fc::path& data_dir,
-   const bpo::options_description& cfg_options
-)
-{
-   ilog("Writing new logging config file at ${path}", ("path", config_ini_path));
-
-   if (!exists(data_dir))
-   {
-      create_directories(data_dir);
-   }
-
-   const auto modify_option_defaults = [](
-      const boost::shared_ptr<bpo::option_description>& o) -> const boost::shared_ptr<bpo::option_description>
-   {
-       const auto& name = o->long_name();
-
-       if (name == "partial-operations")
-       {
-          return new_option_description( name, bpo::value<bool>()->default_value(true), o->description() );
-       }
-
-       if (name == "max-ops-per-account")
-       {
-          return new_option_description( name, bpo::value<int>()->default_value(100), o->description() );
-       }
-
-       return o;
-   };
-
-   deduplicator dedup(modify_option_defaults);
-   std::ofstream out_cfg(config_ini_path.preferred_string());
-   for (const auto& opt : cfg_options.options())
-   {
-      const auto od = dedup.next(opt);
-      if (!od)
-      {
-         continue;
-      }
-
-      if (!od->description().empty())
-      {
-         out_cfg << "# " << od->description() << "\n";
-      }
-
-      boost::any store;
-      if (!od->semantic()->apply_default(store))
-      {
-         out_cfg << "# " << od->long_name() << " = \n";
-      }
-      else
-      {
-         auto example = od->format_parameter();
-         if (example.empty())
-         {
-            // This is a boolean switch
-            out_cfg << od->long_name() << " = " << "false\n";
-         }
-         else
-         {
-            // The string is formatted "arg (=<interesting part>)"
-            example.erase(0, 6);
-            example.erase(example.length()-1);
-            out_cfg << od->long_name() << " = " << example << "\n";
-         }
-      }
-
-      out_cfg << "\n";
-   }
-
-   out_cfg.close();
-}
-
-static void create_logging_config_file
-(
-   const fc::path& config_ini_path,
-   const fc::path& data_dir
-)
-{
-   ilog("Writing new config file at ${path}", ("path", config_ini_path));
-   if (!exists(data_dir))
-   {
-      create_directories(data_dir);
-   }
-
-   std::ofstream out_cfg(config_ini_path.preferred_string());
-   write_default_logging_config_to_stream(out_cfg);
-   out_cfg.close();
-}
-
-int main(int argc, char** argv)
-{
+int main(int argc, char** argv) {
    auto node = std::make_shared<app::application>();
    fc::oexception unhandled_exception;
-
-   try
-   {
+   try {
       bpo::options_description app_options(GRAPHENE_WITNESS_NODE_TXT);
       bpo::options_description cfg_options(GRAPHENE_WITNESS_NODE_TXT);
       app_options.add_options()
@@ -287,54 +91,33 @@ int main(int argc, char** argv)
       catch (const boost::program_options::error& e)
       {
         std::cerr << "Error parsing command line: " << e.what() << "\n";
-
         return 1;
       }
 
-      if (options.count("help"))
+      if( options.count("help") )
       {
          std::cout << app_options << "\n";
-
          return 0;
       }
-
-      if (options.count("version"))
+      if( options.count("version") )
       {
          std::cout << "Version: " << utilities::git_revision_description << "\n";
          std::cout << "SHA: " << utilities::git_revision_sha << "\n";
-         std::cout << "Timestamp: " << get_approximate_relative_time_string(fc::time_point_sec(utilities::git_revision_unix_timestamp)) << "\n";std::cout << "SSL: " << OPENSSL_VERSION_TEXT << "\n";
+         std::cout << "Timestamp: " << get_approximate_relative_time_string(fc::time_point_sec(utilities::git_revision_unix_timestamp)) << "\n";
+         std::cout << "SSL: " << OPENSSL_VERSION_TEXT << "\n";
          std::cout << "Boost: " << boost::replace_all_copy(std::string(BOOST_LIB_VERSION), "_", ".") << "\n";
          std::cout << "Websocket++: " << websocketpp::major_version << "." << websocketpp::minor_version << "." << websocketpp::patch_version << "\n";
          return 0;
       }
 
       fc::path data_dir;
-      if (options.count("data-dir"))
+      if( options.count("data-dir") )
       {
          data_dir = options["data-dir"].as<boost::filesystem::path>();
-         if (data_dir.is_relative())
-         {
+         if( data_dir.is_relative() )
             data_dir = fc::current_path() / data_dir;
-         }
       }
-
-      // load witness node initial configuration
-      const auto config_ini_path = data_dir / "config.ini";
-      if (!exists(config_ini_path))
-      {
-         create_new_config_file( config_ini_path, data_dir, cfg_options );
-      }
-
-      load_config_file( config_ini_path, cfg_options, options );
-
-      // load witness node logging configuration
-      const auto logging_ini_path = data_dir / "logging.ini";
-      if (!exists(logging_ini_path))
-      {
-         create_logging_config_file (logging_ini_path, data_dir);
-      }
-
-      load_logging_config_file( logging_ini_path );
+      app::load_configuration_options(data_dir, cfg_options, options);
 
       notify(options);
       node->initialize(data_dir, options);
@@ -345,14 +128,12 @@ int main(int argc, char** argv)
 
       fc::promise<int>::ptr exit_promise(new fc::promise<int>("UNIX Signal Handler"));
 
-      fc::set_signal_handler([&exit_promise](int signal)
-      {
+      fc::set_signal_handler([&exit_promise](int signal) {
          elog( "Caught SIGINT attempting to exit cleanly" );
          exit_promise->set_value(signal);
       }, SIGINT);
 
-      fc::set_signal_handler([&exit_promise](int signal)
-      {
+      fc::set_signal_handler([&exit_promise](int signal) {
          elog( "Caught SIGTERM attempting to exit cleanly" );
          exit_promise->set_value(signal);
       }, SIGTERM);
@@ -362,15 +143,11 @@ int main(int argc, char** argv)
 
       auto signal = exit_promise->wait();
       ilog("Exiting from signal ${n}", ("n", signal));
-
       node->shutdown_plugins();
       node->shutdown();
       node = nullptr;
-
       return 0;
-   }
-   catch (const fc::exception& e)
-   {
+   } catch( const fc::exception& e ) {
       // deleting the node can yield, so do this outside the exception handler
       unhandled_exception = e;
    }
@@ -378,147 +155,9 @@ int main(int argc, char** argv)
    if (unhandled_exception)
    {
       elog("Exiting with error:\n${e}", ("e", unhandled_exception->to_detail_string()));
-
       node->shutdown();
       node = nullptr;
-
       return 1;
    }
 }
 
-// logging config is too complicated to be parsed by boost::program_options, 
-// so we do it by hand
-//
-// Currently, you can only specify the filenames and logging levels, which
-// are all most users would want to change.  At a later time, options can
-// be added to control rotation intervals, compression, and other seldom-
-// used features
-void write_default_logging_config_to_stream(std::ostream& out)
-{
-   out << "# declare an appender named \"stderr\" that writes messages to the console\n"
-          "[log.console_appender.stderr]\n"
-          "stream=std_error\n\n"
-          "# declare an appender named \"default\" that writes messages to default.log\n"
-          "[log.file_appender.default]\n"
-          "# filename can be absolute or relative to this config file\n"
-          "filename=logs/default/default.log\n"
-          "# Rotate log every ? minutes, if leave out default to 60\n"
-          "rotation_interval=60\n"
-          "# how long will logs be kept (in days), if leave out default to 1\n"
-          "rotation_limit=7\n\n"
-          "# declare an appender named \"p2p\" that writes messages to p2p.log\n"
-          "[log.file_appender.p2p]\n"
-          "# filename can be absolute or relative to this config file\n"
-          "filename=logs/p2p/p2p.log\n"
-          "# Rotate log every ? minutes, if leave out default to 60\n"
-          "rotation_interval=60\n"
-          "# how long will logs be kept (in days), if leave out default to 1\n"
-          "rotation_limit=7\n\n"
-          "# declare an appender named \"rpc\" that writes messages to rpc.log\n"
-          "[log.file_appender.rpc]\n"
-          "# filename can be absolute or relative to this config file\n"
-          "filename=logs/rpc/rpc.log\n"
-          "# Rotate log every ? minutes, if leave out default to 60\n"
-          "rotation_interval=60\n"
-          "# how long will logs be kept (in days), if leave out default to 1\n"
-          "rotation_limit=7\n\n"
-          "# route any messages logged to the default logger to the \"stderr\" appender and\n"
-          "# \"default\" appender we declared above, if they are info level or higher\n"
-          "[logger.default]\n"
-          "level=info\n"
-          "appenders=stderr,default\n\n"
-          "# route messages sent to the \"p2p\" logger to the \"p2p\" appender declared above\n"
-          "[logger.p2p]\n"
-          "level=warn\n"
-          "appenders=p2p\n\n"
-          "# route messages sent to the \"rpc\" logger to the \"rpc\" appender declared above\n"
-          "[logger.rpc]\n"
-          "level=error\n"
-          "appenders=rpc\n\n";
-}
-
-fc::optional<fc::logging_config> load_logging_config_from_ini_file(const fc::path& config_ini_filename)
-{
-   try
-   {
-      fc::logging_config logging_config;
-      auto found_logging_config = false;
-
-      boost::property_tree::ptree config_ini_tree;
-      read_ini(config_ini_filename.preferred_string(), config_ini_tree);
-      for (const auto& section : config_ini_tree)
-      {
-         const auto& section_name = section.first;
-         const auto& section_tree = section.second;
-
-         const std::string console_appender_section_prefix = "log.console_appender.";
-         const std::string file_appender_section_prefix = "log.file_appender.";
-         const std::string logger_section_prefix = "logger.";
-
-         if (boost::starts_with(section_name, console_appender_section_prefix))
-         {
-            const auto console_appender_name = section_name.substr(console_appender_section_prefix.length());
-            const auto stream_name = section_tree.get<std::string>("stream");
-
-            // construct a default console appender config here
-            // stdout/stderr will be taken from ini file, everything else hard-coded here
-            fc::console_appender::config console_appender_config;
-            console_appender_config.level_colors.emplace_back(
-               fc::console_appender::level_color(fc::log_level::debug, 
-                                                 fc::console_appender::color::green));
-            console_appender_config.level_colors.emplace_back(
-               fc::console_appender::level_color(fc::log_level::warn, 
-                                                 fc::console_appender::color::brown));
-            console_appender_config.level_colors.emplace_back(
-               fc::console_appender::level_color(fc::log_level::error, 
-                                                 fc::console_appender::color::cyan));
-            console_appender_config.stream = fc::variant(stream_name).as<fc::console_appender::stream::type>(GRAPHENE_MAX_NESTED_OBJECTS);
-            logging_config.appenders.emplace_back(fc::appender_config(console_appender_name, "console", fc::variant(console_appender_config, GRAPHENE_MAX_NESTED_OBJECTS)));
-            found_logging_config = true;
-         }
-         else if (boost::starts_with(section_name, file_appender_section_prefix))
-         {
-            const auto file_appender_name = section_name.substr(file_appender_section_prefix.length());
-            fc::path file_name = section_tree.get<std::string>("filename");
-            if (file_name.is_relative())
-            {
-               file_name = absolute(config_ini_filename).parent_path() / file_name;
-            }
-
-            int interval = section_tree.get_optional<int>("rotation_interval").get_value_or(60);
-            int limit = section_tree.get_optional<int>("rotation_limit").get_value_or(1);
-
-            // construct a default file appender config here
-            // filename will be taken from ini file, everything else hard-coded here
-            fc::file_appender::config file_appender_config;
-            file_appender_config.filename = file_name;
-            file_appender_config.flush = true;
-            file_appender_config.rotate = true;
-            file_appender_config.rotation_interval = fc::minutes(interval);
-            file_appender_config.rotation_limit = fc::days(limit);
-            logging_config.appenders.emplace_back(fc::appender_config(file_appender_name, "file", fc::variant(file_appender_config, GRAPHENE_MAX_NESTED_OBJECTS)));
-            found_logging_config = true;
-         }
-         else if (boost::starts_with(section_name, logger_section_prefix))
-         {
-            const auto logger_name = section_name.substr(logger_section_prefix.length());
-            const auto level_string = section_tree.get<std::string>("level");
-            auto appenders_string = section_tree.get<std::string>("appenders");
-            fc::logger_config logger_config(logger_name);
-            logger_config.level = fc::variant(level_string).as<fc::log_level>(5);
-            split(logger_config.appenders, appenders_string,
-                         boost::is_any_of(" ,"), 
-                         boost::token_compress_on);
-            logging_config.loggers.push_back(logger_config);
-            found_logging_config = true;
-         }
-      }
-      if (found_logging_config)
-      {
-         return logging_config;
-      }
-
-      return fc::optional<fc::logging_config>();
-   }
-   FC_RETHROW_EXCEPTIONS(warn, "")
-}
