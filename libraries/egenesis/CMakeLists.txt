@@ -18,20 +18,8 @@ if( GRAPHENE_EGENESIS_JSON )
    list( APPEND embed_genesis_args --genesis-json "${GRAPHENE_EGENESIS_JSON}" )
 endif( GRAPHENE_EGENESIS_JSON )
 
-SET( EMBED_GENESIS PYTHON CACHE STRING "Default embed_genesis engine" )
-
-if ( Python_Interpreter_FOUND AND EMBED_GENESIS STREQUAL PYTHON )
-   SET( EMBED_GENESIS_USE_PYTHON TRUE CACHE INTERNAL "Use Python as embed_genesis engine")
-endif()
-
-if ( Python_Interpreter_FOUND )
-   MESSAGE( STATUS "Python interpreter")
-   MESSAGE( STATUS "  binary: ${Python_EXECUTABLE}" )
-   MESSAGE( STATUS "  falvor: ${Python_INTERPRETER_ID}")
-endif()
-
-if ( EMBED_GENESIS_USE_PYTHON )
-   MESSAGE( STATUS "embed_genesis: using Python to generate genesis include files")
+if ( GENERATING_HELPERS_USE_PYTHON )
+   MESSAGE( STATUS "embed_genesis: using Python to generate genesis header files")
 
    add_executable( embed_genesis_cpp embed_genesis.cpp )
 
@@ -51,9 +39,9 @@ if ( EMBED_GENESIS_USE_PYTHON )
          "${CMAKE_CURRENT_SOURCE_DIR}/egenesis_full.cpp.tmpl"
       embed_genesis )
 else()
-   MESSAGE( STATUS "embed_genesis: using C++ to generate genesis include files")
+   MESSAGE( STATUS "embed_genesis: using C++ to generate genesis header files")
 
-   add_executable( embed_genesis  embed_genesis.cpp )
+   add_executable( embed_genesis embed_genesis.cpp )
 
    target_link_libraries( embed_genesis graphene_chain graphene_app graphene_egenesis_none fc )
 
@@ -86,7 +74,7 @@ target_include_directories( graphene_egenesis_full
    PUBLIC "${CMAKE_CURRENT_SOURCE_DIR}/include" )
 
 SET( INSTALL_TARGETS )
-if( NOT EMBED_GENESIS_USE_PYTHON )
+if( NOT GENERATING_HELPERS_USE_PYTHON )
    LIST( APPEND INSTALL_TARGETS embed_genesis )
 endif()
 LIST( APPEND INSTALL_TARGETS graphene_egenesis_none graphene_egenesis_brief graphene_egenesis_full )

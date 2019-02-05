@@ -156,6 +156,20 @@ IF(NOT "${Boost_VERSION}" MATCHES "1.53(.*)")
    SET(Boost_LIBRARIES ${BOOST_LIBRARIES_TEMP} ${Boost_LIBRARIES})
 ENDIF()
 
+FIND_PACKAGE(Python 3.6 COMPONENTS Interpreter)
+
+if ( Python_Interpreter_FOUND )
+    MESSAGE( STATUS "Python interpreter")
+    MESSAGE( STATUS "  binary: ${Python_EXECUTABLE}" )
+    MESSAGE( STATUS "  falvor: ${Python_INTERPRETER_ID}")
+endif()
+
+SET( GENERATING_HELPERS PYTHON CACHE STRING "Default file generation helpers engine" )
+
+if ( Python_Interpreter_FOUND AND GENERATING_HELPERS STREQUAL PYTHON )
+    SET( GENERATING_HELPERS_USE_PYTHON TRUE CACHE INTERNAL "Use Python as file generation engine ( genesis, hardfork )")
+endif()
+
 # enforce more strict compiler warnings and errors
 add_compiler_flag_if_available("-Wall")
 add_compiler_flag_if_available("-Wclobbered")
