@@ -9,6 +9,10 @@ set( GUI_CLIENT_EXECUTABLE_NAME BitShares )
 set( CUSTOM_URL_SCHEME "gcs" )
 set( INSTALLER_APP_ID "68ad7005-8eee-49c9-95ce-9eed97e5b347" )
 
+set( CMAKE_CXX_STANDARD 14 )
+set( CMAKE_CXX_STANDARD_REQUIRED ON )
+set( CMAKE_CXX_EXTENSIONS OFF )
+
 # http://stackoverflow.com/a/18369825
 if("${CMAKE_CXX_COMPILER_ID}" STREQUAL "GNU")
     if (CMAKE_CXX_COMPILER_VERSION VERSION_LESS 4.8)
@@ -39,30 +43,30 @@ include(Utils)
 # Fortify source
 if (CMAKE_COMPILER_IS_GNUCXX)
 	if ("${CMAKE_CXX_COMPILER_ID}" STREQUAL "Clang")
-		message ("-- Setting optimizations for clang++")
+		message (STATUS "Setting optimizations for clang++")
 		set (CMAKE_CXX_FLAGS_RELEASE "-D_FORTIFY_SOURCE=2 -O3 -DNDEBUG=1")
 
 		# check and add data execution prevention
-		message ("-- Enabling data execution prevention")
+		message (STATUS "Enabling data execution prevention")
 		add_linker_flag("-fsanitize=safe-stack")
 
 		# check and add Stack-based buffer overrun detection
 		set(CMAKE_REQUIRED_FLAGS "-fstack-protector")
 		check_c_compiler_flag("" HAVE_STACKPROTECTOR)
 		if(HAVE_STACKPROTECTOR)
-			message ("-- Enabling stack-based buffer overrun detection")
+			message (STATUS "Enabling stack-based buffer overrun detection")
 			add_flag_append(CMAKE_C_FLAGS "-fstack-protector")
 			add_flag_append(CMAKE_CXX_FLAGS "-fstack-protector")
 		endif()
 	else ()
-		message ("-- Setting optimizations for g++")
+		message (STATUS "Setting optimizations for g++")
 		set (CMAKE_CXX_FLAGS_RELEASE "-D_FORTIFY_SOURCE=2 -O4 -DNDEBUG=1")
 
 		# check and add data execution prevention
 		set(CMAKE_REQUIRED_FLAGS "-Wl,-znoexecstack")
 		check_c_compiler_flag("" HAVE_NOEXECSTACK)
 		if(HAVE_NOEXECSTACK)
-			message ("-- Enabling data execution prevention")
+			message (STATUS "Enabling data execution prevention")
 			add_linker_flag("-znoexecstack")
 		endif()
 
@@ -70,7 +74,7 @@ if (CMAKE_COMPILER_IS_GNUCXX)
 		set(CMAKE_REQUIRED_FLAGS "-fstack-protector-strong")
 		check_c_compiler_flag("" HAVE_STACKPROTECTOR)
 		if(HAVE_STACKPROTECTOR)
-			message ("-- Enabling stack-based buffer overrun detection")
+			message ( STATUS "Enabling stack-based buffer overrun detection")
 			add_flag_append(CMAKE_C_FLAGS "-fstack-protector-strong")
 			add_flag_append(CMAKE_CXX_FLAGS "-fstack-protector-strong")
 		endif()
@@ -82,7 +86,7 @@ endif ()
 set(CMAKE_REQUIRED_FLAGS "-Wl,-zrelro,-znow")
 check_c_compiler_flag("" HAVE_RELROFULL)
 if(HAVE_RELROFULL)
-	message ("-- Enabling full data relocation and protection")
+	message (STATUS "Enabling full data relocation and protection")
 	add_linker_flag("-zrelro")
 	add_linker_flag("-znow")
 else()
@@ -90,7 +94,7 @@ else()
 	set(CMAKE_REQUIRED_FLAGS "-Wl,-zrelro")
 	check_c_compiler_flag("" HAVE_RELROPARTIAL)
 	if(HAVE_RELROPARTIAL)
-		message ("-- Enabling partial data relocation and protection")
+		message (STATUS "Enabling partial data relocation and protection")
 		add_linker_flag("-zrelro")
 	endif()
 endif()
@@ -137,7 +141,9 @@ LIST(APPEND BOOST_COMPONENTS thread
                              program_options
                              chrono
                              unit_test_framework
-                             context)
+                             context
+                             coroutine)
+# boost::endian is also required, but FindBoost can't handle header-only libs
 SET( Boost_USE_STATIC_LIBS ON CACHE STRING "ON or OFF" )
 
 IF(WIN32)
@@ -193,7 +199,7 @@ if( WIN32 )
     SET( DEFAULT_EXECUTABLE_INSTALL_DIR bin/ )
 
     if( MSVC )
-	add_definitions(-DWIN32_LEAN_AND_MEAN)
+	    add_definitions(-DWIN32_LEAN_AND_MEAN)
         #looks like this flag can have different default on some machines.
         SET(CMAKE_SHARED_LINKER_FLAGS "${CMAKE_SHARED_LINKER_FLAGS} /SAFESEH:NO")
         SET(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} /SAFESEH:NO")
@@ -207,11 +213,11 @@ else( WIN32 ) # Apple AND Linux
     if( APPLE )
         # Apple Specific Options Here
         message( STATUS "Configuring BitShares on OS X" )
-        set( CMAKE_CXX_FLAGS "${CMAKE_C_FLAGS} ${CMAKE_CXX_FLAGS} -std=c++11 -stdlib=libc++" )
+        set( CMAKE_CXX_FLAGS "${CMAKE_C_FLAGS} ${CMAKE_CXX_FLAGS} -std=c++11 -stdlib=libc++ -Wall" )
     else( APPLE )
         # Linux Specific Options Here
         message( STATUS "Configuring BitShares on Linux" )
-        set( CMAKE_CXX_FLAGS "${CMAKE_C_FLAGS} ${CMAKE_CXX_FLAGS} -std=c++11" )
+        set( CMAKE_CXX_FLAGS "${CMAKE_C_FLAGS} ${CMAKE_CXX_FLAGS} -std=c++11 -Wall" )
         if(USE_PROFILER)
             set( CMAKE_CXX_FLAGS "${CMAKE_C_FLAGS} ${CMAKE_CXX_FLAGS} -pg" )
         endif( USE_PROFILER )
