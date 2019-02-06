@@ -6,6 +6,7 @@ variables:
   DOCKER_DRIVER: overlay2
   GIT_SUBMODULE_STRATEGY: recursive
   IMG_NAME: ogc-$CI_JOB_NAME:$CI_COMMIT_SHA
+  SHARED_IMG_TAG: ${CI_REGISTRY_IMAGE}/onegram-$TARGET_ENV-$BUILD_TARGET-image:${CI_COMMIT_SHORT_SHA}
   #GIT_STRATEGY: clone
 
 services:
@@ -13,23 +14,40 @@ services:
 
 before_script:
   - docker info
+  - docker login -u gitlab-ci-token -p $CI_JOB_TOKEN $CI_REGISTRY
 
-.script_template: &script_definition
+after_script:
+  - docker logout $CI_REGISTRY
+
+stages:
+  - build
+  - test
+  - publish
+
+.script_template: &build_script_definition
   script:
     - docker build --build-arg TARGET_ENV=$TARGET_ENV  --build-arg BUILD=$BUILD_TARGET --build-arg REVISION_SHA=$CI_COMMIT_SHA -t $IMG_NAME -f Dockerfile.OGC .
     - docker image ls
-    - docker run --rm $IMG_NAME bash -c "ls -l /usr/local/bin/"
-    - docker run --rm $IMG_NAME chain_test
-    - docker run --rm $IMG_NAME fee_schedule_test
-    - docker run --rm $IMG_NAME vesting_balance_test
+    - IMG_TAG=`echo "$SHARED_IMG_TAG" | tr '[:upper:]' '[:lower:]'`
+    - docker tag $IMG_NAME $IMG_TAG
+    - docker push $IMG_TAG
 
-# BUILD=Release doesn't produce the unit test executables, temp here (we plan to run acceptance test suite in the future)
+.script_template: &test_script_definition
+  script:
+    - IMG_TAG=`echo "$SHARED_IMG_TAG" | tr '[:upper:]' '[:lower:]'`
+    - docker pull $IMG_TAG
+    - docker run --rm $IMG_TAG bash -c "ls -l /usr/local/bin/"
+    - docker run --rm $IMG_TAG chain_test
+    - docker run --rm $IMG_TAG fee_schedule_test
+    - docker run --rm $IMG_TAG vesting_balance_test
+
+# Build stages
+
 build_mainnet_release:
+  <<: *build_script_definition
   only:
     - master
-  script:
-    - docker build --build-arg TARGET_ENV=$TARGET_ENV --build-arg BUILD=$BUILD_TARGET --build-arg REVISION_SHA=$CI_COMMIT_SHA -t $IMG_NAME -f Dockerfile.OGC .
-    - docker image ls
+    - tags
   stage: build
   variables:
     BUILD_TARGET: Release
@@ -39,11 +57,10 @@ build_mainnet_release:
     - docker
 
 build_testnet_release:
+  <<: *build_script_definition
   except:
     - master
-  script:
-    - docker build --build-arg TARGET_ENV=$TARGET_ENV --build-arg BUILD=$BUILD_TARGET --build-arg REVISION_SHA=$CI_COMMIT_SHA -t $IMG_NAME -f Dockerfile.OGC .
-    - docker image ls
+    - tags
   stage: build
   variables:
     BUILD_TARGET: Release
@@ -53,9 +70,10 @@ build_testnet_release:
     - docker
 
 build_mainnet_debug:
-  <<: *script_definition
+  <<: *build_script_definition
   only:
     - master
+    - tags
   stage: build
   variables:
     BUILD_TARGET: Debug
@@ -65,13 +83,89 @@ build_mainnet_debug:
     - docker
 
 build_testnet_debug:
-  <<: *script_definition
+  <<: *build_script_definition
   except:
     - master
+    - tags
   stage: build
   variables:
     BUILD_TARGET: Debug
     TARGET_ENV: TESTNET
     GIT_SUBMODULE_STRATEGY: recursive
+  tags:
+    - docker
+
+# Test stages
+
+test_mainnet_release:
+  <<: *test_script_definition
+  only:
+    - master
+    - tags
+  stage: test
+  variables:
+    BUILD_TARGET: Release
+    TARGET_ENV: MAINNET
+  tags:
+    - docker
+
+test_testnet_release:
+  <<: *test_script_definition
+  except:
+    - master
+    - tags
+  stage: test
+  variables:
+    BUILD_TARGET: Release
+    TARGET_ENV: TESTNET
+  tags:
+    - docker
+
+test_mainnet_debug:
+  <<: *test_script_definition
+  only:
+    - master
+    - tags
+  stage: test
+  variables:
+    BUILD_TARGET: Debug
+    TARGET_ENV: MAINNET
+  tags:
+    - docker
+
+test_testnet_debug:
+  <<: *test_script_definition
+  except:
+    - master
+    - tags
+  stage: test
+  variables:
+    BUILD_TARGET: Debug
+    TARGET_ENV: TESTNET
+  tags:
+    - docker
+
+# Publish stage
+
+# this stage is valid only for master branch with tagged commit
+publish_mainnet_release:
+  only:
+    - tags
+    - /^v\d+\.\d+\.\d+([abc]\d*)?$/  # PEP-440 compliant
+  script:
+    - IMG_TAG=`echo "$SHARED_IMG_TAG" | tr '[:upper:]' '[:lower:]'`
+    - echo "image "$IMG_TAG
+    - echo $CI_COMMIT_TAG
+    - echo "release image "$RELEASE_IMG_NAME
+    - docker image ls
+    - docker pull $IMG_TAG
+    - docker image ls
+    - docker tag $IMG_TAG $RELEASE_IMG_NAME
+    - docker push $RELEASE_IMG_NAME
+  stage: publish
+  variables:
+    TARGET_ENV: MAINNET
+    BUILD_TARGET: Release
+    RELEASE_IMG_NAME: ${CI_REGISTRY_IMAGE}/onegram:${CI_COMMIT_TAG}-${CI_COMMIT_SHORT_SHA}
   tags:
     - docker
