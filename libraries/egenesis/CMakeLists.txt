@@ -21,9 +21,7 @@ endif( GRAPHENE_EGENESIS_JSON )
 if ( GENERATING_HELPERS_USE_PYTHON )
    MESSAGE( STATUS "embed_genesis: using Python to generate genesis header files")
 
-   add_executable( embed_genesis_cpp embed_genesis.cpp )
-
-   target_link_libraries( embed_genesis_cpp graphene_chain graphene_app graphene_egenesis_none fc )
+   SET( EMBED_GENESIS_TARGET_NAME embed_genesis_cpp )
 
    add_custom_target( embed_genesis )
 
@@ -41,9 +39,7 @@ if ( GENERATING_HELPERS_USE_PYTHON )
 else()
    MESSAGE( STATUS "embed_genesis: using C++ to generate genesis header files")
 
-   add_executable( embed_genesis embed_genesis.cpp )
-
-   target_link_libraries( embed_genesis graphene_chain graphene_app graphene_egenesis_none fc )
+   SET( EMBED_GENESIS_TARGET_NAME embed_genesis )
 
    add_custom_command(
       OUTPUT
@@ -57,6 +53,10 @@ else()
          "${CMAKE_CURRENT_SOURCE_DIR}/egenesis_full.cpp.tmpl"
       embed_genesis )
 endif()
+
+add_executable( ${EMBED_GENESIS_TARGET_NAME} embed_genesis.cpp )
+
+target_link_libraries( ${EMBED_GENESIS_TARGET_NAME} graphene_chain graphene_app graphene_egenesis_none fc )
 
 MESSAGE( STATUS "egenesis: " ${GRAPHENE_EGENESIS_JSON} )
 
