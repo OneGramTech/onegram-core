@@ -47,6 +47,7 @@ build_mainnet_release:
   <<: *build_script_definition
   only:
     - master
+    - tags
   stage: build
   variables:
     BUILD_TARGET: Release
@@ -59,6 +60,7 @@ build_testnet_release:
   <<: *build_script_definition
   except:
     - master
+    - tags
   stage: build
   variables:
     BUILD_TARGET: Release
@@ -71,6 +73,7 @@ build_mainnet_debug:
   <<: *build_script_definition
   only:
     - master
+    - tags
   stage: build
   variables:
     BUILD_TARGET: Debug
@@ -83,6 +86,7 @@ build_testnet_debug:
   <<: *build_script_definition
   except:
     - master
+    - tags
   stage: build
   variables:
     BUILD_TARGET: Debug
@@ -97,6 +101,7 @@ test_mainnet_release:
   <<: *test_script_definition
   only:
     - master
+    - tags
   stage: test
   variables:
     BUILD_TARGET: Release
@@ -108,6 +113,7 @@ test_testnet_release:
   <<: *test_script_definition
   except:
     - master
+    - tags
   stage: test
   variables:
     BUILD_TARGET: Release
@@ -119,6 +125,7 @@ test_mainnet_debug:
   <<: *test_script_definition
   only:
     - master
+    - tags
   stage: test
   variables:
     BUILD_TARGET: Debug
@@ -130,6 +137,7 @@ test_testnet_debug:
   <<: *test_script_definition
   except:
     - master
+    - tags
   stage: test
   variables:
     BUILD_TARGET: Debug
