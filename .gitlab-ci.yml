@@ -143,6 +143,7 @@ test_testnet_debug:
 publish_mainnet_release:
   only:
     - tags
+    - /^v\d+\.\d+\.\d+([abc]\d*)?$/  # PEP-440 compliant
   script:
     - IMG_TAG=`echo "$SHARED_IMG_TAG" | tr '[:upper:]' '[:lower:]'`
     - echo "image "$IMG_TAG
