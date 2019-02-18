@@ -46,7 +46,7 @@ if(CURL_STATICLIB)
   SET_TARGET_PROPERTIES(graphene_utilities PROPERTIES
   COMPILE_DEFINITIONS "CURL_STATICLIB")
 endif(CURL_STATICLIB)
-target_link_libraries( graphene_utilities fc ${CURL_LIBRARIES})
+target_link_libraries( graphene_utilities fc ${CURL_LIBRARIES} ${CURL_ADDITIONAL_LIBS} )
 target_include_directories( graphene_utilities
                             PUBLIC "${CMAKE_CURRENT_SOURCE_DIR}/include" ${CURL_INCLUDE_DIR} )
 if (USE_PCH)
