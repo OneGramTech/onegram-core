@@ -41,6 +41,23 @@ stages:
     - docker run --rm $IMG_TAG fee_schedule_test
     - docker run --rm $IMG_TAG vesting_balance_test
 
+.script_template: &mingw_build_script_definition
+  artifacts:
+    paths:
+      - $CI_PROJECT_DIR/release/*.exe
+      - $CI_PROJECT_DIR/release/tests/*.exe
+    expire_in: 2 days
+  script:
+    - docker build --build-arg TARGET_ENV=$TARGET_ENV  --build-arg BUILD=$BUILD_TARGET --build-arg REVISION_SHA=$CI_COMMIT_SHA -t $IMG_NAME -f Dockerfile.OGC.MINGW .
+    - docker image ls
+    - mkdir -p /release
+    - id=$(docker create $IMG_NAME)
+    - docker container ls -a
+    - docker cp $id:/release $CI_PROJECT_DIR
+    - ls $CI_PROJECT_DIR/release/ -l
+    - ls $CI_PROJECT_DIR/release/tests -l
+    - docker rm -v $id
+
 # Build stages
 
 build_mainnet_release:
@@ -92,6 +109,29 @@ build_testnet_debug:
     BUILD_TARGET: Debug
     TARGET_ENV: TESTNET
     GIT_SUBMODULE_STRATEGY: recursive
+  tags:
+    - docker
+
+# MinGW builds, debug builds are not supported
+mingw_build_mainnet_release:
+  <<: *mingw_build_script_definition
+  stage: build
+  variables:
+    BUILD_TARGET: Release
+    TARGET_ENV: MAINNET
+    GIT_SUBMODULE_STRATEGY: recursive
+    IMG_NAME: mingw-build-mainnet
+  tags:
+    - docker
+
+mingw_build_testnet_release:
+  <<: *mingw_build_script_definition
+  stage: build
+  variables:
+    BUILD_TARGET: Release
+    TARGET_ENV: TESTNET
+    GIT_SUBMODULE_STRATEGY: recursive
+    IMG_NAME: mingw-build-testnet
   tags:
     - docker
 
