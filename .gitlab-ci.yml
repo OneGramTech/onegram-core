@@ -42,13 +42,36 @@ stages:
     - docker run --rm $IMG_TAG vesting_balance_test
 
 .script_template: &mingw_build_script_definition
+  image: registry.gitlab.com/cryptohouse/onegramdev/mingw-dependencies:latest
+  before_script:
+    # Overriding docker commands
+    - echo "Hello, this is a Windows build environment"
+  after_script:
+    # Overriding docker commands
+    - echo "Goodbye!"
+  variables:
+    TARGET:
+  artifacts:
+    paths:
+      - $CI_PROJECT_DIR/release-$TARGET_ENV/*.exe
+      - $CI_PROJECT_DIR/release-$TARGET_ENV/tests/*.exe
+    expire_in: 2 days
+  script:
+    # BUILD_TYPE = Release ( Fixed parameter, Debug is not compilable )
+    - cmake -G Ninja -DTARGET_ENV=$TARGET_ENV -DENABLE_INSTALLER=TRUE -DCMAKE_BUILD_TYPE=Release -DREVISION_SHA=$REVISION_SHA -DREVISION_TIMESTAMP=$REVISION_TIMESTAMP -DCMAKE_TOOLCHAIN_FILE="toolchain_mingw.cmake" -DBOOST_INCLUDEDIR="/dependencies/boost/" -DOPENSSL_ROOT_DIR="/dependencies/openssl/" -DOPENSSL_INCLUDE_DIR="/dependencies/openssl/include/"  -DOPENSSL_SSL_LIBRARY="/dependencies/openssl/libssl.a"  -DOPENSSL_CRYPTO_LIBRARY="/dependencies/openssl/libcrypto.a"  -DZLIB_ROOT="/dependencies/zlib/"  -DCURL_LIBRARY="/dependencies/curl/lib/libcurl.a" -DCURL_INCLUDE_DIR="/dependencies/curl/include/" . && ninja $TARGET && mkdir -p release-$TARGET_ENV/tests  && find programs -type f -name "*.exe" -exec cp {} release-$TARGET_ENV \;  && find tests -type f -name "*.exe" -exec cp {} release-$TARGET_ENV/tests \;  && ls release-$TARGET_ENV -l && ls release-$TARGET_ENV/tests -l
+    # Create NSIS Installer ( optional )
+    - apt-get install -y --no-install-recommends nsis
+    - cpack -C Release
+    - find packages -type f -name "*.exe" -exec cp {} release-$TARGET_ENV \;
+
+.script_template: &mingw_build_script_definition_docker
   artifacts:
     paths:
       - $CI_PROJECT_DIR/release/*.exe
       - $CI_PROJECT_DIR/release/tests/*.exe
     expire_in: 2 days
   script:
-    - docker build --build-arg TARGET_ENV=$TARGET_ENV  --build-arg BUILD=$BUILD_TARGET --build-arg REVISION_SHA=$CI_COMMIT_SHA -t $IMG_NAME -f Dockerfile.OGC.MINGW .
+    - docker build --build-arg TARGET_ENV=$TARGET_ENV  --build-arg BUILD=$BDCUILD_TARGET --build-arg REVISION_SHA=$CI_COMMIT_SHA -t $IMG_NAME -f Dockerfile.OGC.MINGW .
     - docker image ls
     - mkdir -p /release
     - id=$(docker create $IMG_NAME)
@@ -122,7 +145,7 @@ mingw_build_mainnet_release:
     GIT_SUBMODULE_STRATEGY: recursive
     IMG_NAME: mingw-build-mainnet
   tags:
-    - docker
+    - windows
 
 mingw_build_testnet_release:
   <<: *mingw_build_script_definition
@@ -133,7 +156,7 @@ mingw_build_testnet_release:
     GIT_SUBMODULE_STRATEGY: recursive
     IMG_NAME: mingw-build-testnet
   tags:
-    - docker
+    - windows
 
 # Test stages
 
