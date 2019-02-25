@@ -36,6 +36,8 @@
 
 #include <graphene/net/node.hpp>
 
+#include <graphene/account_archive/account_summary.hpp>
+
 #include <fc/api.hpp>
 #include <fc/optional.hpp>
 #include <fc/crypto/elliptic.hpp>
@@ -107,7 +109,170 @@ namespace graphene { namespace app {
       price         max_price; ///< possible highest price in the group
       share_type    total_for_sale; ///< total amount of asset for sale, asset id is min_price.base.asset_id
    };
-   
+
+   /* Helper functions. */
+   time_point_sec get_block_time(uint32_t block_num, const database_api& db_api);
+   optional<operation> get_operation(const operation_archive_object& oao, const database& db);
+
+   /**
+    * @brief The archive_api class implements the RPC API for the operation archive.
+    *
+    * This API contains methods to query complete operation history.
+    * (It is an alternative to the history_api.)
+    *
+    * The convention of operation ordering is from the more recent operations
+    * to the older. This holds for both types of queries, i.e. by index and
+    * by time. The result also contains operations ordered this way.
+    *
+    * Block time consideration. Let's say that the block b1/b2 was forged
+    * at the time t1/t2 (t1 != t2) and that t2 - t1 equals the block time.
+    * The operations contained in a particular block are ascribed that
+    * block's timestamp. Thus, if a time query is performed with begin
+    * time t, the first considered operations are those from the block:
+    *   - b1 if t <= t1
+    *   - b2 if t > t1 && t <= t2
+    *
+    * A query result contains the number of processed (i.e. queried) operations.
+    * This is necessary information to facilitate the by time api calls. To list
+    * all operations satisfying the time window requirement the call has to be
+    * repeated until all candidate operations from the time window are processed.
+    * Because of query limit per call this is done by skipping a specified number
+    * of operations counted from the end of the time window (see operation ordering).
+    *
+    * An acceptable operation is one which satisfies the imposed restrictions.
+    * Possible restrictions are (some) combinations of the following:
+    *   * impacted a specified account
+    *   * enchained before a specified operation
+    *   * enchained within a specific time window
+    *   * is of type specified by an operation id filter
+    *   * is not within a to be skipped operation count
+    */
+   class archive_api
+   {
+      public:
+         /** @brief Maximal number of operations returned by get_archived calls per query. */
+         static const size_t QueryResultLimit;
+         /** @brief Maximal number of operations inspected by get_archived calls per query. */
+         static const size_t QueryInspectLimit;
+
+         /// Result aggregator for get_archived calls.
+         struct query_result {
+            size_t num_processed; // operations by the call
+            vector<operation_history_object> operations;
+         };
+
+         /// Result aggregator for get_summary calls.
+         struct summary_result {
+            size_t num_processed; // operations by the call
+            account_archive::account_summary summary;
+         };
+
+         archive_api(application& app)
+            : _app(app), database_api(std::ref(*app.chain_database()), &(app.get_options())) {}
+         /**
+          * @brief Get a subset of the performed operations queried by index and traversed from recent to older.
+          * @param last Index of the last acceptable operation.
+          * @param count Number of the requested operations.
+          * @param operation_id_filter A set of acceptable operation type IDs. Empty set accepts all.
+          * @return A list of at most @QueryResultLimit subsequent acceptable operations.
+          */
+         query_result get_archived_operations(size_t last,
+                                              size_t count,
+                                              flat_set<int> operation_id_filter = flat_set<int>()) const;
+         /**
+          * @brief Get a subset of the performed operations queried by time and traversed from recent to older.
+          * @param inclusive_from Starting time of the query time window.
+          * @param exclusive_until Ending time of the query time window.
+          * @param skip_count Number of operations to skip before including them in the query.
+          * @param operation_id_filter A set of acceptable operation type IDs. Empty set accepts all.
+          * @return A list of at most @QueryResultLimit subsequent acceptable operations.
+          */
+         query_result get_archived_operations_by_time(time_point_sec inclusive_from,
+                                                      time_point_sec exclusive_until,
+                                                      size_t skip_count,
+                                                      flat_set<int> operation_id_filter = flat_set<int>()) const;
+         /**
+          * @brief Get a subset of the performed operations by the specified account queried by index and traversed from recent to older.
+          * @param account_id_or_name An account identifier for which to query the operations.
+          * @param last Index of the last acceptable operation.
+          * @param count Number of the requested operations.
+          * @param operation_id_filter A set of acceptable operation type IDs. Empty set accepts all.
+          * @return A list of at most @QueryResultLimit subsequent acceptable operations.
+          */
+         query_result get_archived_account_operations(const std::string account_id_or_name,
+                                                      size_t last,
+                                                      size_t count,
+                                                      flat_set<int> operation_id_filter = flat_set<int>()) const;
+         /**
+          * @brief Get a subset of the performed operations by the specified account queried by time and traversed from recent to older.
+          * @param account_id_or_name An account identifier for which to query the operations.
+          * @param inclusive_from Starting time of the query time window.
+          * @param exclusive_until Ending time of the query time window.
+          * @param skip_count Number of operations to skip before including them in the query.
+          * @param operation_id_filter A set of acceptable operation type IDs. Empty set accepts all.
+          * @param processed_count If provided it will contain the number of operations traversed
+          * by the query within the specified time window not counting the skipped operations.
+          * @return A list of at most @QueryResultLimit subsequent acceptable operations.
+          */
+         query_result get_archived_account_operations_by_time(const std::string account_id_or_name,
+                                                              time_point_sec inclusive_from,
+                                                              time_point_sec exclusive_until,
+                                                              size_t skip_count,
+                                                              flat_set<int> operation_id_filter = flat_set<int>()) const;
+         /**
+          * @brief Get the number of performed operations impacting the specified account.
+          * @param account_id_or_name An account identifier for which to query the operation count.
+          * @return The number of performed operations impacting the specified account.
+          */
+         size_t get_archived_account_operation_count(const std::string account_id_or_name) const;
+         /**
+          * @brief Get the summaries of credit and debit operations for the specified account and asset.
+          * @param account_id_or_name An account identifier for which to get the summary for.
+          * @param asset_id_or_name An asset identifier for which to get the summary for.
+          * @param last Index of the last acceptable operation.
+          * @param count Number of operations to be included in the summary.
+          * @return The requested account asset summary retrieved from the processed operations.
+          */
+         summary_result get_account_summary(const std::string account_id_or_name,
+                                            const std::string asset_id_or_name,
+                                            size_t last,
+                                            size_t count) const;
+         /**
+          * @brief Get the summaries of credit and debit operations for the specified account and asset queried by time.
+          * @param account_id_or_name An account identifier for which to get the summary for.
+          * @param asset_id_or_name An asset identifier for which to get the summary for.
+          * @param inclusive_from Starting time of the query time window.
+          * @param exclusive_until Ending time of the query time window.
+          * @param skip_count Number of operations to skip before including them in the query.
+          * @return The requested account asset summary retrieved from the processed operations.
+          */
+         summary_result get_account_summary_by_time(const std::string account_id_or_name,
+                                                    const std::string asset_id_or_name,
+                                                    time_point_sec inclusive_from,
+                                                    time_point_sec exclusive_until,
+                                                    size_t skip_count) const;
+      private:
+         application& _app;
+         graphene::app::database_api database_api;
+
+         query_result my_get_archived_operations(const account_id_type* account_id,
+                                                 size_t last,
+                                                 size_t count,
+                                                 flat_set<int> operation_id_filter) const;
+
+         query_result my_get_archived_operations_by_time(const account_id_type* account_id,
+                                                         time_point_sec inclusive_from,
+                                                         time_point_sec exclusive_until,
+                                                         size_t skip_count,
+                                                         flat_set<int> operation_id_filter) const;
+
+         void update_summary(const database& db,
+                             account_id_type account_id,
+                             asset_id_type asset_id,
+                             const operation& op,
+                             account_archive::account_summary& sum) const;
+   };
+
    /**
     * @brief The history_api class implements the RPC API for account history
     *
@@ -545,6 +710,8 @@ namespace graphene { namespace app {
          fc::api<network_broadcast_api> network_broadcast()const;
          /// @brief Retrieve the database API
          fc::api<database_api> database()const;
+         /// @brief Retrieve the archive API
+         fc::api<archive_api> archive()const;
          /// @brief Retrieve the history API
          fc::api<history_api> history()const;
          /// @brief Retrieve the network node API
@@ -567,7 +734,8 @@ namespace graphene { namespace app {
          optional< fc::api<database_api> > _database_api;
          optional< fc::api<network_broadcast_api> > _network_broadcast_api;
          optional< fc::api<network_node_api> > _network_node_api;
-         optional< fc::api<history_api> >  _history_api;
+         optional< fc::api<archive_api> > _archive_api;
+         optional< fc::api<history_api> > _history_api;
          optional< fc::api<crypto_api> > _crypto_api;
          optional< fc::api<asset_api> > _asset_api;
          optional< fc::api<orders_api> > _orders_api;
@@ -576,6 +744,10 @@ namespace graphene { namespace app {
 
 }}  // graphene::app
 
+FC_REFLECT( graphene::app::archive_api::query_result,
+        (num_processed)(operations) )
+FC_REFLECT( graphene::app::archive_api::summary_result,
+        (num_processed)(summary))
 FC_REFLECT( graphene::app::network_broadcast_api::transaction_confirmation,
         (id)(block_num)(trx_num)(trx) )
 FC_REFLECT( graphene::app::verify_range_result,
@@ -592,6 +764,15 @@ FC_REFLECT( graphene::app::limit_order_group,
 FC_REFLECT( graphene::app::account_asset_balance, (name)(account_id)(amount) );
 FC_REFLECT( graphene::app::asset_holders, (asset_id)(count) );
 
+FC_API(graphene::app::archive_api,
+       (get_archived_operations)
+       (get_archived_operations_by_time)
+       (get_archived_account_operations)
+       (get_archived_account_operations_by_time)
+       (get_archived_account_operation_count)
+       (get_account_summary)
+       (get_account_summary_by_time)
+     )
 FC_API(graphene::app::history_api,
        (get_account_history)
        (get_account_history_by_operations)
@@ -642,6 +823,7 @@ FC_API(graphene::app::login_api,
        (block)
        (network_broadcast)
        (database)
+       (archive)
        (history)
        (network_node)
        (crypto)

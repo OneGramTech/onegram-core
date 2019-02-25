@@ -406,6 +406,12 @@ void get_relevant_accounts( const object* obj, flat_set<account_id_type>& accoun
               FC_ASSERT( aobj != nullptr );
               accounts.insert( aobj->bidder );
               break;
+           } case impl_operation_archive_object_type: {
+              // For now do not notify node rpc clients via archive_api.
+              break;
+           } case impl_account_archive_object_type: {
+              // For now do not notify node rpc clients via archive_api.
+              break;
            }
       }
    }
