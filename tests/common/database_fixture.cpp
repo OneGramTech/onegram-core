@@ -24,6 +24,7 @@
 #include <boost/test/unit_test.hpp>
 #include <boost/program_options.hpp>
 
+#include <graphene/account_archive/account_archive_plugin.hpp>
 #include <graphene/account_history/account_history_plugin.hpp>
 #include <graphene/market_history/market_history_plugin.hpp>
 #include <graphene/grouped_orders/grouped_orders_plugin.hpp>
@@ -125,6 +126,13 @@ database_fixture::database_fixture()
    if( boost::unit_test::framework::current_test_case().p_name.value == "track_votes_witnesses_disabled" ||
        boost::unit_test::framework::current_test_case().p_name.value == "track_votes_committee_disabled") {
       app.chain_database()->enable_standby_votes_tracking( false );
+   }
+
+   {
+      auto aaplugin = app.register_plugin<graphene::account_archive::account_archive_plugin>();
+      aaplugin->plugin_set_app(&app);
+      aaplugin->plugin_initialize(options);
+      aaplugin->plugin_startup();
    }
 
    auto test_name = boost::unit_test::framework::current_test_case().p_name.value;

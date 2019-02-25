@@ -43,6 +43,635 @@
 
 namespace graphene { namespace app {
 
+   /* HELPERS begin */
+
+   time_point_sec get_block_time(const database_api& db_api, uint32_t block_num)
+   {
+      const auto& header = db_api.get_block_header(block_num);
+      return header.valid() ? header->timestamp : time_point_sec::min();
+   }
+
+   optional<operation> get_archived_operation(const database& db, const operation_archive_object& oao)
+   {
+      const auto& block = db.fetch_block_by_number(oao.block_num);
+      if (block.valid() && ((size_t)oao.trx_in_block < block->transactions.size())) {
+         const auto& trx = block->transactions[oao.trx_in_block];
+         if ((size_t)oao.op_in_trx < trx.operations.size())
+            return trx.operations[oao.op_in_trx];
+      }
+      return optional<operation>();
+   }
+
+   optional<operation_history_object> get_oho_without_id(const database& db, const operation_archive_object& oao)
+   {
+      const auto& block = db.fetch_block_by_number(oao.block_num);
+      if (block.valid() && ((size_t)oao.trx_in_block < block->transactions.size())) {
+         const auto& trx = block->transactions[oao.trx_in_block];
+         if ((size_t)oao.op_in_trx < trx.operations.size()) {
+            auto oho = operation_history_object();
+            oho.op = trx.operations[oao.op_in_trx];
+            oho.result = trx.operation_results[oao.op_in_trx];
+            oho.block_num = oao.block_num;
+            oho.trx_in_block = oao.trx_in_block;
+            oho.op_in_trx = oao.op_in_trx;
+            oho.virtual_op = oao.virtual_op;
+            return oho;
+         }
+      }
+      return optional<operation_history_object>();
+   }
+
+   bool check_query_index_input(size_t num_ops, size_t last, size_t count, size_t count_limit)
+   {
+      FC_ASSERT(!num_ops || (num_ops >= last + 1), "invalid request offset");
+      FC_ASSERT(count <= count_limit, "invalid request count");
+      FC_ASSERT(count <= last + 1, "invalid request count");
+      return count > 0u;
+   }
+
+   // remove invalid operation ids
+   bool check_query_opid_input(flat_set<int>& ids)
+   {
+      for (auto i = ids.begin(); i != ids.end(); i++) {
+         if ((*i < 0) || (*i > operation::count()))
+            i = ids.erase(i);
+      }
+      return ids.size() > 0u;
+   }
+
+   const account_archive_object* get_account_operations(const database& db, const account_id_type& account_id)
+   {
+      const auto& account_archive = db.get_index_type<account_archive_index>().indices().get<by_id>();
+      const auto aao_id = account_archive_id_type(account_id.instance);
+      const auto& finder = account_archive.find(aao_id);
+      return (finder != account_archive.end()) ? &(*finder) : nullptr;
+   }
+
+   object_id_type get_archived_operation_id(const account_archive_object* archive, const account_id_type* account, size_t index)
+   {
+      return account ? archive->operations[index] : operation_archive_id_type(index);
+   }
+
+   fc::time_point_sec get_operation_time(
+         const database_api& db_api,
+         const operation_archive_index& operation_archive,
+         const account_archive_object* account_operations,
+         const account_id_type* account,
+         size_t index)
+   {
+      const auto object_id = get_archived_operation_id(account_operations, account, index);
+      const auto op_object = static_cast<const operation_archive_object &>(operation_archive.get(object_id));
+      return get_block_time(db_api, op_object.block_num);
+   }
+
+   inline int64_t pick_pivot(int64_t begin, int64_t end)
+   {
+      return (end + begin + 1) >> 1; // average rounded up
+   }
+
+   // finds last operation written later than 'time'
+   size_t find_operation(
+         const database_api& db_api,
+         const operation_archive_index& operation_archive,
+         const account_archive_object* account_operations,
+         const account_id_type* account,
+         size_t max_op_count,
+         time_point_sec time)
+   {
+      if ( !max_op_count )
+         return 0;
+
+      // this is edge case, when every value is > than time and algorithm would return 1 instead of 0
+      auto first_time = get_operation_time(db_api, operation_archive, account_operations, account, 0);
+      if ( first_time >= time )
+         return 0;
+
+      // use binary search to find specific operation id
+      int64_t begin = 0;
+      int64_t end = (int64_t)max_op_count - 1;
+      while (begin < end) {
+         const int64_t pivot = pick_pivot(begin, end);
+         auto pivot_time = get_operation_time(db_api, operation_archive, account_operations, account, pivot);
+         if (pivot_time < time) {
+            begin = pivot;
+         } else {
+            end = pivot - 1;
+         }
+      };
+
+      return begin + 1; // move from index to id space
+   }
+
+   asset_id_type get_asset_id(const database_api& db_api, const string& id_or_symbol)
+   {
+      vector<string> symbol_or_id;
+      symbol_or_id.push_back(id_or_symbol);
+      auto result = db_api.lookup_asset_symbols(symbol_or_id);
+      FC_ASSERT(result[0].valid(), "Unable to find asset '${string}'", ("symbol", id_or_symbol));
+      return result[0]->get_id();
+   }
+
+   struct fee_retrieval_visitor
+   {
+      typedef share_type result_type;
+
+      const account_id_type& account_id;
+      const asset_id_type& asset_id;
+
+      fee_retrieval_visitor(const account_id_type& account_id, const asset_id_type& asset_id) : account_id(account_id), asset_id(asset_id) {}
+
+      template<typename OpType>
+      result_type operator()(OpType& op) const
+      {
+         return ((op.fee_payer() == account_id) && (op.fee.asset_id == asset_id)) ? op.fee.amount : 0;
+      }
+   };
+
+   /* HELPERS end */
+
+   const size_t archive_api::QueryResultLimit = 50;
+   const size_t archive_api::QueryInspectLimit = 5 * QueryResultLimit;
+
+   archive_api::query_result archive_api::get_archived_operations(size_t last,
+                                                                  size_t count,
+                                                                  flat_set<int> operation_id_filter) const
+   {
+      return my_get_archived_operations(nullptr, last, count, operation_id_filter);
+   }
+
+   archive_api::query_result archive_api::get_archived_operations_by_time(time_point_sec inclusive_from,
+                                                                          time_point_sec exclusive_until,
+                                                                          size_t skip_count,
+                                                                          flat_set<int> operation_id_filter) const
+   {
+      return my_get_archived_operations_by_time(nullptr, inclusive_from, exclusive_until, skip_count, operation_id_filter);
+   }
+
+   archive_api::query_result archive_api::archive_api::get_archived_account_operations(const std::string account_id_or_name,
+                                                                                       size_t last,
+                                                                                       size_t count,
+                                                                                       flat_set<int> operation_id_filter) const
+   {
+      const auto account_id = database_api.get_account_id_from_string(account_id_or_name);
+      return my_get_archived_operations(&account_id, last, count, operation_id_filter);
+   }
+
+   archive_api::query_result archive_api::get_archived_account_operations_by_time(const std::string account_id_or_name,
+                                                                                  time_point_sec inclusive_from,
+                                                                                  time_point_sec exclusive_until,
+                                                                                  size_t skip_count,
+                                                                                  flat_set<int> operation_id_filter) const
+   {
+      const auto account_id = database_api.get_account_id_from_string(account_id_or_name);
+      return my_get_archived_operations_by_time(&account_id, inclusive_from, exclusive_until, skip_count, operation_id_filter);
+   }
+
+   size_t archive_api::get_archived_account_operation_count(const std::string account_id_or_name) const
+   {
+      const auto db = _app.chain_database();
+      FC_ASSERT(db != nullptr);
+
+      const auto acc_id = database_api.get_account_id_from_string(account_id_or_name);
+      const auto aao_id = account_archive_id_type(acc_id.instance);
+      const auto& acc_archive = db->get_index_type<account_archive_index>().indices().get<by_id>();
+      const auto& finder = acc_archive.find(aao_id);
+      return (finder != acc_archive.end()) ? (*finder).operations.size() : 0u;
+   }
+
+   archive_api::summary_result archive_api::get_account_summary(const std::string account_id_or_name,
+                                                                const std::string asset_id_or_name,
+                                                                size_t last,
+                                                                size_t count) const
+   {
+      auto result = archive_api::summary_result();
+
+      const auto db = _app.chain_database();
+      FC_ASSERT(db != nullptr);
+
+      const auto asset_id = get_asset_id(database_api, asset_id_or_name);
+      const auto account_id = database_api.get_account_id_from_string(account_id_or_name);
+      const auto& operation_archive = db->get_index_type<operation_archive_index>();
+      const account_archive_object* account_operations = get_account_operations(*db.get(), account_id);
+      if (!account_operations)
+         return result; // account created in genesis without any operations yet
+
+      size_t num_operations = account_operations->operations.size();
+      if (!check_query_index_input(num_operations, last, count, archive_api::QueryInspectLimit))
+         return result;
+
+      // inspect archived operations
+      num_operations = last + 1; // number of operations left to query
+      count = std::min(count, archive_api::QueryInspectLimit);
+      while (num_operations-- && count--) {
+         result.num_processed++;
+         const auto oao_id = get_archived_operation_id(account_operations, &account_id, num_operations);
+         const auto oao = static_cast<const operation_archive_object&>(operation_archive.get(oao_id));
+         const auto op = get_archived_operation(*db, oao);
+         if (op.valid()) {
+            FC_ASSERT((int64_t)(*op).which() == (int64_t)oao.operation_id);
+            update_summary(*db.get(), account_id, asset_id, *op, result.summary);
+         }
+      }
+
+      return result;
+   }
+
+   archive_api::summary_result archive_api::get_account_summary_by_time(const std::string account_id_or_name,
+                                                                        const std::string asset_id_or_name,
+                                                                        time_point_sec inclusive_from,
+                                                                        time_point_sec exclusive_until,
+                                                                        size_t skip_count) const
+   {
+      auto result = archive_api::summary_result();
+
+      const auto db = _app.chain_database();
+      FC_ASSERT(db != nullptr);
+
+      const auto asset_id = get_asset_id(database_api, asset_id_or_name);
+      const auto account_id = database_api.get_account_id_from_string(account_id_or_name);
+      const auto& operation_archive = db->get_index_type<operation_archive_index>();
+      const account_archive_object* account_operations = get_account_operations(*db.get(), account_id);
+      if (!account_operations)
+         return result; // account created in genesis without any operations yet
+
+      size_t last_op_id = account_operations->operations.size();
+      size_t first_op_id = 0;
+
+      if (!last_op_id)
+         return result;
+
+      last_op_id  = find_operation(database_api, operation_archive, account_operations, &account_id, last_op_id, exclusive_until);
+      first_op_id = find_operation(database_api, operation_archive, account_operations, &account_id, last_op_id, inclusive_from);
+
+      if ( last_op_id > skip_count )
+         last_op_id -= skip_count;
+      else
+         last_op_id = 0;
+
+      // inspect operations inside the time window
+      while ((last_op_id > first_op_id) && (result.num_processed < QueryInspectLimit)) {
+         result.num_processed++;
+         const auto oao_id = get_archived_operation_id(account_operations, &account_id, last_op_id - 1);
+         const auto oao = static_cast<const operation_archive_object&>(operation_archive.get(oao_id));
+         const auto op = get_archived_operation(*db, oao);
+         if (op.valid()) {
+            FC_ASSERT((int64_t)(*op).which() == (int64_t)oao.operation_id);
+            update_summary(*db.get(), account_id, asset_id, *op, result.summary);
+         }
+         last_op_id--;
+      }
+
+      return result;
+   }
+
+   archive_api::query_result archive_api::my_get_archived_operations(const account_id_type* account_id,
+                                                                     size_t last,
+                                                                     size_t count,
+                                                                     flat_set<int> operation_id_filter) const
+   {
+      auto result = archive_api::query_result();
+
+      const auto db = _app.chain_database();
+      FC_ASSERT(db != nullptr);
+
+      const auto& operation_archive = db->get_index_type<operation_archive_index>();
+      const account_archive_object* account_operations = nullptr;
+      size_t num_operations = 0;
+
+      if (account_id) {
+         account_operations = get_account_operations(*db.get(), *account_id);
+         if (!account_operations)
+            return result; // account created in genesis without any operations yet
+         num_operations = account_operations->operations.size();
+      } else {
+         num_operations = operation_archive.size();
+      }
+      if (!check_query_index_input(num_operations, last, count, archive_api::QueryResultLimit))
+         return result;
+
+      const auto filter_end = operation_id_filter.end();
+      const bool filter = check_query_opid_input(operation_id_filter);
+
+      result.operations.reserve(count);
+
+      // inspect archived operations
+      num_operations = last + 1; // number of operations left to query
+      while (num_operations && count && (result.num_processed < QueryInspectLimit)) {
+         result.num_processed++;
+         const auto oa_id = get_archived_operation_id(account_operations, account_id, num_operations - 1);
+         const auto oao = static_cast<const operation_archive_object&>(operation_archive.get(oa_id));
+         if (!filter || (operation_id_filter.find((int)oao.operation_id) != filter_end)) {
+            auto oho = get_oho_without_id(*db, oao);
+            if (oho.valid()) {
+               FC_ASSERT((int64_t)oho->op.which() == (int64_t)oao.operation_id);
+               oho->id = operation_history_id_type(oa_id.instance());
+               result.operations.push_back(*oho);
+               count--;
+            }
+         }
+         num_operations--;
+      }
+
+      return result;
+   }
+
+   archive_api::query_result archive_api::my_get_archived_operations_by_time(const account_id_type* account_id,
+                                                                             time_point_sec inclusive_from,
+                                                                             time_point_sec exclusive_until,
+                                                                             size_t skip_count,
+                                                                             flat_set<int> operation_id_filter) const
+   {
+      auto result = archive_api::query_result();
+
+      if (inclusive_from >= exclusive_until)
+         return result;
+
+      const auto db = _app.chain_database();
+      FC_ASSERT(db != nullptr);
+
+      const auto& operation_archive = db->get_index_type<operation_archive_index>();
+      const account_archive_object* account_operations = nullptr;
+      size_t last_op_id = 0;
+      size_t first_op_id = 0;
+
+      if (account_id) {
+         account_operations = get_account_operations(*db.get(), *account_id);
+         if (!account_operations)
+            return result; // account created in genesis without any operations yet
+         last_op_id = account_operations->operations.size();
+      } else {
+         last_op_id = operation_archive.size();
+      }
+      if (!last_op_id)
+         return result;
+
+      const auto filter_end = operation_id_filter.end();
+      const bool filter = check_query_opid_input(operation_id_filter);
+
+      last_op_id  = find_operation(database_api, operation_archive, account_operations, account_id, last_op_id, exclusive_until);
+      first_op_id = find_operation(database_api, operation_archive, account_operations, account_id, last_op_id, inclusive_from);
+
+      if ( last_op_id > skip_count )
+         last_op_id -= skip_count;
+      else
+         last_op_id = 0;
+
+      result.operations.reserve(QueryResultLimit);
+
+      // inspect operations inside the time window
+      while ((last_op_id > first_op_id) && (result.num_processed < QueryInspectLimit)) {
+         const auto oa_id = get_archived_operation_id(account_operations, account_id, last_op_id - 1);
+         const auto oao = static_cast<const operation_archive_object&>(operation_archive.get(oa_id));
+         result.num_processed++;
+         if (!filter || (operation_id_filter.find((int)oao.operation_id) != filter_end)) {
+            auto oho = get_oho_without_id(*db, oao);
+            if (oho.valid()) {
+               FC_ASSERT((int64_t)oho->op.which() == (int64_t)oao.operation_id);
+               oho->id = operation_history_id_type(oa_id.instance());
+               result.operations.push_back(*oho);
+               if (result.operations.size() == QueryResultLimit)
+                  break;
+            }
+         }
+         last_op_id--;
+      }
+
+      return result;
+   }
+
+   void archive_api::update_summary(const database& db,
+                                    account_id_type account_id,
+                                    asset_id_type asset_id,
+                                    const operation& op,
+                                    account_archive::account_summary& sum) const
+   {
+      switch(op.which()) {
+         case operation::tag<transfer_operation>::value:
+         {
+            const auto& o = op.get<transfer_operation>();
+            FC_ASSERT((o.from == account_id) || (o.to == account_id));
+            if (o.amount.asset_id == asset_id) {
+               if (o.from == account_id)
+                  sum.debits += o.amount.amount;
+               if (o.to == account_id)
+                  sum.credits += o.amount.amount;
+            }
+            break;
+         }
+         case operation::tag<limit_order_create_operation>::value:
+         {
+            const auto& o = op.get<limit_order_create_operation>();
+            FC_ASSERT(o.seller == account_id);
+            if (o.amount_to_sell.asset_id == asset_id) {
+               sum.debits += o.amount_to_sell.amount;
+            }
+            break;
+         }
+         case operation::tag<limit_order_cancel_operation>::value:
+         {
+            const auto& o = op.get<limit_order_cancel_operation>();
+            const auto& order = o.order(db);
+            FC_ASSERT(order.seller == account_id);
+            FC_ASSERT(order.sell_price.base.asset_id == asset_id);
+            sum.credits += order.sell_price.base.amount;
+            break;
+         }
+         case operation::tag<call_order_update_operation>::value:
+         {
+            const auto& o = op.get<call_order_update_operation>();
+            FC_ASSERT(o.funding_account == account_id);
+            if (o.delta_collateral.asset_id == asset_id) {
+               if (o.delta_collateral.amount > 0)
+                  sum.debits += o.delta_collateral.amount;
+               if (o.delta_collateral.amount < 0)
+                  sum.credits += o.delta_collateral.amount;
+            }
+            if (o.delta_debt.asset_id == asset_id) {
+               if (o.delta_debt.amount > 0)
+                  sum.credits += o.delta_debt.amount;
+               if (o.delta_debt.amount < 0)
+                  sum.debits += o.delta_debt.amount;
+            }
+            break;
+         }
+         case operation::tag<fill_order_operation>::value: // VIRTUAL
+         {
+            const auto& o = op.get<fill_order_operation>();
+            FC_ASSERT(o.account_id == account_id);
+            if (o.pays.asset_id == asset_id)
+               sum.debits += o.pays.amount;
+            if (o.receives.asset_id == asset_id)
+               sum.credits += o.receives.amount;
+            break;
+         }
+         case operation::tag<asset_issue_operation>::value:
+         {
+            const auto& o = op.get<asset_issue_operation>();
+            FC_ASSERT((o.issuer == account_id) || (o.issue_to_account == account_id));
+            if ((o.asset_to_issue.asset_id == asset_id) && (o.issue_to_account == account_id))
+               sum.credits += o.asset_to_issue.amount;
+            break;
+         }
+         case operation::tag<asset_reserve_operation>::value:
+         {
+            const auto& o = op.get<asset_reserve_operation>();
+            FC_ASSERT(o.payer == account_id);
+            if (o.amount_to_reserve.asset_id == asset_id)
+               sum.debits += o.amount_to_reserve.amount;
+            break;
+         }
+         case operation::tag<asset_fund_fee_pool_operation>::value:
+         {
+            const auto& o = op.get<asset_fund_fee_pool_operation>();
+            FC_ASSERT(o.from_account == account_id);
+            if (o.asset_id == asset_id)
+               sum.debits += o.amount;
+            break;
+         }
+         case operation::tag<asset_settle_operation>::value:
+         {
+            const auto& o = op.get<asset_settle_operation>();
+            FC_ASSERT(o.account == account_id);
+            if (o.amount.asset_id == asset_id)
+               sum.debits += o.amount.amount;
+            break;
+         }
+         case operation::tag<withdraw_permission_claim_operation>::value:
+         {
+            const auto& o = op.get<withdraw_permission_claim_operation>();
+            FC_ASSERT((o.withdraw_from_account == account_id) || (o.withdraw_to_account == account_id));
+            if (o.amount_to_withdraw.asset_id == asset_id) {
+               if (o.withdraw_from_account == account_id)
+                  sum.debits += o.amount_to_withdraw.amount;
+               if (o.withdraw_to_account == account_id)
+                  sum.credits += o.amount_to_withdraw.amount;
+            }
+            break;
+         }
+         case operation::tag<vesting_balance_create_operation>::value:
+         {
+            const auto& o = op.get<vesting_balance_create_operation>();
+            if ((o.creator == account_id) && (o.amount.asset_id == asset_id))
+               sum.debits += o.amount.amount;
+            break;
+         }
+         case operation::tag<vesting_balance_withdraw_operation>::value:
+         {
+            const auto& o = op.get<vesting_balance_withdraw_operation>();
+            FC_ASSERT(o.owner == account_id);
+            if (o.amount.asset_id == asset_id)
+               sum.credits += o.amount.amount;
+            break;
+         }
+         case operation::tag<balance_claim_operation>::value:
+         {
+            const auto& o = op.get<balance_claim_operation>();
+            FC_ASSERT(o.deposit_to_account == account_id);
+            if (o.total_claimed.asset_id == asset_id)
+               sum.credits += o.total_claimed.amount;
+            break;
+         }
+         case operation::tag<override_transfer_operation>::value:
+         {
+            const auto& o = op.get<override_transfer_operation>();
+            FC_ASSERT((o.issuer == account_id) || (o.from == account_id) || (o.to == account_id));
+            if (o.amount.asset_id == asset_id) {
+               if (o.from == account_id)
+                  sum.debits += o.amount.amount;
+               if (o.to == account_id)
+                  sum.credits += o.amount.amount;
+            }
+            break;
+         }
+         case operation::tag<transfer_to_blind_operation>::value:
+         {
+            const auto& o = op.get<transfer_to_blind_operation>();
+            if ((o.from == account_id) && (o.amount.asset_id == asset_id))
+               sum.debits += o.amount.amount;
+            break;
+         }
+         case operation::tag<transfer_from_blind_operation>::value:
+         {
+            const auto& o = op.get<transfer_from_blind_operation>();
+            FC_ASSERT(o.to == account_id);
+            if (o.amount.asset_id == asset_id)
+               sum.credits += o.amount.amount;
+            break;
+         }
+         case operation::tag<asset_settle_cancel_operation>::value: // VIRTUAL
+         {
+            const auto& o = op.get<asset_settle_cancel_operation>();
+            FC_ASSERT(o.account == account_id);
+            if (o.amount.asset_id == asset_id)
+               sum.credits += o.amount.amount;
+            break;
+         }
+         case operation::tag<asset_claim_fees_operation>::value:
+         {
+            const auto& o = op.get<asset_claim_fees_operation>();
+            FC_ASSERT(o.issuer == account_id);
+            if (o.amount_to_claim.asset_id == asset_id)
+               sum.credits += o.amount_to_claim.amount;
+            break;
+         }
+         case operation::tag<bid_collateral_operation>::value:
+         {
+            const auto& o = op.get<bid_collateral_operation>();
+            FC_ASSERT(o.bidder == account_id);
+            if (o.additional_collateral.asset_id == asset_id)
+               sum.debits += o.additional_collateral.amount;
+            break;
+         }
+         case operation::tag<execute_bid_operation>::value: // VIRTUAL
+         {
+            const auto& o = op.get<execute_bid_operation>();
+            FC_ASSERT(o.bidder == account_id);
+            if (o.debt.asset_id == asset_id)
+               sum.credits += o.debt.amount;
+            break;
+         }
+         case operation::tag<asset_claim_pool_operation>::value:
+         {
+            const auto& o = op.get<asset_claim_pool_operation>();
+            FC_ASSERT(o.issuer == account_id);
+            if (o.amount_to_claim.asset_id == asset_id)
+               sum.credits += o.amount_to_claim.amount;
+            break;
+         }
+         default: // These don't modify balances directly.
+            // account_create_operation
+            // account_update_operation
+            // account_whitelist_operation
+            // account_upgrade_operation
+            // account_transfer_operation
+            // asset_create_operation
+            // asset_update_operation
+            // asset_update_bitasset_operation
+            // asset_update_feed_producers_operation
+            // asset_global_settle_operation
+            // asset_publish_feed_operation
+            // witness_create_operation
+            // witness_update_operation
+            // proposal_create_operation
+            // proposal_update_operation
+            // proposal_delete_operation
+            // withdraw_permission_create_operation
+            // withdraw_permission_update_operation
+            // withdraw_permission_delete_operation
+            // committee_member_create_operation
+            // committee_member_update_operation
+            // committee_member_update_global_parameters_operation
+            // worker_create_operation
+            // custom_operation
+            // assert_operation
+            // blind_transfer_operation
+            // fba_distribute_operation // VIRTUAL
+            // asset_update_issuer_operation
+            break;
+      }
+      sum.fees += op.visit(fee_retrieval_visitor(account_id, asset_id));
+   }
+
     login_api::login_api(application& a)
     :_app(a)
     {
@@ -87,6 +716,10 @@ namespace graphene { namespace app {
        else if( api_name == "network_broadcast_api" )
        {
           _network_broadcast_api = std::make_shared< network_broadcast_api >( std::ref( _app ) );
+       }
+       else if( api_name == "archive_api" )
+       {
+          _archive_api = std::make_shared< archive_api >( _app );
        }
        else if( api_name == "history_api" )
        {
@@ -252,6 +885,12 @@ namespace graphene { namespace app {
     {
        FC_ASSERT(_database_api);
        return *_database_api;
+    }
+
+    fc::api<archive_api> login_api::archive()const
+    {
+       FC_ASSERT(_archive_api);
+       return *_archive_api;
     }
 
     fc::api<history_api> login_api::history() const

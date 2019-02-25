@@ -407,6 +407,7 @@ public:
         _remote_api(rapi),
         _remote_db(rapi->database()),
         _remote_net_broadcast(rapi->network_broadcast()),
+        _remote_arch(rapi->archive()),
         _remote_hist(rapi->history())
    {
       chain_id_type remote_chain_id = _remote_db->get_chain_id();
@@ -2787,6 +2788,7 @@ public:
    fc::api<login_api>      _remote_api;
    fc::api<database_api>   _remote_db;
    fc::api<network_broadcast_api>   _remote_net_broadcast;
+   fc::api<archive_api>    _remote_arch;
    fc::api<history_api>    _remote_hist;
    optional< fc::api<network_node_api> > _remote_net_node;
    optional< fc::api<graphene::debug_witness::debug_api> > _remote_debug;
@@ -3032,6 +3034,152 @@ vector<asset_object> wallet_api::list_assets(const string& lowerbound, uint32_t 
 uint64_t wallet_api::get_asset_count()const
 {
    return my->_remote_db->get_asset_count();
+}
+
+vector<operation_detail> wallet_api::get_archived_operations(size_t last,
+                                                             size_t count,
+                                                             flat_set<int> operation_id_filter) const
+{
+   return my_get_archived_operations(nullptr, last, count, operation_id_filter);
+}
+
+vector<operation_detail> wallet_api::get_archived_operations_by_time(time_point_sec inclusive_from,
+                                                                     time_point_sec exclusive_until,
+                                                                     flat_set<int> operation_id_filter) const
+{
+   return my_get_archived_operations_by_time(nullptr, inclusive_from, exclusive_until, operation_id_filter);
+}
+
+vector<operation_detail> wallet_api::get_archived_account_operations(const std::string account_id_or_name,
+                                                                     size_t last,
+                                                                     size_t count,
+                                                                     flat_set<int> operation_id_filter) const
+{
+   return my_get_archived_operations(&account_id_or_name, last, count, operation_id_filter);
+}
+
+vector<operation_detail> wallet_api::get_archived_account_operations_by_time(const std::string account_id_or_name,
+                                                                             time_point_sec inclusive_from,
+                                                                             time_point_sec exclusive_until,
+                                                                             flat_set<int> operation_id_filter) const
+{
+   return my_get_archived_operations_by_time(&account_id_or_name, inclusive_from, exclusive_until, operation_id_filter);
+}
+
+size_t wallet_api::get_archived_account_operation_count(const std::string account_id_or_name) const
+{
+   return my->_remote_arch->get_archived_account_operation_count(account_id_or_name);
+}
+
+account_archive::account_summary wallet_api::get_account_summary(const std::string account_id_or_name,
+                                                                 const std::string asset_id_or_symbol,
+                                                                 size_t last,
+                                                                 size_t count) const
+{
+   FC_ASSERT(account_id_or_name.size(), "account id or name is required");
+   FC_ASSERT(asset_id_or_symbol.size(), "asset id or symbol is required");
+
+   const size_t op_count = my->_remote_arch->get_archived_account_operation_count(account_id_or_name);
+   FC_ASSERT(last < op_count, "last does not index an existing operation");
+   FC_ASSERT(count <= op_count, "count exceeds the account operation count");
+
+   auto answer = archive_api::summary_result();
+   auto result = account_archive::account_summary();
+   count = std::min(last + 1, count);
+
+   do {
+      const auto batch_size = std::min(count, archive_api::QueryInspectLimit);
+      answer = my->_remote_arch->get_account_summary(account_id_or_name, asset_id_or_symbol, last, batch_size);
+      FC_ASSERT(batch_size == answer.num_processed);
+
+      result.credits += answer.summary.credits;
+      result.debits += answer.summary.debits;
+      result.fees += answer.summary.fees;
+
+      last -= answer.num_processed;
+      count -= answer.num_processed;
+   } while (count && answer.num_processed);
+
+   return result;
+}
+
+account_archive::account_summary wallet_api::get_account_summary_by_time(const std::string account_id_or_name,
+                                                                         const std::string asset_id_or_symbol,
+                                                                         time_point_sec inclusive_from,
+                                                                         time_point_sec exclusive_until) const
+{
+   FC_ASSERT(account_id_or_name.size(), "account id or name is required");
+   FC_ASSERT(asset_id_or_symbol.size(), "asset id or symbol is required");
+
+   auto answer = archive_api::summary_result();
+   auto result = account_archive::account_summary();
+   size_t skip_count = 0u;
+
+   do {
+      answer = my->_remote_arch->get_account_summary_by_time(account_id_or_name, asset_id_or_symbol, inclusive_from, exclusive_until, skip_count);
+
+      result.credits += answer.summary.credits;
+      result.debits += answer.summary.debits;
+      result.fees += answer.summary.fees;
+
+      skip_count += answer.num_processed;
+   } while (answer.num_processed);
+
+   return result;
+}
+
+vector<operation_detail> wallet_api::my_get_archived_operations(const std::string* account_id_or_name,
+                                                                size_t last,
+                                                                size_t count,
+                                                                flat_set<int> operation_id_filter) const
+{
+   auto answer = archive_api::query_result();
+   vector<operation_detail> result;
+   count = std::min(last + 1, count);
+   result.reserve(count);
+
+   do {
+      if (account_id_or_name)
+         answer = my->_remote_arch->get_archived_account_operations(*account_id_or_name, last, count, operation_id_filter);
+      else
+         answer = my->_remote_arch->get_archived_operations(last, count, operation_id_filter);
+      for (auto op : answer.operations) {
+         std::stringstream ss;
+         auto memo = op.op.visit(detail::operation_printer(ss, *my, op.result));
+         result.push_back(operation_detail{ memo, ss.str(), op });
+      }
+
+      last -= answer.num_processed;
+      count -= answer.operations.size();
+   } while (count && answer.num_processed);
+
+   return result;
+}
+
+vector<operation_detail> wallet_api::my_get_archived_operations_by_time(const std::string* account_id_or_name,
+                                                                        time_point_sec inclusive_from,
+                                                                        time_point_sec exclusive_until,
+                                                                        flat_set<int> operation_id_filter) const
+{
+   auto answer = archive_api::query_result();
+   vector<operation_detail> result;
+
+   size_t nskip = 0;
+   do {
+      if (account_id_or_name)
+         answer = my->_remote_arch->get_archived_account_operations_by_time(*account_id_or_name, inclusive_from, exclusive_until, nskip, operation_id_filter);
+      else
+         answer = my->_remote_arch->get_archived_operations_by_time(inclusive_from, exclusive_until, nskip, operation_id_filter);
+      for (auto op : answer.operations) {
+         std::stringstream ss;
+         auto memo = op.op.visit(detail::operation_printer(ss, *my, op.result));
+         result.push_back(operation_detail{ memo, ss.str(), op });
+      }
+
+      nskip += answer.num_processed;
+   } while (answer.num_processed);
+
+   return result;
 }
 
 vector<operation_detail> wallet_api::get_account_history(string name, int limit)const
