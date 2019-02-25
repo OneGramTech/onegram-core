@@ -49,7 +49,7 @@ share_type transfer_operation::calculate_flat_or_percentage_fee(const fee_parame
    auto core_fee_amount = fc::uint128(amount.amount.value);
    core_fee_amount *= schedule.percentage;
    core_fee_amount /= GRAPHENE_100_PERCENT;
-   share_type core_fee_required = core_fee_amount.to_uint64();
+   auto core_fee_required = core_fee_amount.to_uint64();
    auto min_fee = schedule.fee;
    auto max_fee = schedule.percentage_max_fee;
    /// max( min(core_fee_required, max_fee), min_fee )

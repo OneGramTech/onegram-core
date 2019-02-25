@@ -97,7 +97,9 @@ endif()
 
 # position independent executetable (PIE)
 # position independent code (PIC)
-add_definitions (-fPIC)
+if (NOT MSVC)
+    add_definitions (-fPIC)
+endif(NOT MSVC)
 set(CMAKE_EXPORT_COMPILE_COMMANDS "ON")
 set(GRAPHENE_EGENESIS_JSON "${CMAKE_CURRENT_BINARY_DIR}/runtime/genesis.json" )
 
