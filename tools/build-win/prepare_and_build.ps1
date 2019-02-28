@@ -34,10 +34,10 @@ if ( !($BUILD_ROOT -eq $GUESS_BUILD_ROOT) ) {
     } 
 }
 
-$BOOST_VERSION = "1.63.0"
-$OPENSSL_VERSION = "1.0.2o"
-$CURL_VERSION = "7.61.0"
-$CMAKE_VERSION = "3.1.3"
+$BOOST_VERSION = "1.65.1"
+$OPENSSL_VERSION = "1.0.2q"
+$CURL_VERSION = "7.64.0"
+$CMAKE_VERSION = "3.10.3"
 
 $DLPREFIX = "Downloads"
 
@@ -72,19 +72,19 @@ if (!(Test-Path "$BUILD_ROOT\$DLPREFIX" )) {
     new-item "$BUILD_ROOT\$DLPREFIX" -itemtype directory
 }
 
-if (!(Test-Path $BOOST_FILEDEST )) {
+if (!(Test-Path "$BUILD_ROOT\$BOOST_NAME" ) -And !( Test-Path $BOOST_FILEDEST )) {
     Start-BitsTransfer -Source $BOOST_URL -Destination $BOOST_FILEDEST
 }
 
-if (!(Test-Path $OPENSSL_FILEDEST )) {
+if (!(Test-Path "$BUILD_ROOT\$OPENSSL_NAME") -And !(Test-Path $OPENSSL_FILEDEST)) {
     Start-BitsTransfer -Source $OPENNSL_URL -Destination $OPENSSL_FILEDEST
 }
 
-if (!(Test-Path $CURL_FILEDEST )) {
+if (!(Test-Path "$BUILD_ROOT\$CURL_NAME" ) -And !(Test-Path $CURL_FILEDEST )) {
     Start-BitsTransfer -Source $CURL_URL -Destination $CURL_FILEDEST
 }
 
-if (!(Test-Path $CMAKE_FILEDEST )) {
+if (!(Test-Path "$BUILD_ROOT\$CMAKE_NAME" ) -And !(Test-Path $CMAKE_FILEDEST )) {
     Start-BitsTransfer -Source $CMAKE_URL -Destination $CMAKE_FILEDEST
 }
 
@@ -116,6 +116,11 @@ $ENV:PATH = "$BUILD_ROOT\$CMAKE_NAME\bin;" + $ENV:PATH
 $ENV:BOOST_ROOT = Resolve-Path -Path "$BUILD_ROOT\$BOOST_NAME"
 $ENV:OPENSSL_ROOT = Resolve-Path -Path "$BUILD_ROOT\$OPENSSL_NAME"
 $ENV:CURL_ROOT = Resolve-Path -Path "$BUILD_ROOT\$CURL_NAME"
+
+# store directory info
+"@echo off`r`n`r`n" | Out-File _directories.bat -encoding ascii
+"set BOOST_BUILD_NAME=$BOOST_NAME`r`nset OPENSSL_BUILD_NAME=$OPENSSL_NAME`r`nset CURL_BUILD_NAME=$CURL_NAME`r`nset CMAKE_BUILD_NAME=$CMAKE_NAME`r`n" | Out-File _directories.bat -encoding ascii -Append
+"set BOOST_BUILD_PATH=$ENV:BOOST_ROOT`r`nset OPENSSL_BUILD_PATH=$ENV:OPENSSL_ROOT`r`nset CURL_BUILD_PATH=$ENV:CURL_ROOT`r`nset CMAKE_BUILD_PATH=$BUILD_ROOT\$CMAKE_NAME`r`n" | Out-File _directories.bat -encoding ascii -Append
 
 $PROJECT_NAME = "BitShares"
 
