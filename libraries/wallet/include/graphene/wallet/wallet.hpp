@@ -1709,6 +1709,8 @@ class wallet_api
 
    private:
 
+      void check_remote_arch_api() const;
+
       vector<operation_detail> my_get_archived_operations(const std::string* account_id_or_name,
                                                           size_t last,
                                                           size_t count,
