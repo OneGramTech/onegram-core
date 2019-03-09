@@ -189,11 +189,11 @@ namespace graphene { namespace app {
 
    /* HELPERS end */
 
-   const size_t archive_api::QueryResultLimit = 50;
-   const size_t archive_api::QueryInspectLimit = 5 * QueryResultLimit;
+   const uint32_t archive_api::QueryResultLimit = 50;
+   const uint32_t archive_api::QueryInspectLimit = 5 * QueryResultLimit;
 
-   archive_api::query_result archive_api::get_archived_operations(size_t last,
-                                                                  size_t count,
+   archive_api::query_result archive_api::get_archived_operations(uint32_t last,
+                                                                  uint32_t count,
                                                                   flat_set<int> operation_id_filter) const
    {
       return my_get_archived_operations(nullptr, last, count, operation_id_filter);
@@ -201,15 +201,15 @@ namespace graphene { namespace app {
 
    archive_api::query_result archive_api::get_archived_operations_by_time(time_point_sec inclusive_from,
                                                                           time_point_sec exclusive_until,
-                                                                          size_t skip_count,
+                                                                          uint32_t skip_count,
                                                                           flat_set<int> operation_id_filter) const
    {
       return my_get_archived_operations_by_time(nullptr, inclusive_from, exclusive_until, skip_count, operation_id_filter);
    }
 
    archive_api::query_result archive_api::archive_api::get_archived_account_operations(const std::string account_id_or_name,
-                                                                                       size_t last,
-                                                                                       size_t count,
+                                                                                       uint32_t last,
+                                                                                       uint32_t count,
                                                                                        flat_set<int> operation_id_filter) const
    {
       const auto account_id = database_api.get_account_id_from_string(account_id_or_name);
@@ -219,14 +219,14 @@ namespace graphene { namespace app {
    archive_api::query_result archive_api::get_archived_account_operations_by_time(const std::string account_id_or_name,
                                                                                   time_point_sec inclusive_from,
                                                                                   time_point_sec exclusive_until,
-                                                                                  size_t skip_count,
+                                                                                  uint32_t skip_count,
                                                                                   flat_set<int> operation_id_filter) const
    {
       const auto account_id = database_api.get_account_id_from_string(account_id_or_name);
       return my_get_archived_operations_by_time(&account_id, inclusive_from, exclusive_until, skip_count, operation_id_filter);
    }
 
-   size_t archive_api::get_archived_account_operation_count(const std::string account_id_or_name) const
+uint32_t archive_api::get_archived_account_operation_count(const std::string account_id_or_name) const
    {
       const auto db = _app.chain_database();
       FC_ASSERT(db != nullptr);
@@ -240,8 +240,8 @@ namespace graphene { namespace app {
 
    archive_api::summary_result archive_api::get_account_summary(const std::string account_id_or_name,
                                                                 const std::string asset_id_or_name,
-                                                                size_t last,
-                                                                size_t count) const
+                                                                uint32_t last,
+                                                                uint32_t count) const
    {
       auto result = archive_api::summary_result();
 
@@ -280,7 +280,7 @@ namespace graphene { namespace app {
                                                                         const std::string asset_id_or_name,
                                                                         time_point_sec inclusive_from,
                                                                         time_point_sec exclusive_until,
-                                                                        size_t skip_count) const
+                                                                        uint32_t skip_count) const
    {
       auto result = archive_api::summary_result();
 
@@ -325,8 +325,8 @@ namespace graphene { namespace app {
    }
 
    archive_api::query_result archive_api::my_get_archived_operations(const account_id_type* account_id,
-                                                                     size_t last,
-                                                                     size_t count,
+                                                                     uint32_t last,
+                                                                     uint32_t count,
                                                                      flat_set<int> operation_id_filter) const
    {
       auto result = archive_api::query_result();
@@ -378,7 +378,7 @@ namespace graphene { namespace app {
    archive_api::query_result archive_api::my_get_archived_operations_by_time(const account_id_type* account_id,
                                                                              time_point_sec inclusive_from,
                                                                              time_point_sec exclusive_until,
-                                                                             size_t skip_count,
+                                                                             uint32_t skip_count,
                                                                              flat_set<int> operation_id_filter) const
    {
       auto result = archive_api::query_result();
