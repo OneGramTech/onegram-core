@@ -3040,8 +3040,8 @@ uint64_t wallet_api::get_asset_count()const
    return my->_remote_db->get_asset_count();
 }
 
-vector<operation_detail> wallet_api::get_archived_operations(uint32_t last,
-                                                             uint32_t count,
+vector<operation_detail> wallet_api::get_archived_operations(uint64_t last,
+                                                             uint64_t count,
                                                              flat_set<int> operation_id_filter) const
 {
    return my_get_archived_operations(nullptr, last, count, operation_id_filter);
@@ -3055,8 +3055,8 @@ vector<operation_detail> wallet_api::get_archived_operations_by_time(time_point_
 }
 
 vector<operation_detail> wallet_api::get_archived_account_operations(const std::string account_id_or_name,
-                                                                     uint32_t last,
-                                                                     uint32_t count,
+                                                                     uint64_t last,
+                                                                     uint64_t count,
                                                                      flat_set<int> operation_id_filter) const
 {
    return my_get_archived_operations(&account_id_or_name, last, count, operation_id_filter);
@@ -3070,7 +3070,7 @@ vector<operation_detail> wallet_api::get_archived_account_operations_by_time(con
    return my_get_archived_operations_by_time(&account_id_or_name, inclusive_from, exclusive_until, operation_id_filter);
 }
 
-uint32_t wallet_api::get_archived_account_operation_count(const std::string account_id_or_name) const
+uint64_t wallet_api::get_archived_account_operation_count(const std::string account_id_or_name) const
 {
    check_remote_arch_api();
    return (*my->_remote_arch)->get_archived_account_operation_count(account_id_or_name);
@@ -3078,14 +3078,14 @@ uint32_t wallet_api::get_archived_account_operation_count(const std::string acco
 
 account_archive::account_summary wallet_api::get_account_summary(const std::string account_id_or_name,
                                                                  const std::string asset_id_or_symbol,
-                                                                 uint32_t last,
-                                                                 uint32_t count) const
+                                                                 uint64_t last,
+                                                                 uint64_t count) const
 {
    check_remote_arch_api();
    FC_ASSERT(account_id_or_name.size(), "account id or name is required");
    FC_ASSERT(asset_id_or_symbol.size(), "asset id or symbol is required");
 
-   const uint32_t op_count = (*my->_remote_arch)->get_archived_account_operation_count(account_id_or_name);
+   const uint64_t op_count = (*my->_remote_arch)->get_archived_account_operation_count(account_id_or_name);
    FC_ASSERT(last < op_count, "last does not index an existing operation");
    FC_ASSERT(count <= op_count, "count exceeds the account operation count");
 
@@ -3141,8 +3141,8 @@ void wallet_api::check_remote_arch_api() const
 }
 
 vector<operation_detail> wallet_api::my_get_archived_operations(const std::string* account_id_or_name,
-                                                                uint32_t last,
-                                                                uint32_t count,
+                                                                uint64_t last,
+                                                                uint64_t count,
                                                                 flat_set<int> operation_id_filter) const
 {
    check_remote_arch_api();
