@@ -151,19 +151,19 @@ namespace graphene { namespace app {
    {
       public:
          /** @brief Maximal number of operations returned by get_archived calls per query. */
-         static const size_t QueryResultLimit;
+         static const uint64_t QueryResultLimit;
          /** @brief Maximal number of operations inspected by get_archived calls per query. */
-         static const size_t QueryInspectLimit;
+         static const uint64_t QueryInspectLimit;
 
          /// Result aggregator for get_archived calls.
          struct query_result {
-            size_t num_processed; // operations by the call
+            uint64_t num_processed; // operations by the call
             vector<operation_history_object> operations;
          };
 
          /// Result aggregator for get_summary calls.
          struct summary_result {
-            size_t num_processed; // operations by the call
+            uint64_t num_processed; // operations by the call
             account_archive::account_summary summary;
          };
 
@@ -176,8 +176,8 @@ namespace graphene { namespace app {
           * @param operation_id_filter A set of acceptable operation type IDs. Empty set accepts all.
           * @return A list of at most @QueryResultLimit subsequent acceptable operations.
           */
-         query_result get_archived_operations(size_t last,
-                                              size_t count,
+         query_result get_archived_operations(uint64_t last,
+                                              uint64_t count,
                                               flat_set<int> operation_id_filter = flat_set<int>()) const;
          /**
           * @brief Get a subset of the performed operations queried by time and traversed from recent to older.
@@ -189,7 +189,7 @@ namespace graphene { namespace app {
           */
          query_result get_archived_operations_by_time(time_point_sec inclusive_from,
                                                       time_point_sec exclusive_until,
-                                                      size_t skip_count,
+                                                      uint64_t skip_count,
                                                       flat_set<int> operation_id_filter = flat_set<int>()) const;
          /**
           * @brief Get a subset of the performed operations by the specified account queried by index and traversed from recent to older.
@@ -200,8 +200,8 @@ namespace graphene { namespace app {
           * @return A list of at most @QueryResultLimit subsequent acceptable operations.
           */
          query_result get_archived_account_operations(const std::string account_id_or_name,
-                                                      size_t last,
-                                                      size_t count,
+                                                      uint64_t last,
+                                                      uint64_t count,
                                                       flat_set<int> operation_id_filter = flat_set<int>()) const;
          /**
           * @brief Get a subset of the performed operations by the specified account queried by time and traversed from recent to older.
@@ -217,14 +217,14 @@ namespace graphene { namespace app {
          query_result get_archived_account_operations_by_time(const std::string account_id_or_name,
                                                               time_point_sec inclusive_from,
                                                               time_point_sec exclusive_until,
-                                                              size_t skip_count,
+                                                              uint64_t skip_count,
                                                               flat_set<int> operation_id_filter = flat_set<int>()) const;
          /**
           * @brief Get the number of performed operations impacting the specified account.
           * @param account_id_or_name An account identifier for which to query the operation count.
           * @return The number of performed operations impacting the specified account.
           */
-         size_t get_archived_account_operation_count(const std::string account_id_or_name) const;
+         uint64_t get_archived_account_operation_count(const std::string account_id_or_name) const;
          /**
           * @brief Get the summaries of credit and debit operations for the specified account and asset.
           * @param account_id_or_name An account identifier for which to get the summary for.
@@ -235,8 +235,8 @@ namespace graphene { namespace app {
           */
          summary_result get_account_summary(const std::string account_id_or_name,
                                             const std::string asset_id_or_name,
-                                            size_t last,
-                                            size_t count) const;
+                                            uint64_t last,
+                                            uint64_t count) const;
          /**
           * @brief Get the summaries of credit and debit operations for the specified account and asset queried by time.
           * @param account_id_or_name An account identifier for which to get the summary for.
@@ -250,20 +250,20 @@ namespace graphene { namespace app {
                                                     const std::string asset_id_or_name,
                                                     time_point_sec inclusive_from,
                                                     time_point_sec exclusive_until,
-                                                    size_t skip_count) const;
+                                                    uint64_t skip_count) const;
       private:
          application& _app;
          graphene::app::database_api database_api;
 
          query_result my_get_archived_operations(const account_id_type* account_id,
-                                                 size_t last,
-                                                 size_t count,
+                                                 uint64_t last,
+                                                 uint64_t count,
                                                  flat_set<int> operation_id_filter) const;
 
          query_result my_get_archived_operations_by_time(const account_id_type* account_id,
                                                          time_point_sec inclusive_from,
                                                          time_point_sec exclusive_until,
-                                                         size_t skip_count,
+                                                         uint64_t skip_count,
                                                          flat_set<int> operation_id_filter) const;
 
          void update_summary(const database& db,

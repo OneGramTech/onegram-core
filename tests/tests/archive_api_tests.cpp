@@ -47,12 +47,12 @@ BOOST_AUTO_TEST_CASE(get_archived_operations) {
     try {
         graphene::app::archive_api arch_api(app);
 
-        const auto& eur = create_user_issued_asset("EUR"); // op 0
+        const auto eur = create_user_issued_asset("EUR"); // op 0
         issue_uia(account_id_type(), eur.amount(1000000)); // op 1
         generate_block();
 
-        const auto& mario = create_account("mario"); // op 2
-        const auto& marek = create_account("marek"); // op 3
+        const auto mario = create_account("mario"); // op 2
+        const auto marek = create_account("marek"); // op 3
         generate_block();
 
         fund(mario, eur.amount(1000)); // op 4
@@ -276,12 +276,12 @@ BOOST_AUTO_TEST_CASE(get_archived_account_operations) {
     try {
         graphene::app::archive_api arch_api(app);
 
-        const auto& eur = create_user_issued_asset("EUR"); // op 0
+        const auto eur = create_user_issued_asset("EUR"); // op 0
         issue_uia(account_id_type(), eur.amount(1000000)); // op 1
         generate_block();
 
-        const auto& mario = create_account("mario"); // op 2, mario 0
-        const auto& marek = create_account("marek"); // op 3, marek 0
+        const auto mario = create_account("mario"); // op 2, mario 0
+        const auto marek = create_account("marek"); // op 3, marek 0
         generate_block();
 
         fund(mario, eur.amount(1000)); // op 4, mario 1
@@ -405,7 +405,7 @@ BOOST_AUTO_TEST_CASE(get_archived_account_operations) {
         /* Extend environment for more complex tests. */
 
         const auto jozef = create_account("jozef"); // op 8, jozef 0
-        const auto& franz = create_account("franz"); // op 9, franz 0
+        const auto franz = create_account("franz"); // op 9, franz 0
         generate_block();
         fund(mario, eur.amount(archive_api::QueryResultLimit + archive_api::QueryInspectLimit + 1u)); // op 10, mario 5
         fund(marek, eur.amount(archive_api::QueryResultLimit + archive_api::QueryInspectLimit + 1u)); // op 11
@@ -475,12 +475,12 @@ BOOST_AUTO_TEST_CASE(get_archived_operations_by_time) {
         generate_block();
         const auto time_1 = db.head_block_time();
 
-        const auto& eur = create_user_issued_asset("EUR"); // op 0
+        const auto eur = create_user_issued_asset("EUR"); // op 0
         issue_uia(account_id_type(), eur.amount(1000000)); // op 1
         generate_block();
 
-        const auto& mario = create_account("mario"); // op 2, mario 0
-        const auto& marek = create_account("marek"); // op 3, marek 0
+        const auto mario = create_account("mario"); // op 2, mario 0
+        const auto marek = create_account("marek"); // op 3, marek 0
         generate_block();
 
         fund(mario, eur.amount(1000)); // op 4, mario 1
@@ -755,12 +755,12 @@ BOOST_AUTO_TEST_CASE(get_archived_account_operations_by_time) {
         generate_block();
         const auto time_1 = db.head_block_time();
 
-        const auto& eur = create_user_issued_asset("EUR"); // op 0
+        const auto eur = create_user_issued_asset("EUR"); // op 0
         issue_uia(account_id_type(), eur.amount(1000000)); // op 1
         generate_block();
 
-        const auto& mario = create_account("mario"); // op 2, mario 0
-        const auto& marek = create_account("marek"); // op 3, marek 0
+        const auto mario = create_account("mario"); // op 2, mario 0
+        const auto marek = create_account("marek"); // op 3, marek 0
         generate_block();
 
         fund(mario, eur.amount(1000)); // op 4, mario 1
@@ -960,7 +960,7 @@ BOOST_AUTO_TEST_CASE(get_archived_account_operations_by_time) {
         /* Extend environment for more complex tests. */
 
         const auto jozef = create_account("jozef"); // op 8, jozef 0
-        const auto& franz = create_account("franz"); // op 9, franz 0
+        const auto franz = create_account("franz"); // op 9, franz 0
         generate_block();
         fund(mario, eur.amount(archive_api::QueryResultLimit + archive_api::QueryInspectLimit + 1u)); // op 10, mario 5
         fund(marek, eur.amount(archive_api::QueryResultLimit + archive_api::QueryInspectLimit + 1u)); // op 11
@@ -1014,12 +1014,12 @@ BOOST_AUTO_TEST_CASE(get_archived_account_operation_count) {
     try {
         graphene::app::archive_api arch_api(app);
 
-        const auto& eur = create_user_issued_asset("EUR"); // op 0
+        const auto eur = create_user_issued_asset("EUR"); // op 0
         issue_uia(account_id_type(), eur.amount(1000000)); // op 1
         generate_block();
 
-        const auto& mario = create_account("mario"); // op 2, mario 0
-        const auto& marek = create_account("marek"); // op 3, marek 0
+        const auto mario = create_account("mario"); // op 2, mario 0
+        const auto marek = create_account("marek"); // op 3, marek 0
         generate_block();
 
         fund(mario, eur.amount(1000)); // op 4, mario 1
@@ -1106,8 +1106,8 @@ BOOST_AUTO_TEST_CASE(get_account_summary) {
         generate_block_with_fees(fees);
         assert_summary(db_api, arch_api, cmmtt, assets);
 
-        const auto& mario = create_account("mario");
-        const auto& marek = create_account("marek");
+        const auto mario = create_account("mario");
+        const auto marek = create_account("marek");
         fund(mario, cra.amount(fraction * fraction));
         generate_block_with_fees(fees);
         assert_summary(db_api, arch_api, cmmtt, assets);
