@@ -372,8 +372,8 @@ class wallet_api
       uint64_t get_asset_count()const;
 
       /// @see graphene::app::archive_api::get_archived_operations
-      vector<operation_detail> get_archived_operations(uint32_t last,
-                                                       uint32_t count,
+      vector<operation_detail> get_archived_operations(uint64_t last,
+                                                       uint64_t count,
                                                        flat_set<int> operation_id_filter) const;
       /// @see graphene::app::archive_api::get_archived_operations_by_time
       vector<operation_detail> get_archived_operations_by_time(time_point_sec inclusive_from,
@@ -381,8 +381,8 @@ class wallet_api
                                                                flat_set<int> operation_id_filter) const;
       /// @see graphene::app::archive_api::get_archived_account_operations
       vector<operation_detail> get_archived_account_operations(const std::string account_id_or_name,
-                                                               uint32_t last,
-                                                               uint32_t count,
+                                                               uint64_t last,
+                                                               uint64_t count,
                                                                flat_set<int> operation_id_filter) const;
       /// @see graphene::app::archive_api::get_archived_account_operations_by_time
       vector<operation_detail> get_archived_account_operations_by_time(const std::string account_id_or_name,
@@ -390,12 +390,12 @@ class wallet_api
                                                                        time_point_sec exclusive_until,
                                                                        flat_set<int> operation_id_filter) const;
       /// @see graphene::app::archive_api::get_archived_account_operation_count
-      uint32_t get_archived_account_operation_count(const std::string account_id_or_name) const;
+      uint64_t get_archived_account_operation_count(const std::string account_id_or_name) const;
       /// @see graphene::app::archive_api::get_account_summary
       account_archive::account_summary get_account_summary(const std::string account_id_or_name,
                                                            const std::string asset_id_or_symbol,
-                                                           uint32_t last,
-                                                           uint32_t count) const;
+                                                           uint64_t last,
+                                                           uint64_t count) const;
       /// @see graphene::app::archive_api::get_account_summary_by_time
       account_archive::account_summary get_account_summary_by_time(const std::string account_id_or_name,
                                                                    const std::string asset_id_or_symbol,
@@ -1712,8 +1712,8 @@ class wallet_api
       void check_remote_arch_api() const;
 
       vector<operation_detail> my_get_archived_operations(const std::string* account_id_or_name,
-                                                          uint32_t last,
-                                                          uint32_t count,
+                                                          uint64_t last,
+                                                          uint64_t count,
                                                           flat_set<int> operation_id_filter) const;
 
       vector<operation_detail> my_get_archived_operations_by_time(const std::string* account_id_or_name,
