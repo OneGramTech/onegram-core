@@ -466,17 +466,17 @@ public:
       fc::async([this]{resync();}, "Resync after block");
    }
 
-   bool copy_wallet_file( string destination_filename )
+   bool copy_wallet_file( string destination_filepath )
    {
       fc::path src_path = get_wallet_filename();
       if( !fc::exists( src_path ) )
          return false;
-      fc::path dest_path = destination_filename + _wallet_filename_extension;
+      fc::path dest_path = destination_filepath + _wallet_filename_extension;
       int suffix = 0;
       while( fc::exists(dest_path) )
       {
          ++suffix;
-         dest_path = destination_filename + "-" + to_string( suffix ) + _wallet_filename_extension;
+         dest_path = destination_filepath + "-" + to_string( suffix ) + _wallet_filename_extension;
       }
       wlog( "backing up wallet ${src} to ${dest}",
             ("src", src_path)
@@ -786,7 +786,7 @@ public:
     void quit()
     {
         ilog( "Quitting Cli Wallet ..." );
-        
+
         throw fc::canceled_exception();
     }
 
@@ -2992,9 +2992,9 @@ wallet_api::~wallet_api()
 {
 }
 
-bool wallet_api::copy_wallet_file(string destination_filename)
+bool wallet_api::copy_wallet_file(string destination_filepath)
 {
-   return my->copy_wallet_file(destination_filename);
+   return my->copy_wallet_file(destination_filepath);
 }
 
 optional<signed_block_with_info> wallet_api::get_block(uint32_t num)
@@ -3565,12 +3565,17 @@ bool wallet_api::import_key(string account_name_or_id, string wif_key)
    if (!optional_private_key)
       FC_THROW("Invalid private key");
    string shorthash = detail::address_to_shorthash(optional_private_key->get_public_key());
-   copy_wallet_file( "before-import-key-" + shorthash );
+
+   fc::path src_path = get_wallet_filename();
+   fc::path src_parent = fc::absolute(src_path).parent_path();
+   std::string src_parent_path = src_parent.to_native_ansi_path();
+
+   copy_wallet_file( src_parent_path + "/before-import-key-" + shorthash );
 
    if( my->import_key(account_name_or_id, wif_key) )
    {
       save_wallet_file();
-      copy_wallet_file( "after-import-key-" + shorthash );
+      copy_wallet_file( src_parent_path + "/after-import-key-" + shorthash );
       return true;
    }
    return false;

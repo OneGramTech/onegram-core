@@ -314,7 +314,7 @@ class wallet_api
       wallet_api( const wallet_data& initial_data, fc::api<login_api> rapi );
       virtual ~wallet_api();
 
-      bool copy_wallet_file( string destination_filename );
+      bool copy_wallet_file( string destination_filepath );
 
       fc::ecc::private_key derive_private_key(const std::string& prefix_string, int sequence_number) const;
 
