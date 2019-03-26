@@ -13,6 +13,9 @@ services:
 - docker:dind
 
 before_script:
+  - apk update && apk add git
+  - git submodule sync --recursive
+  - git submodule update --init --recursive
   - docker info
   - docker login -u gitlab-ci-token -p $CI_JOB_TOKEN $CI_REGISTRY
 
@@ -48,6 +51,8 @@ build_mainnet_release:
   only:
     - master
     - tags
+  except:
+    - schedules
   stage: build
   variables:
     BUILD_TARGET: Release
@@ -61,6 +66,7 @@ build_testnet_release:
   except:
     - master
     - tags
+    - schedules
   stage: build
   variables:
     BUILD_TARGET: Release
@@ -74,6 +80,8 @@ build_mainnet_debug:
   only:
     - master
     - tags
+  except:
+    - schedules
   stage: build
   variables:
     BUILD_TARGET: Debug
@@ -87,6 +95,7 @@ build_testnet_debug:
   except:
     - master
     - tags
+    - schedules
   stage: build
   variables:
     BUILD_TARGET: Debug
@@ -102,6 +111,8 @@ test_mainnet_release:
   only:
     - master
     - tags
+  except:
+    - schedules
   stage: test
   variables:
     BUILD_TARGET: Release
@@ -114,6 +125,7 @@ test_testnet_release:
   except:
     - master
     - tags
+    - schedules
   stage: test
   variables:
     BUILD_TARGET: Release
@@ -126,6 +138,8 @@ test_mainnet_debug:
   only:
     - master
     - tags
+  except:
+    - schedules
   stage: test
   variables:
     BUILD_TARGET: Debug
@@ -138,6 +152,7 @@ test_testnet_debug:
   except:
     - master
     - tags
+    - schedules
   stage: test
   variables:
     BUILD_TARGET: Debug
@@ -167,5 +182,32 @@ publish_mainnet_release:
     TARGET_ENV: MAINNET
     BUILD_TARGET: Release
     RELEASE_IMG_NAME: ${CI_REGISTRY_IMAGE}/onegram:${CI_COMMIT_TAG}-${CI_COMMIT_SHORT_SHA}
+  tags:
+    - docker
+
+# Midnight builds
+
+midnight_build_testnet_debug:
+  before_script:
+    - apk update
+    - apk add python3-dev && apk add py3-pip
+    - apk add libc-dev && apk add gcc
+    - pip3 install --upgrade pip
+    - pip3 install wheel && pip3 install -r ./tests/onegram-integration-tests/requirements.txt
+  script:
+    - echo $TARGET_ENV
+    - echo $BUILD_TARGET
+    - echo $CI_COMMIT_SHA
+    - docker build --build-arg TARGET_ENV=$TARGET_ENV --build-arg BUILD=$BUILD_TARGET --build-arg REVISION_SHA=$CI_COMMIT_SHA -t onegram-test -f Dockerfile.OGC .
+    - docker image ls
+    - cd ./tests/onegram-integration-tests/tests && python3 -m pytest -s --collect-only .
+    - python3 run.py --silent common_tests blockchain_tests sync_tests
+  only:
+    - schedules
+  stage: build
+  variables:
+    BUILD_TARGET: Debug
+    TARGET_ENV: TESTNET
+    GIT_SUBMODULE_STRATEGY: recursive
   tags:
     - docker
