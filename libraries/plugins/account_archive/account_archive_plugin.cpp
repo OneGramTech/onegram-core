@@ -88,10 +88,10 @@ namespace detail {
             o.virtual_op = op->virtual_op;
             o.operation_id = static_cast<uint16_t>(op->op.which());
          };
-         auto& indexed_operation = db.create<operation_archive_object>(initialize_operation);
+         auto& indexed_operation = db.create<operation_archive_object>(initialize_operation); // THIS OBJECT SHALL NOT BE REMOVED FROM THE DB
 
          // index in account archives
-         auto append_operation = [&](account_archive_object& o) { o.operations.push_back(indexed_operation.id); };
+         auto append_operation = [&](account_archive_object& o) { o.operations.push_back(indexed_operation.id); }; // THE operations VECTOR SHALL NEVER BE MODIFIED EXCEPT BEING EXPANDED
          flat_set<account_id_type> impacted_accounts = get_impacted_accounts(*op, db);
          for (auto& acc : impacted_accounts) {
             object_id_type id = account_archive_id_type(acc.instance);
