@@ -63,6 +63,16 @@ typedef simple_index<operation_archive_object> operation_archive_index;
  * @brief An index relative to a particular account referencing respective @operation_archive_object.
  *
  *  These indices are stored per account in order to speed up inspection of archived operation by account.
+ *
+ * !!!! NOTE !!!!
+ *  Instances of this class shall never be erased from the database.
+ *  In order to save memory due to the undo database storing whole
+ *  objects in the remembered states, this object stores only the number
+ *  of operations indexed at the moment of being stored by the undo db.
+ *  Furthermore, the indices present in the @operations vector shall
+ *  never be modified and/or removed. Otherwise the undo db could not work.
+ *  In particular, the undo db would not restore a removed instance of
+ *  this class. The merge function could fail similarly.
  */
 class account_archive_object : public abstract_object<account_archive_object>
 {
@@ -73,6 +83,21 @@ class account_archive_object : public abstract_object<account_archive_object>
       vector<operation_archive_id_type> operations;
 
       account_id_type get_owner_account() const;
+
+      unique_ptr<object> clone() const
+      {
+         auto aao = new account_archive_object();
+         aao->id = this->id;
+         aao->operations.emplace_back(operation_archive_id_type(this->operations.size()));
+         return unique_ptr<object>(aao);
+      }
+
+      void move_from(object& obj)
+      {
+         auto aao = static_cast<account_archive_object&>(obj);
+         auto num = static_cast<object_id_type>(aao.operations[0]);
+         this->operations.erase(this->operations.begin() + num.instance(), this->operations.end());
+      }
 };
 
 inline account_id_type account_archive_object::get_owner_account() const
