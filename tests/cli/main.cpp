@@ -43,7 +43,7 @@
       #define _WIN32_WINNT 0x0501
    #endif
    #include <winsock2.h>
-   #include <WS2tcpip.h>
+   #include <ws2tcpip.h>
 #else
    #include <sys/socket.h>
    #include <netinet/ip.h>

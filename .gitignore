@@ -47,3 +47,5 @@ build
 cmake-build-*
 
 .vscode
+
+!toolchain_mingw.cmake

@@ -7,7 +7,7 @@ add_library( graphene_es_objects
 find_package( CURL REQUIRED )
 include_directories(${CURL_INCLUDE_DIRS})
 
-target_link_libraries( graphene_es_objects graphene_chain graphene_app ${CURL_LIBRARY} )
+target_link_libraries( graphene_es_objects graphene_chain graphene_app ${CURL_LIBRARY} ${CURL_ADDITIONAL_LIBS} )
 target_include_directories( graphene_es_objects
                             PUBLIC "${CMAKE_CURRENT_SOURCE_DIR}/include" ${CURL_INCLUDE_DIR} )
 
