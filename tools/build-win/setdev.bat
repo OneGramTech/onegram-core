@@ -18,6 +18,32 @@ if not defined PROJECT_NAME (
     set PROJECT_NAME=OneGram
 )
 
+if exist _directories.bat (
+    call _directories.bat
+
+    if not defined BOOST_ROOT (
+        if defined BOOST_BUILD_PATH (
+            set BOOST_ROOT=%BOOST_BUILD_PATH%
+        )
+    )
+
+    if not defined OPENSSL_ROOT (
+        if defined OPENSSL_BUILD_PATH (
+            set OPENSSL_ROOT=%OPENSSL_BUILD_PATH%
+        )
+    )
+
+    if not defined CURL_ROOT (
+        if defined CURL_BUILD_PATH (
+            set CURL_ROOT=%CURL_BUILD_PATH%
+        )
+    )
+
+    REM TODO: Add 'CMake' and 'nmake' to %PATH%
+    REM  + check if not already in %PATH%
+
+)
+
 rem Default directories
 if not defined BOOST_ROOT (
     set BOOST_ROOT=%DEV_ROOT%\boost_1_63_0
@@ -58,7 +84,12 @@ if not defined OPENSSL_LIBRARIES (
 )
 
 if not defined BUILD_THREADS_COUNT (
-	set BUILD_THREADS_COUNT=4
+    if defined NUMBER_OF_PROCESSORS (
+        set BUILD_THREADS_COUNT=%NUMBER_OF_PROCESSORS%
+    )
+    if not defined NUMBER_OF_PROCESSORS (
+        set BUILD_THREADS_COUNT=4
+    )
 )
 
 
