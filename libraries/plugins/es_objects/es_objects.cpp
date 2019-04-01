@@ -367,6 +367,10 @@ void es_objects_plugin_impl::prepare_bitasset(const asset_bitasset_data_object& 
 
 es_objects_plugin_impl::~es_objects_plugin_impl()
 {
+   if (curl) {
+      curl_easy_cleanup(curl);
+      curl = nullptr;
+   }
    return;
 }
 
