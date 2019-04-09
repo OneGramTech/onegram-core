@@ -40,6 +40,8 @@ include(Configuration)
 include(CheckCCompilerFlag)
 include(Utils)
 
+add_subdirectory(${CMAKE_CURRENT_SOURCE_DIR}/CMakeModules/Legacy)
+
 # Fortify source
 if (CMAKE_COMPILER_IS_GNUCXX)
 	if ("${CMAKE_CXX_COMPILER_ID}" STREQUAL "Clang")
@@ -118,6 +120,8 @@ endif(USE_PCH)
 
 option(USE_PROFILER "Build with GPROF support(Linux)." OFF)
 
+add_subdirectory("libraries/fc/CMakeModules/Legacy" "CMakeModules/fc-legacy")
+
 # FC  is an external dependency, and should not be placed into libraries folder
 # explicitly add FC submodule here to not loose focus on that
 add_subdirectory( libraries/fc )
@@ -142,7 +146,8 @@ LIST(APPEND BOOST_COMPONENTS thread
                              chrono
                              unit_test_framework
                              context
-                             coroutine)
+                             coroutine
+                             regex)
 # boost::endian is also required, but FindBoost can't handle header-only libs
 SET( Boost_USE_STATIC_LIBS ON CACHE STRING "ON or OFF" )
 
@@ -156,9 +161,9 @@ IF(WIN32)
   list(APPEND PLATFORM_SPECIFIC_LIBS ws2_32 crypt32 mswsock userenv )
 ENDIF(WIN32)
 
-FIND_PACKAGE(Boost 1.57 REQUIRED COMPONENTS ${BOOST_COMPONENTS})
+FIND_PACKAGE(Boost CONFIG REQUIRED COMPONENTS ${BOOST_COMPONENTS})
 
-FIND_PACKAGE(Python 3.6 COMPONENTS Interpreter)
+FIND_PACKAGE(Python 3.2 COMPONENTS Interpreter)
 
 if ( Python_Interpreter_FOUND )
     MESSAGE( STATUS "Python interpreter")
@@ -169,7 +174,7 @@ endif()
 SET( GENERATING_HELPERS PYTHON CACHE STRING "Default file generation helpers engine" )
 
 if ( Python_Interpreter_FOUND AND GENERATING_HELPERS STREQUAL PYTHON )
-    SET( GENERATING_HELPERS_USE_PYTHON TRUE CACHE INTERNAL "Use Python as file generation engine ( genesis, hardfork )")
+    SET( GENERATING_HELPERS_USE_PYTHON TRUE CACHE INTERNAL "Use Python as file generation engine ( genesis, hardfork )" )
 endif()
 
 # enforce more strict compiler warnings and errors
@@ -199,7 +204,7 @@ if( WIN32 )
     SET( DEFAULT_EXECUTABLE_INSTALL_DIR bin/ )
 
     if( MSVC )
-	    add_definitions(-DWIN32_LEAN_AND_MEAN)
+        add_definitions(-DWIN32_LEAN_AND_MEAN)
         #looks like this flag can have different default on some machines.
         SET(CMAKE_SHARED_LINKER_FLAGS "${CMAKE_SHARED_LINKER_FLAGS} /SAFESEH:NO")
         SET(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} /SAFESEH:NO")
