@@ -27,7 +27,11 @@ def convert_to_c_array(genesis_json):
     def c_ify(byte_array):
         byte_data = bytearray()
         for b in byte_array:
-            if b in b"\"":
+            if b in b"\' !#$%&()*+,-./" or b in b":;<=>@[]^_`{|}~" or\
+                    b in range(ord("a"), ord("z")+1) or b in range(ord("A"), ord("Z")+1) or \
+                    b in range(ord("0"), ord("9")+1):
+                byte_data.append(b)
+            elif b in b"\"":
                 byte_data += b"\\\""
             elif b in b"?":
                 # see https://en.cppreference.com/w/cpp/language/escape
@@ -49,10 +53,6 @@ def convert_to_c_array(genesis_json):
                 byte_data += b"\\t"
             elif b in b"\v":
                 byte_data += b"\\v"
-            elif b in b"\' !#$%&()*+,-./" or b in b":;<=>@[]^_`{|}~" or\
-                    b in range(ord("a"), ord("z")+1) or b in range(ord("A"), ord("Z")+1) or \
-                    b in range(ord("0"), ord("9")+1):
-                byte_data.append(b)
             else:
                 byte_data += b"\\%o" % b
 
