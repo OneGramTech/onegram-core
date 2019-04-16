@@ -37,7 +37,7 @@ if ( !($BUILD_ROOT -eq $GUESS_BUILD_ROOT) ) {
 $BOOST_VERSION = "1.65.1"
 $OPENSSL_VERSION = "1.1.1b"
 #$OPENSSL_VERSION = "1.1.0j"
-$CURL_VERSION = "7.64.0"
+$CURL_VERSION = "7.64.1"
 $CMAKE_VERSION = "3.10.3"
 $NASM_VERSION = "2.14.02"
 
@@ -126,6 +126,7 @@ $ENV:PATH = "$BUILD_ROOT\$CMAKE_NAME\bin;$BUILD_ROOT\$NASM_NAME\;" + $ENV:PATH
 $ENV:BOOST_ROOT = Resolve-Path -Path "$BUILD_ROOT\$BOOST_NAME"
 $ENV:OPENSSL_ROOT = Resolve-Path -Path "$BUILD_ROOT\$OPENSSL_NAME"
 $ENV:CURL_ROOT = Resolve-Path -Path "$BUILD_ROOT\$CURL_NAME"
+#$ENV:CURL_BUILD_WITH_SSPI = "TRUE"
 
 # store directory info
 "@echo off`r`n`r`n" | Out-File _directories.bat -encoding ascii
