@@ -6,4 +6,4 @@
 	url = https://github.com/bitshares/bitshares-core.wiki.git
 [submodule "tests/onegram-integration-tests"]
 	path = tests/onegram-integration-tests
-	url = ../../onegram-developers/onegram-integration-tests.git
+	url = https://gitlab.com/onegram-developers/onegram-integration-tests.git
