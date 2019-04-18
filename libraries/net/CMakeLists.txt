@@ -36,6 +36,7 @@ target_include_directories( graphene_net
 	"${CMAKE_CURRENT_SOURCE_DIR}/include"
 	"${CMAKE_CURRENT_BINARY_DIR}/include"
   PRIVATE
+	"${CMAKE_CURRENT_BINARY_DIR}/../chain/include"
 	"${CMAKE_CURRENT_SOURCE_DIR}/../chain/include"
 )
 
