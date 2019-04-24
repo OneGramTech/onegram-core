@@ -23,15 +23,13 @@ if not defined CURL_BUILD_WITH_SSPI (
 			RMDIR /S /Q "%CURL_ROOT%\include\internal"
 		)
 
-		xcopy /s %OPENSSL_ROOT%\include %CURL_ROOT%\include
+		xcopy /qs %OPENSSL_ROOT%\include %CURL_ROOT%\include
 
 		if %ERRORLEVEL% EQU 0 (
 			set CURL_BUILD_CONFIG_RELEASE=LIB Release - LIB OpenSSL
 			set CURL_BUILD_CONFIG_DEBUG=LIB Debug - LIB OpenSSL
-			echo OpenSSL config set
+			echo Setting OpenSSL to build cURL
 		)
-
-		echo OpenSSL built
 	)
 )
 
