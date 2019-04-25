@@ -2,7 +2,7 @@ if( MINGW )
     # MinGW requires a specific order of included libraries ( CURL before ZLib )
     find_package( ZLIB REQUIRED )
     # ${ZLIB_LIBRARY}  ws2_32 crypt32 mswsock userenv
-    SET( CURL_ADDITIONAL_LIBS ${ZLIB_LIBRARY} )
+    SET( CURL_ADDITIONAL_LIBS ${ZLIB_LIBRARY} pthread )
 endif( MINGW )
 if ( MSVC )
     SET( CURL_ADDITIONAL_LIBS Wldap32 )
