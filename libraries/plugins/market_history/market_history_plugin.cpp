@@ -35,7 +35,6 @@
 #include <graphene/chain/protocol/operations_permissions.hpp>
 
 #include <fc/thread/thread.hpp>
-#include <fc/smart_ref_impl.hpp>
 
 namespace graphene { namespace market_history {
 

@@ -270,7 +270,7 @@ BOOST_AUTO_TEST_CASE(bsip36)
       // Feed from witness1 is also expired but never deleted
       // All feeds should be deleted at this point
       const auto minimum_feeds = bit_usd_id(db).bitasset_data(db).options.minimum_feeds;
-      BOOST_CHECK_EQUAL(minimum_feeds, 1);
+      BOOST_CHECK_EQUAL(minimum_feeds, 1u);
       BOOST_CHECK_EQUAL(itr[1].first.instance.value, 17u);
 
       // Advancing into HF time

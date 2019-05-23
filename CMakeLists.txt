@@ -57,7 +57,7 @@ if (CMAKE_COMPILER_IS_GNUCXX)
 	else ()
 		message ("-- Setting optimizations for g++")
 		set (CMAKE_CXX_FLAGS_RELEASE "-D_FORTIFY_SOURCE=2 -O4 -DNDEBUG=1")
-		
+
 		# check and add data execution prevention
 		set(CMAKE_REQUIRED_FLAGS "-Wl,-znoexecstack")
 		check_c_compiler_flag("" HAVE_NOEXECSTACK)
@@ -65,7 +65,7 @@ if (CMAKE_COMPILER_IS_GNUCXX)
 			message ("-- Enabling data execution prevention")
 			add_linker_flag("-znoexecstack")
 		endif()
-		
+
 		# check and add Stack-based buffer overrun detection
 		set(CMAKE_REQUIRED_FLAGS "-fstack-protector-strong")
 		check_c_compiler_flag("" HAVE_STACKPROTECTOR)
@@ -101,7 +101,7 @@ if (NOT MSVC)
     add_definitions (-fPIC)
 endif(NOT MSVC)
 set(CMAKE_EXPORT_COMPILE_COMMANDS "ON")
-set(GRAPHENE_EGENESIS_JSON "${CMAKE_CURRENT_BINARY_DIR}/runtime/genesis.json" )
+set(GRAPHENE_EGENESIS_JSON "${CMAKE_CURRENT_BINARY_DIR}/runtime/libraries/egenesis/genesis.json" )
 
 include_directories(SYSTEM ${CMAKE_CURRENT_SOURCE_DIR} "${CMAKE_CURRENT_BINARY_DIR}/runtime")
 
@@ -135,12 +135,9 @@ LIST(APPEND BOOST_COMPONENTS thread
                              system
                              filesystem
                              program_options
-                             signals
-                             serialization
                              chrono
                              unit_test_framework
-                             context
-                             locale)
+                             context)
 SET( Boost_USE_STATIC_LIBS ON CACHE STRING "ON or OFF" )
 
 IF(WIN32)
@@ -196,6 +193,7 @@ if( WIN32 )
     SET( DEFAULT_EXECUTABLE_INSTALL_DIR bin/ )
 
     if( MSVC )
+	add_definitions(-DWIN32_LEAN_AND_MEAN)
         #looks like this flag can have different default on some machines.
         SET(CMAKE_SHARED_LINKER_FLAGS "${CMAKE_SHARED_LINKER_FLAGS} /SAFESEH:NO")
         SET(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} /SAFESEH:NO")
