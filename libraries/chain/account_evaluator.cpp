@@ -313,17 +313,17 @@ void_result account_update_evaluator::do_apply( const account_update_operation& 
    // exclude eternalAccountIds from the check acnt->options.is_voting() otherwise the aso.is_voting is never set!!!
    const auto eternalAccountIds = d.get_chain_properties().eternal_committee_account_ids();
    // update account statistics
-   if( o.new_options.valid() && o.new_options->is_voting() != acnt->options.is_voting(eternalAccountIds) )
+   if( o.new_options.valid() )
    {
-      d.modify( acnt->statistics( d ), [&]( account_statistics_object& aso )
-      {
-         if(o.new_options->is_voting() != acnt->options.is_voting())
-            aso.is_voting = !aso.is_voting;
+       d.modify( acnt->statistics( d ), [&]( account_statistics_object& aso )
+       {
+           if ( o.new_options->is_voting() != acnt->options.is_voting(eternalAccountIds) )
+               aso.is_voting = !aso.is_voting;
 
-         if((o.new_options->votes != acnt->options.votes ||
+           if((o.new_options->votes != acnt->options.votes ||
                o.new_options->voting_account != acnt->options.voting_account))
-            aso.last_vote_time = d.head_block_time();
-      } );
+               aso.last_vote_time = d.head_block_time();
+       } );
    }
 
    // update account object

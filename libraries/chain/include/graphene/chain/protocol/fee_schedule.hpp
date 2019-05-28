@@ -175,17 +175,19 @@ namespace graphene { namespace chain {
 
       static fee_schedule get_default();
 
+
+      asset calculate_fee( const operation& op )const;
       /**
        *  Finds the appropriate fee parameter struct for the operation
        *  and then calculates the appropriate fee in CORE asset.
        */
-      asset calculate_fee( const operation& op, const optional<feeless_account_ids_type>& feeless_account_ids = optional<feeless_account_ids_type>() )const;
+      asset calculate_fee( const operation& op, const optional<feeless_account_ids_type>& feeless_account_ids )const;
       /**
        *  Finds the appropriate fee parameter struct for the operation
        *  and then calculates the appropriate fee in an asset specified
        *  implicitly by core_exchange_rate.
        */
-      asset calculate_fee( const operation& op, const price& core_exchange_rate = price::unit_price(), const optional<feeless_account_ids_type>& feeless_account_ids = optional<feeless_account_ids_type>() )const;
+      asset calculate_fee( const operation& op, const price& core_exchange_rate, const optional<feeless_account_ids_type>& feeless_account_ids = optional<feeless_account_ids_type>() )const;
        /**
         *  Updates the operation with appropriate fee and returns the fee.
         */
@@ -209,7 +211,7 @@ namespace graphene { namespace chain {
          return fee_helper<Operation>().get(parameters);
       }
       template<typename Operation>
-      const bool exists()const
+      bool exists()const
       {
          auto itr = parameters.find(typename Operation::fee_parameters_type());
          return itr != parameters.end();

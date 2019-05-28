@@ -3,16 +3,11 @@
 #include <graphene/chain/transaction_evaluation_state.hpp>
 #include <graphene/chain/protocol/fee_schedule.hpp>
 #include <graphene/chain/protocol/operations_permissions.hpp>
-#include <fc/smart_ref_impl.hpp>
 #include <graphene/chain/committee_member_object.hpp>
 #include <graphene/chain/witness_object.hpp>
 #include <graphene/chain/worker_object.hpp>
 
 namespace graphene { namespace chain {
-
-   typedef fc::smart_ref<operations_permissions> smart_operations_permissions;
-
-   static smart_operations_permissions smart_operations_permissions_tmp;
 
    bool account_has_comittee(const database& db, const account_id_type& account)
    {

@@ -62,7 +62,7 @@ const fee_schedule&  database::current_fee_schedule()const
 
 const operations_permissions&  database::current_operations_permissions()const
 {
-   return get_global_properties().parameters.current_operations_permissions;
+   return get_global_properties().parameters.get_current_operations_permissions();
 }
 
 time_point_sec database::head_block_time()const

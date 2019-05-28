@@ -51,6 +51,9 @@ namespace graphene {
             uint64_t fee = 1 * GRAPHENE_BLOCKCHAIN_PRECISION;
             uint64_t fee_per_day = 1 * GRAPHENE_BLOCKCHAIN_PRECISION;
          };
+
+         struct operation_permissions_type { operation_permissions_container_type rules; };
+
          // paid to network
          asset fee;
          // where the held monies are to come from
@@ -90,7 +93,9 @@ namespace graphene {
             uint64_t fee = 1 * GRAPHENE_BLOCKCHAIN_PRECISION;
             uint64_t fee_per_kb = 1 * GRAPHENE_BLOCKCHAIN_PRECISION;
          };
-         
+
+         struct operation_permissions_type { operation_permissions_container_type rules; };
+
          // paid to network
          asset fee;
          // the object we are attempting to update
@@ -125,6 +130,8 @@ namespace graphene {
       {
          struct fee_parameters_type {};
 
+         struct operation_permissions_type { operation_permissions_container_type rules; };
+
          htlc_redeemed_operation() {}
          htlc_redeemed_operation( htlc_id_type htlc_id, account_id_type from, account_id_type to, account_id_type redeemer, asset amount ) :
                htlc_id(htlc_id), from(from), to(to), redeemer(redeemer), amount(amount) {}
@@ -146,6 +153,8 @@ namespace graphene {
             uint64_t fee = 1 * GRAPHENE_BLOCKCHAIN_PRECISION;
             uint64_t fee_per_day = 1 * GRAPHENE_BLOCKCHAIN_PRECISION;
          };
+
+         struct operation_permissions_type { operation_permissions_container_type rules; };
          
          // paid to network
          asset fee;
@@ -178,6 +187,8 @@ namespace graphene {
       {
          struct fee_parameters_type {};
 
+         struct operation_permissions_type { operation_permissions_container_type rules; };
+
          htlc_refund_operation(){}
          htlc_refund_operation( const htlc_id_type& htlc_id, const account_id_type& to ) 
          : htlc_id(htlc_id), to(to) {}
@@ -209,3 +220,9 @@ FC_REFLECT( graphene::chain::htlc_redeem_operation, (fee)(htlc_id)(redeemer)(pre
 FC_REFLECT( graphene::chain::htlc_redeemed_operation, (fee)(htlc_id)(from)(to)(redeemer)(amount) )
 FC_REFLECT( graphene::chain::htlc_extend_operation, (fee)(htlc_id)(update_issuer)(seconds_to_add)(extensions))
 FC_REFLECT( graphene::chain::htlc_refund_operation, (fee)(htlc_id)(to))
+
+FC_REFLECT( graphene::chain::htlc_create_operation::operation_permissions_type, (rules) )
+FC_REFLECT( graphene::chain::htlc_redeem_operation::operation_permissions_type, (rules) )
+FC_REFLECT( graphene::chain::htlc_redeemed_operation::operation_permissions_type, (rules) )
+FC_REFLECT( graphene::chain::htlc_extend_operation::operation_permissions_type, (rules) )
+FC_REFLECT( graphene::chain::htlc_refund_operation::operation_permissions_type, (rules) )

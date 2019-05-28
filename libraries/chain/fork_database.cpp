@@ -23,9 +23,7 @@
  */
 #include <graphene/chain/fork_database.hpp>
 #include <graphene/chain/exceptions.hpp>
-#include <graphene/chain/protocol/fee_schedule.hpp>
 #include <graphene/chain/protocol/operations_permissions.hpp>
-#include <fc/smart_ref_impl.hpp>
 
 namespace graphene { namespace chain {
 fork_database::fork_database()

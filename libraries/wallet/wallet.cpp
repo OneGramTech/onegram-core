@@ -2465,7 +2465,7 @@ public:
             auto b = _remote_db->get_block_header(i.block_num);
             FC_ASSERT(b);
             ss << b->timestamp.to_iso_string() << " ";
-            i.op.visit(operation_printer(ss, *this, i.result));
+            i.op.visit(operation_printer(ss, *this, i));
             ss << " \n";
          }
 
@@ -3407,7 +3407,7 @@ vector<operation_detail> wallet_api::my_get_archived_operations(const std::strin
          answer = (*my->_remote_arch)->get_archived_operations(last, count, operation_id_filter);
       for (auto op : answer.operations) {
          std::stringstream ss;
-         auto memo = op.op.visit(detail::operation_printer(ss, *my, op.result));
+         auto memo = op.op.visit(detail::operation_printer(ss, *my, op));
          result.push_back(operation_detail{ memo, ss.str(), op });
       }
 
@@ -3436,7 +3436,7 @@ vector<operation_detail> wallet_api::my_get_archived_operations_by_time(const st
          answer = (*my->_remote_arch)->get_archived_operations_by_time(inclusive_from, exclusive_until, nskip, operation_id_filter);
       for (auto op : answer.operations) {
          std::stringstream ss;
-         auto memo = op.op.visit(detail::operation_printer(ss, *my, op.result));
+         auto memo = op.op.visit(detail::operation_printer(ss, *my, op));
          result.push_back(operation_detail{ memo, ss.str(), op });
       }
 
@@ -3601,7 +3601,7 @@ vector<operation_detail> wallet_api::get_last_operations_history(unsigned limit)
       for (auto& o : current)
       {
          std::stringstream ss;
-         auto memo = o.op.visit(detail::operation_printer(ss, *my, o.result));
+         auto memo = o.op.visit(detail::operation_printer(ss, *my, o));
          result.push_back(operation_detail{ memo, ss.str(), o });
       }
 

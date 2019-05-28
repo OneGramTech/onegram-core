@@ -101,7 +101,7 @@ if (NOT MSVC)
     add_definitions (-fPIC)
 endif(NOT MSVC)
 set(CMAKE_EXPORT_COMPILE_COMMANDS "ON")
-set(GRAPHENE_EGENESIS_JSON "${CMAKE_CURRENT_BINARY_DIR}/runtime/libraries/egenesis/genesis.json" )
+set(GRAPHENE_EGENESIS_JSON "${CMAKE_CURRENT_BINARY_DIR}/runtime/genesis.json" )
 
 include_directories(SYSTEM ${CMAKE_CURRENT_SOURCE_DIR} "${CMAKE_CURRENT_BINARY_DIR}/runtime")
 

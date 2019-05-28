@@ -49,7 +49,7 @@ class deduplicator
 public:
    deduplicator() : modifier(nullptr) {}
 
-   /* TODO: explicit */ deduplicator(const boost::shared_ptr<bpo::option_description> (*mod_fn)(const boost::shared_ptr<bpo::option_description>&))
+   explicit deduplicator(const boost::shared_ptr<bpo::option_description> (*mod_fn)(const boost::shared_ptr<bpo::option_description>&))
    : modifier(mod_fn) {}
 
    const boost::shared_ptr<bpo::option_description> next(const boost::shared_ptr<bpo::option_description>& o)

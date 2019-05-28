@@ -142,6 +142,11 @@ namespace graphene { namespace chain {
       this->scale = 0;
    }
 
+   asset fee_schedule::calculate_fee( const operation& op )const
+   {
+      return calculate_fee(op, optional<feeless_account_ids_type>());
+   }
+
    asset fee_schedule::calculate_fee( const operation& op, const optional<feeless_account_ids_type>& feeless_account_ids )const
    {
       if (feeless_account_ids.valid() && op.visit( feeless_payer_visitor( *feeless_account_ids ) )) {
@@ -194,7 +199,7 @@ namespace graphene { namespace chain {
    void chain_parameters::validate()const
    {
       get_current_fees().validate();
-      current_operations_permissions->validate();
+      get_current_operations_permissions().validate();
       FC_ASSERT( reserve_percent_of_fee <= GRAPHENE_100_PERCENT );
       FC_ASSERT( network_percent_of_fee <= GRAPHENE_100_PERCENT );
       FC_ASSERT( lifetime_referrer_percent_of_fee <= GRAPHENE_100_PERCENT );

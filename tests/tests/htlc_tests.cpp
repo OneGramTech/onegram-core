@@ -108,6 +108,8 @@ void set_committee_parameters(database_fixture* db_fixture)
    const fee_schedule_type& existing_fee_schedule = *(existing_params.current_fees);
    // create a new fee_shedule
    std::shared_ptr<fee_schedule_type> new_fee_schedule = std::make_shared<fee_schedule_type>();
+   // create default operations_permissions
+   std::shared_ptr<operations_permissions_type> new_op_permissions = std::make_shared<operations_permissions_type>(operations_permissions::get_default());
    new_fee_schedule->scale = GRAPHENE_100_PERCENT;
    // replace the old with the new
    flat_map<uint64_t, graphene::chain::fee_parameters> params_map = get_htlc_fee_parameters();
@@ -132,6 +134,7 @@ void set_committee_parameters(database_fixture* db_fixture)
    new_params.max_timeout_secs = 60 * 60 * 24 * 28;
    uop.new_parameters.extensions.value.updatable_htlc_options = new_params;
    uop.new_parameters.current_fees = new_fee_schedule;
+   uop.new_parameters.current_operations_permissions = new_op_permissions;
    cop.proposed_ops.emplace_back(uop);
    
    db_fixture->trx.operations.push_back(cop);

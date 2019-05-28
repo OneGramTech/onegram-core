@@ -353,6 +353,9 @@ namespace graphene { namespace chain {
 
    // Forward-declare fee_schedule to allow typename reflection below
    struct fee_schedule;
+
+   // Forward-declare operations_permissions to allow typename reflection below
+   struct operations_permissions;
 } }  // graphene::chain
 
 namespace fc
@@ -373,6 +376,16 @@ namespace fc
         return "shared_ptr<fee_schedule>";
     } };
     void from_variant( const fc::variant& var, std::shared_ptr<const graphene::chain::fee_schedule>& vo,
+                       uint32_t max_depth = 2 );
+
+    // Define typename reflectors for shared_ptr<operations_permissions> here, so they're available everywhere that needs them
+    template<> struct get_typename<std::shared_ptr<const graphene::chain::operations_permissions>> { static const char* name() {
+            return "shared_ptr<const operations_permissions>";
+        } };
+    template<> struct get_typename<std::shared_ptr<graphene::chain::operations_permissions>> { static const char* name() {
+            return "shared_ptr<operations_permissions>";
+        } };
+    void from_variant( const fc::variant& var, std::shared_ptr<const graphene::chain::operations_permissions>& vo,
                        uint32_t max_depth = 2 );
 }
 namespace fc {

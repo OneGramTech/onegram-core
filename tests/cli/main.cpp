@@ -784,7 +784,7 @@ BOOST_AUTO_TEST_CASE( cli_multisig_transaction )
       account_create_op.owner = authority(1, bki1.pub_key, 1);
       account_create_op.active = authority(2, bki2.pub_key, 1, bki3.pub_key, 1);
       account_create_op.options.memo_key = bki4.pub_key;
-      account_create_op.fee = asset(1000000);  // should be enough for creating account
+      account_create_op.fee = asset(100000000);  // should be enough for creating account
 
       create_multisig_acct_tx.operations.push_back(account_create_op);
       con.wallet_api_ptr->sign_transaction(create_multisig_acct_tx, true);

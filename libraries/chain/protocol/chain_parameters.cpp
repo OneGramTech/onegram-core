@@ -1,15 +1,18 @@
 #include <graphene/chain/protocol/chain_parameters.hpp>
 #include <graphene/chain/protocol/fee_schedule.hpp>
+#include <graphene/chain/protocol/operations_permissions.hpp>
 
 namespace graphene { namespace chain {
    chain_parameters::chain_parameters() {
        current_fees = std::make_shared<fee_schedule>();
+       current_operations_permissions = std::make_shared<operations_permissions>();
    }
 
    // copy constructor
    chain_parameters::chain_parameters(const chain_parameters& other)
    {
       current_fees = std::make_shared<fee_schedule>(*other.current_fees);
+      current_operations_permissions = std::make_shared<operations_permissions>(*other.current_operations_permissions);
       safe_copy(*this, other);
    }
 
@@ -19,6 +22,7 @@ namespace graphene { namespace chain {
       if (&other != this)
       {
          current_fees = std::make_shared<fee_schedule>(*other.current_fees);
+         current_operations_permissions = std::make_shared<operations_permissions>(*other.current_operations_permissions);
          safe_copy(*this, other);
       }
       return *this;
@@ -62,6 +66,7 @@ namespace graphene { namespace chain {
    chain_parameters::chain_parameters(chain_parameters&& other)
    {
       current_fees = std::move(other.current_fees);
+      current_operations_permissions = std::move(other.current_operations_permissions);
       safe_copy(*this, other);
    }
 
@@ -71,6 +76,7 @@ namespace graphene { namespace chain {
       if (&other != this)
       {
          current_fees = std::move(other.current_fees);
+         current_operations_permissions = std::move(other.current_operations_permissions);
          safe_copy(*this, other);
       }
       return *this;
