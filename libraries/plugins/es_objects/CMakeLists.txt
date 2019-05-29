@@ -4,12 +4,17 @@ add_library( graphene_es_objects
         es_objects.cpp
            )
 
-find_package( CURL REQUIRED )		   
-		   
-target_link_libraries( graphene_es_objects graphene_chain graphene_app ${CURL_LIBRARY} )
+find_package( CURL REQUIRED )
+include_directories(${CURL_INCLUDE_DIRS})
+
+target_link_libraries( graphene_es_objects graphene_chain graphene_app ${CURL_LIBRARY} ${CURL_ADDITIONAL_LIBS} )
 target_include_directories( graphene_es_objects
                             PUBLIC "${CMAKE_CURRENT_SOURCE_DIR}/include" ${CURL_INCLUDE_DIR} )
 
+if(CURL_STATICLIB)
+  SET_TARGET_PROPERTIES(graphene_es_objects PROPERTIES
+	COMPILE_DEFINITIONS "CURL_STATICLIB")
+endif(CURL_STATICLIB)
 if(MSVC)
   set_source_files_properties(es_objects.cpp PROPERTIES COMPILE_FLAGS "/bigobj" )
 endif(MSVC)

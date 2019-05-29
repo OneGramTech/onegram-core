@@ -84,16 +84,16 @@ private:
       public:
         class actual_execution_measurement_helper
         {
-          call_statistics_collector &_collector;
+          std::shared_ptr<call_statistics_collector> _collector;
         public:
-          actual_execution_measurement_helper(call_statistics_collector& collector) :
+          actual_execution_measurement_helper(std::shared_ptr<call_statistics_collector> collector) :
             _collector(collector)
           {
-            _collector.starting_execution();
+            _collector->starting_execution();
           }
           ~actual_execution_measurement_helper()
           {
-            _collector.execution_completed();
+            _collector->execution_completed();
           }
         };
         call_statistics_collector(const char* method_name,
@@ -482,9 +482,11 @@ class node_impl : public peer_connection_delegate
       void listen_to_p2p_network();
       void connect_to_p2p_network();
       void add_node( const fc::ip::endpoint& ep );
+      bool cap_seed_nodes(size_t nodes_max_count);
       void initiate_connect_to(const peer_connection_ptr& peer);
       void connect_to_endpoint(const fc::ip::endpoint& ep);
       void listen_on_endpoint(const fc::ip::endpoint& ep , bool wait_if_not_available);
+      void peer_database_as_whitelisted(bool whitelisted);
       void accept_incoming_connections(bool accept);
       void listen_on_port( uint16_t port, bool wait_if_not_available );
 

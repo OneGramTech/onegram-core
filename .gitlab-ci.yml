@@ -13,6 +13,9 @@ services:
 - docker:dind
 
 before_script:
+  - apk update && apk add git
+  - git submodule sync --recursive
+  - git submodule update --init --recursive
   - docker info
   - docker login -u gitlab-ci-token -p $CI_JOB_TOKEN $CI_REGISTRY
 
@@ -41,6 +44,48 @@ stages:
     - docker run --rm $IMG_TAG fee_schedule_test
     - docker run --rm $IMG_TAG vesting_balance_test
 
+.script_template: &mingw_build_script_definition
+  image: registry.gitlab.com/cryptohouse/onegramdev/mingw-dependencies:latest
+  before_script:
+    # Overriding docker commands
+    - echo "Hello, this is a Windows build environment"
+  after_script:
+    # Overriding docker commands
+    - echo "Goodbye!"
+  variables:
+    TARGET:
+  artifacts:
+    paths:
+      - $CI_PROJECT_DIR/release-$TARGET_ENV/*.exe
+      - $CI_PROJECT_DIR/release-$TARGET_ENV/tests/*.exe
+    expire_in: 2 days
+  script:
+    # BUILD_TYPE = Release ( Fixed parameter, Debug is not compilable )
+    - cmake -G Ninja -DTARGET_ENV=$TARGET_ENV -DENABLE_INSTALLER=TRUE -DCMAKE_BUILD_TYPE=Release -DREVISION_SHA=$REVISION_SHA -DREVISION_TIMESTAMP=$REVISION_TIMESTAMP -DCMAKE_TOOLCHAIN_FILE="toolchain_mingw.cmake" -DBOOST_ROOT="/dependencies/boost/" -DOPENSSL_ROOT_DIR="/dependencies/openssl/" -DOPENSSL_INCLUDE_DIR="/dependencies/openssl/include/"  -DOPENSSL_SSL_LIBRARY="/dependencies/openssl/libssl.a"  -DOPENSSL_CRYPTO_LIBRARY="/dependencies/openssl/libcrypto.a"  -DZLIB_ROOT="/dependencies/zlib/"  -DCURL_LIBRARY="/dependencies/curl/lib/libcurl.a" -DCURL_INCLUDE_DIR="/dependencies/curl/include/" . && ninja $TARGET && mkdir -p release-$TARGET_ENV/tests  && find programs -type f -name "*.exe" -exec cp {} release-$TARGET_ENV \;  && find tests -type f -name "*.exe" -exec cp {} release-$TARGET_ENV/tests \;  && ls release-$TARGET_ENV -l && ls release-$TARGET_ENV/tests -l
+    # strip symbols from the executables
+    - find release-$TARGET_ENV -type f -name "*.exe" -exec strip {} -s \;
+    # Create NSIS Installer ( optional )
+    - apt-get install -y --no-install-recommends nsis
+    - cpack -C Release
+    - find packages -type f -name "*.exe" -exec cp {} release-$TARGET_ENV \;
+
+.script_template: &mingw_build_script_definition_docker
+  artifacts:
+    paths:
+      - $CI_PROJECT_DIR/release/*.exe
+      - $CI_PROJECT_DIR/release/tests/*.exe
+    expire_in: 2 days
+  script:
+    - docker build --build-arg TARGET_ENV=$TARGET_ENV  --build-arg BUILD=$BDCUILD_TARGET --build-arg REVISION_SHA=$CI_COMMIT_SHA -t $IMG_NAME -f Dockerfile.OGC.MINGW .
+    - docker image ls
+    - mkdir -p /release
+    - id=$(docker create $IMG_NAME)
+    - docker container ls -a
+    - docker cp $id:/release $CI_PROJECT_DIR
+    - ls $CI_PROJECT_DIR/release/ -l
+    - ls $CI_PROJECT_DIR/release/tests -l
+    - docker rm -v $id
+
 # Build stages
 
 build_mainnet_release:
@@ -48,6 +93,8 @@ build_mainnet_release:
   only:
     - master
     - tags
+  except:
+    - schedules
   stage: build
   variables:
     BUILD_TARGET: Release
@@ -61,6 +108,7 @@ build_testnet_release:
   except:
     - master
     - tags
+    - schedules
   stage: build
   variables:
     BUILD_TARGET: Release
@@ -74,6 +122,8 @@ build_mainnet_debug:
   only:
     - master
     - tags
+  except:
+    - schedules
   stage: build
   variables:
     BUILD_TARGET: Debug
@@ -87,6 +137,7 @@ build_testnet_debug:
   except:
     - master
     - tags
+    - schedules
   stage: build
   variables:
     BUILD_TARGET: Debug
@@ -95,6 +146,29 @@ build_testnet_debug:
   tags:
     - docker
 
+# MinGW builds, debug builds are not supported
+mingw_build_mainnet_release:
+  <<: *mingw_build_script_definition
+  stage: build
+  variables:
+    BUILD_TARGET: Release
+    TARGET_ENV: MAINNET
+    GIT_SUBMODULE_STRATEGY: recursive
+    IMG_NAME: mingw-build-mainnet
+  tags:
+    - windows
+
+mingw_build_testnet_release:
+  <<: *mingw_build_script_definition
+  stage: build
+  variables:
+    BUILD_TARGET: Release
+    TARGET_ENV: TESTNET
+    GIT_SUBMODULE_STRATEGY: recursive
+    IMG_NAME: mingw-build-testnet
+  tags:
+    - windows
+
 # Test stages
 
 test_mainnet_release:
@@ -102,6 +176,8 @@ test_mainnet_release:
   only:
     - master
     - tags
+  except:
+    - schedules
   stage: test
   variables:
     BUILD_TARGET: Release
@@ -114,6 +190,7 @@ test_testnet_release:
   except:
     - master
     - tags
+    - schedules
   stage: test
   variables:
     BUILD_TARGET: Release
@@ -126,6 +203,8 @@ test_mainnet_debug:
   only:
     - master
     - tags
+  except:
+    - schedules
   stage: test
   variables:
     BUILD_TARGET: Debug
@@ -138,6 +217,7 @@ test_testnet_debug:
   except:
     - master
     - tags
+    - schedules
   stage: test
   variables:
     BUILD_TARGET: Debug
@@ -167,5 +247,32 @@ publish_mainnet_release:
     TARGET_ENV: MAINNET
     BUILD_TARGET: Release
     RELEASE_IMG_NAME: ${CI_REGISTRY_IMAGE}/onegram:${CI_COMMIT_TAG}-${CI_COMMIT_SHORT_SHA}
+  tags:
+    - docker
+
+# Midnight builds
+
+midnight_build_testnet_debug:
+  before_script:
+    - apk update
+    - apk add python3-dev && apk add py3-pip
+    - apk add libc-dev && apk add gcc
+    - pip3 install --upgrade pip
+    - pip3 install wheel && pip3 install -r ./tests/onegram-integration-tests/requirements.txt
+  script:
+    - echo $TARGET_ENV
+    - echo $BUILD_TARGET
+    - echo $CI_COMMIT_SHA
+    - docker build --build-arg TARGET_ENV=$TARGET_ENV --build-arg BUILD=$BUILD_TARGET --build-arg REVISION_SHA=$CI_COMMIT_SHA -t onegram-test -f Dockerfile.OGC .
+    - docker image ls
+    - cd ./tests/onegram-integration-tests/tests && python3 -m pytest -s --collect-only .
+    - python3 run.py --silent common_tests blockchain_tests sync_tests
+  only:
+    - schedules
+  stage: build
+  variables:
+    BUILD_TARGET: Debug
+    TARGET_ENV: TESTNET
+    GIT_SUBMODULE_STRATEGY: recursive
   tags:
     - docker

@@ -314,7 +314,7 @@ class wallet_api
       wallet_api( const wallet_data& initial_data, fc::api<login_api> rapi );
       virtual ~wallet_api();
 
-      bool copy_wallet_file( string destination_filename );
+      bool copy_wallet_file( string destination_filepath );
 
       fc::ecc::private_key derive_private_key(const std::string& prefix_string, int sequence_number) const;
 
@@ -370,6 +370,37 @@ class wallet_api
        * @returns assets count
        */
       uint64_t get_asset_count()const;
+
+      /// @see graphene::app::archive_api::get_archived_operations
+      vector<operation_detail> get_archived_operations(uint64_t last,
+                                                       uint64_t count,
+                                                       flat_set<int> operation_id_filter) const;
+      /// @see graphene::app::archive_api::get_archived_operations_by_time
+      vector<operation_detail> get_archived_operations_by_time(time_point_sec inclusive_from,
+                                                               time_point_sec exclusive_until,
+                                                               flat_set<int> operation_id_filter) const;
+      /// @see graphene::app::archive_api::get_archived_account_operations
+      vector<operation_detail> get_archived_account_operations(const std::string account_id_or_name,
+                                                               uint64_t last,
+                                                               uint64_t count,
+                                                               flat_set<int> operation_id_filter) const;
+      /// @see graphene::app::archive_api::get_archived_account_operations_by_time
+      vector<operation_detail> get_archived_account_operations_by_time(const std::string account_id_or_name,
+                                                                       time_point_sec inclusive_from,
+                                                                       time_point_sec exclusive_until,
+                                                                       flat_set<int> operation_id_filter) const;
+      /// @see graphene::app::archive_api::get_archived_account_operation_count
+      uint64_t get_archived_account_operation_count(const std::string account_id_or_name) const;
+      /// @see graphene::app::archive_api::get_account_summary
+      account_archive::account_summary get_account_summary(const std::string account_id_or_name,
+                                                           const std::string asset_id_or_symbol,
+                                                           uint64_t last,
+                                                           uint64_t count) const;
+      /// @see graphene::app::archive_api::get_account_summary_by_time
+      account_archive::account_summary get_account_summary_by_time(const std::string account_id_or_name,
+                                                                   const std::string asset_id_or_symbol,
+                                                                   time_point_sec inclusive_from,
+                                                                   time_point_sec exclusive_until) const;
 
       /** Returns the most recent operations on the named account.
        *
@@ -1675,6 +1706,20 @@ class wallet_api
       fc::signal<void(bool)> lock_changed;
       std::shared_ptr<detail::wallet_api_impl> my;
       void encrypt_keys();
+
+   private:
+
+      void check_remote_arch_api() const;
+
+      vector<operation_detail> my_get_archived_operations(const std::string* account_id_or_name,
+                                                          uint64_t last,
+                                                          uint64_t count,
+                                                          flat_set<int> operation_id_filter) const;
+
+      vector<operation_detail> my_get_archived_operations_by_time(const std::string* account_id_or_name,
+                                                                  time_point_sec inclusive_from,
+                                                                  time_point_sec exclusive_until,
+                                                                  flat_set<int> operation_id_filter) const;
 };
 
 } }
@@ -1817,6 +1862,13 @@ FC_API( graphene::wallet::wallet_api,
         (get_account_id)
         (get_block)
         (get_account_count)
+        (get_archived_operations)
+        (get_archived_operations_by_time)
+        (get_archived_account_operations)
+        (get_archived_account_operations_by_time)
+        (get_archived_account_operation_count)
+        (get_account_summary)
+        (get_account_summary_by_time)
         (get_account_history)
         (get_last_operations_history)
         (get_relative_account_history)

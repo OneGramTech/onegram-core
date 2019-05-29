@@ -97,7 +97,9 @@ endif()
 
 # position independent executetable (PIE)
 # position independent code (PIC)
-add_definitions (-fPIC)
+if (NOT MSVC)
+    add_definitions (-fPIC)
+endif(NOT MSVC)
 set(CMAKE_EXPORT_COMPILE_COMMANDS "ON")
 set(GRAPHENE_EGENESIS_JSON "${CMAKE_CURRENT_BINARY_DIR}/runtime/genesis.json" )
 
@@ -119,7 +121,7 @@ add_subdirectory( libraries/fc )
 IF( NOT WIN32 )
     get_property(FC_ROOT_PATH GLOBAL PROPERTY FC_ROOT_PATH)
     set(FC_CMAKE_MODULE_PATH ${FC_ROOT_PATH}/CMakeModules)
-    list( APPEND CMAKE_MODULE_PATH ${FC_CMAKE_MODULE_PATH} ) 
+    list( APPEND CMAKE_MODULE_PATH ${FC_CMAKE_MODULE_PATH} ${FC_CMAKE_MODULE_PATH}/Legacy )
 ENDIF( NOT WIN32 )
 
 #list( APPEND CMAKE_MODULE_PATH "${CMAKE_CURRENT_SOURCE_DIR}/libraries/fc/GitVersionGen" )
@@ -141,20 +143,31 @@ LIST(APPEND BOOST_COMPONENTS thread
                              locale)
 SET( Boost_USE_STATIC_LIBS ON CACHE STRING "ON or OFF" )
 
-IF( WIN32 )
-  SET(BOOST_ROOT $ENV{BOOST_ROOT})
+IF(WIN32)
+   if($ENV{BOOST_ROOT})
+       SET(BOOST_ROOT $ENV{BOOST_ROOT})
+   endif($ENV{BOOST_ROOT})
   set(Boost_USE_MULTITHREADED ON)
   set(BOOST_ALL_DYN_LINK OFF) # force dynamic linking for all libraries
+  add_definitions("-DCURL_STATICLIB")
+  list(APPEND PLATFORM_SPECIFIC_LIBS ws2_32 crypt32 mswsock userenv )
 ENDIF(WIN32)
 
 FIND_PACKAGE(Boost 1.57 REQUIRED COMPONENTS ${BOOST_COMPONENTS})
-# For Boost 1.53 on windows, coroutine was not in BOOST_LIBRARYDIR and do not need it to build,  but if boost versin >= 1.54, find coroutine otherwise will cause link errors
-IF(NOT "${Boost_VERSION}" MATCHES "1.53(.*)")
-   SET(BOOST_LIBRARIES_TEMP ${Boost_LIBRARIES})
-   FIND_PACKAGE(Boost 1.54 REQUIRED COMPONENTS coroutine)
-   LIST(APPEND BOOST_COMPONENTS coroutine)
-   SET(Boost_LIBRARIES ${BOOST_LIBRARIES_TEMP} ${Boost_LIBRARIES})
-ENDIF()
+
+FIND_PACKAGE(Python 3.6 COMPONENTS Interpreter)
+
+if ( Python_Interpreter_FOUND )
+    MESSAGE( STATUS "Python interpreter")
+    MESSAGE( STATUS "  binary: ${Python_EXECUTABLE}" )
+    MESSAGE( STATUS "  falvor: ${Python_INTERPRETER_ID}")
+endif()
+
+SET( GENERATING_HELPERS PYTHON CACHE STRING "Default file generation helpers engine" )
+
+if ( Python_Interpreter_FOUND AND GENERATING_HELPERS STREQUAL PYTHON )
+    SET( GENERATING_HELPERS_USE_PYTHON TRUE CACHE INTERNAL "Use Python as file generation engine ( genesis, hardfork )")
+endif()
 
 # enforce more strict compiler warnings and errors
 add_compiler_flag_if_available("-Wall")
@@ -172,35 +185,24 @@ add_compiler_flag_if_available("-Wunused-but-set-parameter")
 if( WIN32 )
 
     message( STATUS "Configuring BitShares on WIN32")
-    set( DB_VERSION 60 )
-    set( BDB_STATIC_LIBS 1 )
 
-    set( ZLIB_LIBRARIES "" )
+    if ( MINGW )
+        message( STATUS "Windows build using MinGW" )
+        set( FULL_STATIC_BUILD TRUE )
+    else( MINGW )
+        set( ZLIB_LIBRARIES "" )
+    endif( MINGW )
+
     SET( DEFAULT_EXECUTABLE_INSTALL_DIR bin/ )
 
-    set(CRYPTO_LIB)
+    if( MSVC )
+        #looks like this flag can have different default on some machines.
+        SET(CMAKE_SHARED_LINKER_FLAGS "${CMAKE_SHARED_LINKER_FLAGS} /SAFESEH:NO")
+        SET(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} /SAFESEH:NO")
 
-    #looks like this flag can have different default on some machines.
-    SET(CMAKE_SHARED_LINKER_FLAGS "${CMAKE_SHARED_LINKER_FLAGS} /SAFESEH:NO")
-    SET(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} /SAFESEH:NO")
-
-    # Probably cmake has a bug and vcxproj generated for executable in Debug conf. has disabled debug info
-    set(CMAKE_EXE_LINKER_FLAGS_DEBUG "${CMAKE_EXE_LINKER_FLAGS_DEBUG} /DEBUG")
-
-    # On windows tcl should be installed to the directory pointed by setenv.bat script
-    SET(TCL_INCLUDE_PATH $ENV{TCL_ROOT}/include)
-    MESSAGE(STATUS "tcl INCLUDE PATH: ${TCL_INCLUDE_PATH}")
-
-    FIND_PACKAGE(TCL)
-    MESSAGE(STATUS "tcl_library: ${TCL_LIBRARY}")
-
-    SET(TCL_LIBS "optimized;${TCL_LIBRARY};debug;")
-    get_filename_component(TCL_LIB_PATH "${TCL_LIBRARY}" PATH)
-    get_filename_component(TCL_LIB_NAME "${TCL_LIBRARY}" NAME_WE)
-    get_filename_component(TCL_LIB_EXT "${TCL_LIBRARY}" EXT)
-
-    SET(TCL_LIBS "${TCL_LIBS}${TCL_LIB_PATH}/${TCL_LIB_NAME}g${TCL_LIB_EXT}")
-    SET(TCL_LIBRARY ${TCL_LIBS})
+        # Probably cmake has a bug and vcxproj generated for executable in Debug conf. has disabled debug info
+        set(CMAKE_EXE_LINKER_FLAGS_DEBUG "${CMAKE_EXE_LINKER_FLAGS_DEBUG} /DEBUG")
+    endif ( MSVC )
 
 else( WIN32 ) # Apple AND Linux
 
@@ -222,9 +224,6 @@ else( WIN32 ) # Apple AND Linux
           # if you have a normal install, you can define crypto_library to the empty string to avoid a build error
           set( crypto_library crypto)
         endif ()
-        if ( FULL_STATIC_BUILD )
-          set( CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} -static-libstdc++ -static-libgcc")
-        endif ( FULL_STATIC_BUILD )
     endif( APPLE )
 
     if( "${CMAKE_CXX_COMPILER_ID}" STREQUAL "GNU" )
@@ -246,6 +245,10 @@ else( WIN32 ) # Apple AND Linux
     # set( CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS_DEBUG} -gdwarf-2 -g3" )
 
 endif( WIN32 )
+
+if ( FULL_STATIC_BUILD )
+    set( CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} -static -static-libstdc++ -static-libgcc" )
+endif ( FULL_STATIC_BUILD )
 
 set(ENABLE_COVERAGE_TESTING FALSE CACHE BOOL "Build BitShares for code coverage analysis")
 
@@ -279,7 +282,7 @@ set(CPACK_PACKAGE_VERSION_PATCH "${VERSION_PATCH}")
 set(CPACK_PACKAGE_VERSION "${CPACK_PACKAGE_VERSION_MAJOR}.${CPACK_PACKAGE_VERSION_MINOR}.${CPACK_PACKAGE_VERSION_PATCH}")
 set(CPACK_PACKAGE_DESCRIPTION "A client for the BitShares network")
 set(CPACK_PACKAGE_DESCRIPTION_SUMMARY "A client for the BitShares network")
-set(CPACK_RESOURCE_FILE_LICENSE "${CMAKE_CURRENT_SOURCE_DIR}/LICENSE.md")
+set(CPACK_RESOURCE_FILE_LICENSE "${CMAKE_CURRENT_SOURCE_DIR}/LICENSE.txt")
 set(CPACK_PACKAGE_INSTALL_DIRECTORY "BitShares ${CPACK_PACKAGE_VERSION}")
 
 if(WIN32)

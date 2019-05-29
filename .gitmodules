@@ -4,3 +4,6 @@
 [submodule "docs"]
 	path = docs
 	url = https://github.com/bitshares/bitshares-core.wiki.git
+[submodule "tests/onegram-integration-tests"]
+	path = tests/onegram-integration-tests
+	url = https://gitlab.com/onegram-developers/onegram-integration-tests.git

@@ -107,6 +107,6 @@ USER onegram
 
 EXPOSE 8540 11011
 
-VOLUME data:/var/onegram/data
+VOLUME /var/onegram/data
 
 CMD /usr/local/bin/onegram_witness

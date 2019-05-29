@@ -74,7 +74,6 @@ namespace graphene { namespace chain {
    using                               fc::enum_type;
    using                               fc::optional;
    using                               fc::unsigned_int;
-   using                               fc::signed_int;
    using                               fc::time_point_sec;
    using                               fc::time_point;
    using                               fc::safe;
@@ -163,7 +162,9 @@ namespace graphene { namespace chain {
       impl_special_authority_object_type,
       impl_buyback_object_type,
       impl_fba_accumulator_object_type,
-      impl_collateral_bid_object_type
+      impl_collateral_bid_object_type,
+      impl_operation_archive_object_type,
+      impl_account_archive_object_type
    };
 
    //typedef fc::unsigned_int            object_id_type;
@@ -216,6 +217,8 @@ namespace graphene { namespace chain {
    class buyback_object;
    class fba_accumulator_object;
    class collateral_bid_object;
+   class operation_archive_object;
+   class account_archive_object;
 
    typedef object_id< implementation_ids, impl_global_property_object_type,  global_property_object>                    global_property_id_type;
    typedef object_id< implementation_ids, impl_dynamic_global_property_object_type,  dynamic_global_property_object>    dynamic_global_property_id_type;
@@ -237,8 +240,9 @@ namespace graphene { namespace chain {
    typedef object_id< implementation_ids, impl_buyback_object_type, buyback_object >                                    buyback_id_type;
    typedef object_id< implementation_ids, impl_fba_accumulator_object_type, fba_accumulator_object >                    fba_accumulator_id_type;
    typedef object_id< implementation_ids, impl_collateral_bid_object_type, collateral_bid_object >                      collateral_bid_id_type;
+   typedef object_id< implementation_ids, impl_operation_archive_object_type, operation_archive_object >                operation_archive_id_type;
+   typedef object_id< implementation_ids, impl_account_archive_object_type, account_archive_object >                    account_archive_id_type;
 
-   typedef fc::array<char, GRAPHENE_MAX_ASSET_SYMBOL_LENGTH>    symbol_type;
    typedef fc::ripemd160                                        block_id_type;
    typedef fc::ripemd160                                        checksum_type;
    typedef fc::ripemd160                                        transaction_id_type;
@@ -380,6 +384,8 @@ FC_REFLECT_ENUM( graphene::chain::impl_object_type,
                  (impl_buyback_object_type)
                  (impl_fba_accumulator_object_type)
                  (impl_collateral_bid_object_type)
+                 (impl_operation_archive_object_type)
+                 (impl_account_archive_object_type)
                )
 
 FC_REFLECT_TYPENAME( graphene::chain::share_type )
@@ -412,6 +418,8 @@ FC_REFLECT_TYPENAME( graphene::chain::special_authority_id_type )
 FC_REFLECT_TYPENAME( graphene::chain::buyback_id_type )
 FC_REFLECT_TYPENAME( graphene::chain::fba_accumulator_id_type )
 FC_REFLECT_TYPENAME( graphene::chain::collateral_bid_id_type )
+FC_REFLECT_TYPENAME( graphene::chain::operation_archive_id_type )
+FC_REFLECT_TYPENAME( graphene::chain::account_archive_id_type )
 
 FC_REFLECT( graphene::chain::void_t, )
 
