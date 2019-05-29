@@ -54,6 +54,7 @@
 #include <boost/algorithm/string.hpp>
 
 #include <iostream>
+#include <random>
 
 #include <fc/log/file_appender.hpp>
 #include <fc/log/logger.hpp>
@@ -125,6 +126,8 @@ void application_impl::reset_p2p_node(const fc::path& data_dir)
    _p2p_network->load_configuration(data_dir / "p2p");
    _p2p_network->set_node_delegate(this);
 
+   vector<fc::ip::endpoint> seed_nodes;
+
    if( _options->count("seed-node") )
    {
       auto seeds = _options->at("seed-node").as<vector<string>>();
@@ -132,11 +135,9 @@ void application_impl::reset_p2p_node(const fc::path& data_dir)
       {
          try {
             std::vector<fc::ip::endpoint> endpoints = resolve_string_to_ip_endpoints(endpoint_string);
-            for (const fc::ip::endpoint& endpoint : endpoints)
+            for (const auto& endpoint : endpoints)
             {
-               ilog("Adding seed node ${endpoint}", ("endpoint", endpoint));
-               _p2p_network->add_node(endpoint);
-               _p2p_network->connect_to_endpoint(endpoint);
+               seed_nodes.push_back(endpoint);
             }
          } catch( const fc::exception& e ) {
             wlog( "caught exception ${e} while adding seed node ${endpoint}",
@@ -153,10 +154,9 @@ void application_impl::reset_p2p_node(const fc::path& data_dir)
       {
          try {
             std::vector<fc::ip::endpoint> endpoints = resolve_string_to_ip_endpoints(endpoint_string);
-            for (const fc::ip::endpoint& endpoint : endpoints)
+            for (const auto& endpoint : endpoints)
             {
-               ilog("Adding seed node ${endpoint}", ("endpoint", endpoint));
-               _p2p_network->add_node(endpoint);
+               seed_nodes.push_back(endpoint);
             }
          } catch( const fc::exception& e ) {
             wlog( "caught exception ${e} while adding seed node ${endpoint}",
@@ -175,16 +175,52 @@ void application_impl::reset_p2p_node(const fc::path& data_dir)
       {
          try {
             std::vector<fc::ip::endpoint> endpoints = resolve_string_to_ip_endpoints(endpoint_string);
-            for (const fc::ip::endpoint& endpoint : endpoints)
+            for (const auto& endpoint : endpoints)
             {
-               ilog("Adding seed node ${endpoint}", ("endpoint", endpoint));
-               _p2p_network->add_node(endpoint);
+               seed_nodes.push_back(endpoint);
             }
          } catch( const fc::exception& e ) {
             wlog( "caught exception ${e} while adding seed node ${endpoint}",
                      ("e", e.to_detail_string())("endpoint", endpoint_string) );
          }
       }
+   }
+
+   if (_options->count("randomize-seed-nodes") && _options->at("randomize-seed-nodes").as<bool>())
+   {
+      std::random_device random_device;
+      std::mt19937 mersenne_generator(random_device());
+
+      std::shuffle(seed_nodes.begin(), seed_nodes.end(), mersenne_generator);
+   }
+
+   bool is_whitelisting_peers = _options->count("whitelist-seed-nodes") && _options->at("whitelist-seed-nodes").as<bool>();
+
+   if (is_whitelisting_peers)
+   {
+      ilog("Using peer whitelist: ${whitelist}", ("whitelist", seed_nodes));
+      _p2p_network->clear_peer_database();
+   }
+
+   for (const auto& endpoint : seed_nodes)
+   {
+      ilog("Adding seed node ${endpoint}", ("endpoint", endpoint));
+      _p2p_network->add_node(endpoint);
+   }
+
+   if (_options->count("limit-seed-nodes") && _options->at("limit-seed-nodes").as<size_t>())
+   {
+      size_t initial_node_count = _options->at("limit-seed-nodes").as<size_t>();
+
+      if (_p2p_network->cap_seed_nodes(initial_node_count))
+      {
+         ilog("Seed node list capped to ${count} endpoint(s)", ("count", initial_node_count));
+      }
+   }
+
+   if (is_whitelisting_peers)
+   {
+      _p2p_network->peer_database_as_whitelisted(true);
    }
 
    if( _options->count("p2p-endpoint") )
@@ -322,8 +358,11 @@ void application_impl::startup()
             genesis.initial_timestamp -= ( genesis.initial_timestamp.sec_since_epoch()
                                            % genesis.initial_parameters.block_interval );
             modified_genesis = true;
-            std::cerr << "Used genesis timestamp:  " << genesis.initial_timestamp.to_iso_string()
-                      << " (PLEASE RECORD THIS)\n";
+
+            ilog(
+               "Used genesis timestamp:  ${timestamp} (PLEASE RECORD THIS)",
+               ("timestamp", genesis.initial_timestamp.to_iso_string())
+            );
          }
          if( _options->count("dbg-init-key") )
          {
@@ -331,11 +370,11 @@ void application_impl::startup()
             FC_ASSERT( genesis.initial_witness_candidates.size() >= genesis.initial_active_witnesses );
             set_dbg_init_key( genesis, init_key );
             modified_genesis = true;
-            std::cerr << "Set init witness key to " << init_key << "\n";
+            ilog("Set init witness key to ${init_key}", ("init_key", init_key));
          }
          if( modified_genesis )
          {
-            std::cerr << "WARNING:  GENESIS WAS MODIFIED, YOUR CHAIN ID MAY BE DIFFERENT\n";
+            wlog("WARNING:  GENESIS WAS MODIFIED, YOUR CHAIN ID MAY BE DIFFERENT");
             genesis_str += "BOGUS";
             genesis.initial_chain_id = fc::sha256::hash( genesis_str );
          }
@@ -395,9 +434,8 @@ void application_impl::startup()
       _force_validate = true;
    }
 
-   // TODO uncomment this when GUI is ready
-   //if( _options->count("enable-subscribe-to-all") )
-   //   _app_options.enable_subscribe_to_all = _options->at("enable-subscribe-to-all").as<bool>();
+   if ( _options->count("enable-subscribe-to-all") )
+      _app_options.enable_subscribe_to_all = _options->at( "enable-subscribe-to-all" ).as<bool>();
 
    if( _active_plugins.find( "market_history" ) != _active_plugins.end() )
       _app_options.has_market_history_plugin = true;
@@ -427,6 +465,7 @@ void application_impl::startup()
       wild_access.password_salt_b64 = "*";
       wild_access.allowed_apis.push_back( "database_api" );
       wild_access.allowed_apis.push_back( "network_broadcast_api" );
+      wild_access.allowed_apis.push_back( "archive_api" );
       wild_access.allowed_apis.push_back( "history_api" );
       wild_access.allowed_apis.push_back( "orders_api" );
       _apiaccess.permission_map["*"] = wild_access;
@@ -488,10 +527,11 @@ bool application_impl::handle_block(const graphene::net::block_message& blk_msg,
       const auto& witness = blk_msg.block.witness(*_chain_db);
       const auto& witness_account = witness.witness_account(*_chain_db);
       auto last_irr = _chain_db->get_dynamic_global_properties().last_irreversible_block_num;
-      ilog("Got block: #${n} ${bid} time: ${t} latency: ${l} ms from: ${w}  irreversible: ${i} (-${d})",
+      ilog("Got block: #${n} ${bid} time: ${t} transaction(s): ${x} latency: ${l} ms from: ${w}  irreversible: ${i} (-${d})",
            ("t",blk_msg.block.timestamp)
            ("n", blk_msg.block.block_num())
            ("bid", blk_msg.block.id())
+           ("x", blk_msg.block.transactions.size())
            ("l", (latency.count()/1000))
            ("w",witness_account.name)
            ("i",last_irr)("d",blk_msg.block.block_num()-last_irr) );
@@ -515,10 +555,12 @@ bool application_impl::handle_block(const graphene::net::block_message& blk_msg,
          // happens, there's no reason to fetch the transactions, so  construct a list of the
          // transaction message ids we no longer need.
          // during sync, it is unlikely that we'll see any old
+         contained_transaction_message_ids.reserve( contained_transaction_message_ids.size()
+                                                    + blk_msg.block.transactions.size() );
          for (const processed_transaction& transaction : blk_msg.block.transactions)
          {
             graphene::net::trx_message transaction_message(transaction);
-            contained_transaction_message_ids.push_back(graphene::net::message(transaction_message).id());
+            contained_transaction_message_ids.emplace_back(graphene::net::message(transaction_message).id());
          }
 
          if ( !_is_finished_syncing )
@@ -917,6 +959,12 @@ void application::set_program_options(boost::program_options::options_descriptio
           "P2P nodes to connect to on startup (may specify multiple times)")
          ("seed-nodes", bpo::value<string>()->composing(),
           "JSON array of P2P nodes to connect to on startup")
+         ("whitelist-seed-nodes", bpo::value<bool>()->implicit_value(false),
+          "Whether to set the initial seed nodes list as whitelisted, all newly added peers will be ignored")
+         ("randomize-seed-nodes", bpo::value<bool>()->implicit_value(true),
+          "Randomize order of seed nodes to distribute load")
+         ("limit-seed-nodes", bpo::value<size_t>()->implicit_value(GRAPHENE_NET_DEFAULT_DESIRED_CONNECTIONS),
+          "Limit the number of seed nodes to connect at startup")
          ("checkpoint,c", bpo::value<vector<string>>()->composing(),
           "Pairs of [BLOCK_NUM,BLOCK_ID] that should be enforced as checkpoints.")
          ("rpc-endpoint", bpo::value<string>()->implicit_value("127.0.0.1:8090"),
@@ -930,12 +978,11 @@ void application::set_program_options(boost::program_options::options_descriptio
          ("api-access", bpo::value<boost::filesystem::path>(), "JSON file specifying API permissions")
          ("plugins", bpo::value<string>(), "Space-separated list of plugins to activate")
          ("io-threads", bpo::value<uint16_t>()->implicit_value(0), "Number of IO threads, default to 0 for auto-configuration")
+         ("enable-subscribe-to-all", bpo::value<bool>()->implicit_value(true),
+          "Whether allow API clients to subscribe to universal object creation and removal events")
          ("enable-standby-votes-tracking", bpo::value<bool>()->implicit_value(true),
           "Whether to enable tracking of votes of standby witnesses and committee members. "
           "Set it to true to provide accurate data to API clients, set to false for slightly better performance.")
-         // TODO uncomment this when GUI is ready
-         //("enable-subscribe-to-all", bpo::value<bool>()->implicit_value(false),
-         // "Whether allow API clients to subscribe to universal object creation and removal events")
          ;
    command_line_options.add(configuration_file_options);
    command_line_options.add_options()

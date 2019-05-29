@@ -82,7 +82,7 @@
 
 // explicit instantiation for later use
 namespace fc {
-template class api<graphene::wallet::wallet_api, identity_member>;
+	template class api<graphene::wallet::wallet_api, identity_member>;
 }
 
 #define BRAIN_KEY_WORD_COUNT 16
@@ -416,6 +416,11 @@ public:
             ("remote_chain_id", remote_chain_id)
             ("chain_id", _chain_id) );
       }
+      try {
+         _remote_arch = rapi->archive();
+      } catch( const fc::exception& e ) {
+         elog("archive_api is not available on the remote node");
+      }
       init_prototype_ops();
 
       _remote_db->set_block_applied_callback( [this](const variant& block_id )
@@ -461,17 +466,17 @@ public:
       fc::async([this]{resync();}, "Resync after block");
    }
 
-   bool copy_wallet_file( string destination_filename )
+   bool copy_wallet_file( string destination_filepath )
    {
       fc::path src_path = get_wallet_filename();
       if( !fc::exists( src_path ) )
          return false;
-      fc::path dest_path = destination_filename + _wallet_filename_extension;
+      fc::path dest_path = destination_filepath + _wallet_filename_extension;
       int suffix = 0;
       while( fc::exists(dest_path) )
       {
          ++suffix;
-         dest_path = destination_filename + "-" + to_string( suffix ) + _wallet_filename_extension;
+         dest_path = destination_filepath + "-" + to_string( suffix ) + _wallet_filename_extension;
       }
       wlog( "backing up wallet ${src} to ${dest}",
             ("src", src_path)
@@ -781,7 +786,7 @@ public:
     void quit()
     {
         ilog( "Quitting Cli Wallet ..." );
-        
+
         throw fc::canceled_exception();
     }
 
@@ -802,6 +807,7 @@ public:
       wlog( "saving wallet to file ${fn}", ("fn", wallet_filename) );
 
       string data = fc::json::to_pretty_string( _wallet );
+
       try
       {
          enable_umask_protection();
@@ -811,14 +817,40 @@ public:
          //
          // http://en.wikipedia.org/wiki/Most_vexing_parse
          //
-         fc::ofstream outfile{ fc::path( wallet_filename ) };
+         std::string tmp_wallet_filename = wallet_filename + ".tmp";
+         fc::ofstream outfile{ fc::path( tmp_wallet_filename ) };
          outfile.write( data.c_str(), data.length() );
          outfile.flush();
          outfile.close();
+
+         wlog( "saved successfully wallet to tmp file ${fn}", ("fn", tmp_wallet_filename) );
+
+         std::string wallet_file_content;
+         fc::read_file_contents(tmp_wallet_filename, wallet_file_content);
+
+         if (wallet_file_content == data) {
+            wlog( "validated successfully tmp wallet file ${fn}", ("fn", tmp_wallet_filename) );
+
+            fc::rename( tmp_wallet_filename, wallet_filename );
+
+            wlog( "renamed successfully tmp wallet file ${fn}", ("fn", tmp_wallet_filename) );
+         }
+         else
+         {
+            FC_THROW("tmp wallet file cannot be validated ${fn}", ("fn", tmp_wallet_filename) );
+         }
+
+         wlog( "successfully saved wallet to file ${fn}", ("fn", wallet_filename) );
+
          disable_umask_protection();
       }
       catch(...)
       {
+         string ws_password = _wallet.ws_password;
+         _wallet.ws_password = "";
+         wlog("wallet file content is next: ${data}", ("data", fc::json::to_pretty_string( _wallet ) ) );
+         _wallet.ws_password = ws_password;
+
          disable_umask_protection();
          throw;
       }
@@ -1456,7 +1488,15 @@ public:
       committee_member_create_operation committee_member_create_op;
       committee_member_create_op.committee_member_account = get_account_id(owner_account);
       committee_member_create_op.url = url;
-      if (_remote_db->get_committee_member_by_account(owner_account))
+
+      /*
+       * Compatibility issue
+       * Current Date: 2018-09-28 More info: https://github.com/bitshares/bitshares-core/issues/1307
+       * Todo: remove the next 2 lines and change always_id to name in remote call after next hardfork
+      */
+      auto account = get_account(owner_account);
+      auto always_id = account_id_to_string(account.id);
+      if (_remote_db->get_committee_member_by_account(always_id))
          FC_THROW("Account ${owner_account} is already a committee_member", ("owner_account", owner_account));
 
       signed_transaction tx;
@@ -1714,8 +1754,15 @@ public:
          result.emplace_back( get_object<vesting_balance_object>(*vbid), now );
          return result;
       }
+      /*
+       * Compatibility issue
+       * Current Date: 2018-09-28 More info: https://github.com/bitshares/bitshares-core/issues/1307
+       * Todo: remove the next 2 lines and change always_id to name in remote call after next hardfork
+      */
+      auto account = get_account(account_name);
+      auto always_id = account_id_to_string(account.id);
 
-      vector< vesting_balance_object > vbos = _remote_db->get_vesting_balances( account_name );
+      vector< vesting_balance_object > vbos = _remote_db->get_vesting_balances( always_id );
       if( vbos.size() == 0 )
          return result;
 
@@ -1763,7 +1810,15 @@ public:
                                         bool broadcast /* = false */)
    { try {
       account_object voting_account_object = get_account(voting_account);
-      fc::optional<committee_member_object> committee_member_obj = _remote_db->get_committee_member_by_account(committee_member);
+
+      /*
+       * Compatibility issue
+       * Current Date: 2018-09-28 More info: https://github.com/bitshares/bitshares-core/issues/1307
+       * Todo: remove the next 2 lines and change always_id to name in remote call after next hardfork
+       */
+      auto account = get_account(committee_member);
+      auto always_id = account_id_to_string(account.id);
+      fc::optional<committee_member_object> committee_member_obj = _remote_db->get_committee_member_by_account(always_id);
       if (!committee_member_obj)
          FC_THROW("Account ${committee_member} is not registered as a committee_member", ("committee_member", committee_member));
       if (approve)
@@ -1797,7 +1852,14 @@ public:
    { try {
       account_object voting_account_object = get_account(voting_account);
 
-      fc::optional<witness_object> witness_obj = _remote_db->get_witness_by_account(witness);
+      /*
+       * Compatibility issue
+       * Current Date: 2018-09-28 More info: https://github.com/bitshares/bitshares-core/issues/1307
+       * Todo: remove the next 2 lines and change always_id to name in remote call after next hardfork
+       */
+      auto account = get_account(witness);
+      auto always_id = account_id_to_string(account.id);
+      fc::optional<witness_object> witness_obj = _remote_db->get_witness_by_account(always_id);
       if (!witness_obj)
          FC_THROW("Account ${witness} is not registered as a witness", ("witness", witness));
       if (approve)
@@ -1888,7 +1950,7 @@ public:
       owned_keys.reserve( pks.size() );
       std::copy_if( pks.begin(), pks.end(), std::inserter(owned_keys, owned_keys.end()),
                     [this](const public_key_type& pk){ return _keys.find(pk) != _keys.end(); } );
-      tx.signatures.clear();
+      tx.clear_signatures();
       set<public_key_type> approving_key_set = _remote_db->get_required_signatures( tx, owned_keys );
 
       auto dyn_props = get_dynamic_global_properties();
@@ -1907,7 +1969,7 @@ public:
       for (;;)
       {
          tx.set_expiration( dyn_props.time + fc::seconds(transaction_expiration_time_sec + expiration_time_offset) );
-         tx.signatures.clear();
+         tx.clear_signatures();
 
          for( const public_key_type& key : approving_key_set )
             tx.sign( get_private_key(key), _chain_id );
@@ -2094,7 +2156,7 @@ public:
       account_object from_account = get_account(from);
       account_object to_account = get_account(to);
       account_id_type from_id = from_account.id;
-      account_id_type to_id = get_account_id(to);
+      account_id_type to_id = to_account.id;
 
       transfer_operation xfer_op;
 
@@ -2731,6 +2793,7 @@ public:
    fc::api<database_api>   _remote_db;
    fc::api<network_broadcast_api>   _remote_net_broadcast;
    fc::api<history_api>    _remote_hist;
+   optional< fc::api<archive_api> > _remote_arch;
    optional< fc::api<network_node_api> > _remote_net_node;
    optional< fc::api<graphene::debug_witness::debug_api> > _remote_debug;
 
@@ -2929,9 +2992,9 @@ wallet_api::~wallet_api()
 {
 }
 
-bool wallet_api::copy_wallet_file(string destination_filename)
+bool wallet_api::copy_wallet_file(string destination_filepath)
 {
-   return my->copy_wallet_file(destination_filename);
+   return my->copy_wallet_file(destination_filepath);
 }
 
 optional<signed_block_with_info> wallet_api::get_block(uint32_t num)
@@ -2956,7 +3019,15 @@ map<string,account_id_type> wallet_api::list_accounts(const string& lowerbound, 
 
 vector<asset> wallet_api::list_account_balances(const string& id)
 {
-   return my->_remote_db->get_account_balances(id, flat_set<asset_id_type>());
+   /*
+    * Compatibility issue
+    * Current Date: 2018-09-13 More info: https://github.com/bitshares/bitshares-core/issues/1307
+    * Todo: remove the next 2 lines and change always_id to id in remote call after next hardfork
+    */
+   auto account = get_account(id);
+   auto always_id = my->account_id_to_string(account.id);
+
+   return my->_remote_db->get_account_balances(always_id, flat_set<asset_id_type>());
 }
 
 vector<asset_object> wallet_api::list_assets(const string& lowerbound, uint32_t limit)const
@@ -2969,9 +3040,175 @@ uint64_t wallet_api::get_asset_count()const
    return my->_remote_db->get_asset_count();
 }
 
+vector<operation_detail> wallet_api::get_archived_operations(uint64_t last,
+                                                             uint64_t count,
+                                                             flat_set<int> operation_id_filter) const
+{
+   return my_get_archived_operations(nullptr, last, count, operation_id_filter);
+}
+
+vector<operation_detail> wallet_api::get_archived_operations_by_time(time_point_sec inclusive_from,
+                                                                     time_point_sec exclusive_until,
+                                                                     flat_set<int> operation_id_filter) const
+{
+   return my_get_archived_operations_by_time(nullptr, inclusive_from, exclusive_until, operation_id_filter);
+}
+
+vector<operation_detail> wallet_api::get_archived_account_operations(const std::string account_id_or_name,
+                                                                     uint64_t last,
+                                                                     uint64_t count,
+                                                                     flat_set<int> operation_id_filter) const
+{
+   return my_get_archived_operations(&account_id_or_name, last, count, operation_id_filter);
+}
+
+vector<operation_detail> wallet_api::get_archived_account_operations_by_time(const std::string account_id_or_name,
+                                                                             time_point_sec inclusive_from,
+                                                                             time_point_sec exclusive_until,
+                                                                             flat_set<int> operation_id_filter) const
+{
+   return my_get_archived_operations_by_time(&account_id_or_name, inclusive_from, exclusive_until, operation_id_filter);
+}
+
+uint64_t wallet_api::get_archived_account_operation_count(const std::string account_id_or_name) const
+{
+   check_remote_arch_api();
+   return (*my->_remote_arch)->get_archived_account_operation_count(account_id_or_name);
+}
+
+account_archive::account_summary wallet_api::get_account_summary(const std::string account_id_or_name,
+                                                                 const std::string asset_id_or_symbol,
+                                                                 uint64_t last,
+                                                                 uint64_t count) const
+{
+   check_remote_arch_api();
+   FC_ASSERT(account_id_or_name.size(), "account id or name is required");
+   FC_ASSERT(asset_id_or_symbol.size(), "asset id or symbol is required");
+
+   const uint64_t op_count = (*my->_remote_arch)->get_archived_account_operation_count(account_id_or_name);
+   FC_ASSERT(last < op_count, "last does not index an existing operation");
+   FC_ASSERT(count <= op_count, "count exceeds the account operation count");
+
+   auto answer = archive_api::summary_result();
+   auto result = account_archive::account_summary();
+   count = std::min(last + 1, count);
+
+   do {
+      const auto batch_size = std::min(count, archive_api::QueryInspectLimit);
+      answer = (*my->_remote_arch)->get_account_summary(account_id_or_name, asset_id_or_symbol, last, batch_size);
+      FC_ASSERT(batch_size == answer.num_processed);
+
+      result.credits += answer.summary.credits;
+      result.debits += answer.summary.debits;
+      result.fees += answer.summary.fees;
+
+      last -= answer.num_processed;
+      count -= answer.num_processed;
+   } while (count && answer.num_processed);
+
+   return result;
+}
+
+account_archive::account_summary wallet_api::get_account_summary_by_time(const std::string account_id_or_name,
+                                                                         const std::string asset_id_or_symbol,
+                                                                         time_point_sec inclusive_from,
+                                                                         time_point_sec exclusive_until) const
+{
+   check_remote_arch_api();
+   FC_ASSERT(account_id_or_name.size(), "account id or name is required");
+   FC_ASSERT(asset_id_or_symbol.size(), "asset id or symbol is required");
+
+   auto answer = archive_api::summary_result();
+   auto result = account_archive::account_summary();
+   size_t skip_count = 0u;
+
+   do {
+      answer = (*my->_remote_arch)->get_account_summary_by_time(account_id_or_name, asset_id_or_symbol, inclusive_from, exclusive_until, skip_count);
+
+      result.credits += answer.summary.credits;
+      result.debits += answer.summary.debits;
+      result.fees += answer.summary.fees;
+
+      skip_count += answer.num_processed;
+   } while (answer.num_processed);
+
+   return result;
+}
+
+void wallet_api::check_remote_arch_api() const
+{
+   FC_ASSERT(my->_remote_arch.valid(), "the remote full node does not support archive api");
+}
+
+vector<operation_detail> wallet_api::my_get_archived_operations(const std::string* account_id_or_name,
+                                                                uint64_t last,
+                                                                uint64_t count,
+                                                                flat_set<int> operation_id_filter) const
+{
+   check_remote_arch_api();
+
+   auto answer = archive_api::query_result();
+   vector<operation_detail> result;
+   count = std::min(last + 1, count);
+   result.reserve(count);
+
+   do {
+      if (account_id_or_name)
+         answer = (*my->_remote_arch)->get_archived_account_operations(*account_id_or_name, last, count, operation_id_filter);
+      else
+         answer = (*my->_remote_arch)->get_archived_operations(last, count, operation_id_filter);
+      for (auto op : answer.operations) {
+         std::stringstream ss;
+         auto memo = op.op.visit(detail::operation_printer(ss, *my, op.result));
+         result.push_back(operation_detail{ memo, ss.str(), op });
+      }
+
+      last -= answer.num_processed;
+      count -= answer.operations.size();
+   } while (count && answer.num_processed);
+
+   return result;
+}
+
+vector<operation_detail> wallet_api::my_get_archived_operations_by_time(const std::string* account_id_or_name,
+                                                                        time_point_sec inclusive_from,
+                                                                        time_point_sec exclusive_until,
+                                                                        flat_set<int> operation_id_filter) const
+{
+   check_remote_arch_api();
+
+   auto answer = archive_api::query_result();
+   vector<operation_detail> result;
+
+   size_t nskip = 0;
+   do {
+      if (account_id_or_name)
+         answer = (*my->_remote_arch)->get_archived_account_operations_by_time(*account_id_or_name, inclusive_from, exclusive_until, nskip, operation_id_filter);
+      else
+         answer = (*my->_remote_arch)->get_archived_operations_by_time(inclusive_from, exclusive_until, nskip, operation_id_filter);
+      for (auto op : answer.operations) {
+         std::stringstream ss;
+         auto memo = op.op.visit(detail::operation_printer(ss, *my, op.result));
+         result.push_back(operation_detail{ memo, ss.str(), op });
+      }
+
+      nskip += answer.num_processed;
+   } while (answer.num_processed);
+
+   return result;
+}
+
 vector<operation_detail> wallet_api::get_account_history(string name, int limit)const
 {
    vector<operation_detail> result;
+
+   /*
+    * Compatibility issue
+    * Current Date: 2018-09-14 More info: https://github.com/bitshares/bitshares-core/issues/1307
+    * Todo: remove the next 2 lines and change always_id to name in remote call after next hardfork
+    */
+   auto account = get_account(name);
+   auto always_id = my->account_id_to_string(account.id);
 
    while( limit > 0 )
    {
@@ -2992,8 +3229,11 @@ vector<operation_detail> wallet_api::get_account_history(string name, int limit)
 
       int page_limit = skip_first_row ? std::min( 100, limit + 1 ) : std::min( 100, limit );
 
-      vector<operation_history_object> current = my->_remote_hist->get_account_history( name, operation_history_id_type(),
-                                                                                        page_limit, start );
+      vector<operation_history_object> current = my->_remote_hist->get_account_history(
+            always_id,
+            operation_history_id_type(),
+            page_limit,
+            start );
       bool first_row = true;
       for( auto& o : current )
       {
@@ -3055,13 +3295,24 @@ vector<operation_detail> wallet_api::get_last_operations_history(unsigned limit)
    return result;
 }
 
-vector<operation_detail> wallet_api::get_relative_account_history(string name, uint32_t stop, int limit, uint32_t start)const
+vector<operation_detail> wallet_api::get_relative_account_history(
+      string name,
+      uint32_t stop,
+      int limit,
+      uint32_t start)const
 {
    vector<operation_detail> result;
    auto account_id = get_account(name).get_id();
 
    const account_object& account = my->get_account(account_id);
    const account_statistics_object& stats = my->get_object(account.statistics);
+
+   /*
+    * Compatibility issue
+    * Current Date: 2018-09-14 More info: https://github.com/bitshares/bitshares-core/issues/1307
+    * Todo: remove the next line and change always_id to name in remote call after next hardfork
+    */
+   auto always_id = my->account_id_to_string(account_id);
 
    if(start == 0)
        start = stats.total_ops;
@@ -3070,7 +3321,11 @@ vector<operation_detail> wallet_api::get_relative_account_history(string name, u
 
    while( limit > 0 )
    {
-      vector <operation_history_object> current = my->_remote_hist->get_relative_account_history(name, stop, std::min<uint32_t>(100, limit), start);
+      vector <operation_history_object> current = my->_remote_hist->get_relative_account_history(
+            always_id,
+            stop,
+            std::min<uint32_t>(100, limit),
+            start);
       for (auto &o : current) {
          std::stringstream ss;
          auto memo = o.op.visit(detail::operation_printer(ss, *my, o.result));
@@ -3085,13 +3340,24 @@ vector<operation_detail> wallet_api::get_relative_account_history(string name, u
    return result;
 }
 
-account_history_operation_detail wallet_api::get_account_history_by_operations(string name, vector<uint16_t> operation_types, uint32_t start, int limit)
+account_history_operation_detail wallet_api::get_account_history_by_operations(
+      string name,
+      vector<uint16_t> operation_types,
+      uint32_t start,
+      int limit)
 {
     account_history_operation_detail result;
     auto account_id = get_account(name).get_id();
 
     const auto& account = my->get_account(account_id);
     const auto& stats = my->get_object(account.statistics);
+
+    /*
+     * Compatibility issue
+     * Current Date: 2018-09-14 More info: https://github.com/bitshares/bitshares-core/issues/1307
+     * Todo: remove the next line and change always_id to name in remote call after next hardfork
+     */
+     auto always_id = my->account_id_to_string(account_id);
 
     // sequence of account_transaction_history_object start with 1
     start = start == 0 ? 1 : start;
@@ -3103,7 +3369,7 @@ account_history_operation_detail wallet_api::get_account_history_by_operations(s
 
     while (limit > 0 && start <= stats.total_ops) {
         uint32_t min_limit = std::min<uint32_t> (100, limit);
-        auto current = my->_remote_hist->get_account_history_by_operations(name, operation_types, start, min_limit);
+        auto current = my->_remote_hist->get_account_history_by_operations(always_id, operation_types, start, min_limit);
         for (auto& obj : current.operation_history_objs) {
             std::stringstream ss;
             auto memo = obj.op.visit(detail::operation_printer(ss, *my, obj.result));
@@ -3130,17 +3396,23 @@ full_account wallet_api::get_full_account( const string& name_or_id)
     return my->_remote_db->get_full_accounts({name_or_id}, false)[name_or_id];
 }
 
-vector<bucket_object> wallet_api::get_market_history( string symbol1, string symbol2, uint32_t bucket , fc::time_point_sec start, fc::time_point_sec end )const
+vector<bucket_object> wallet_api::get_market_history(
+      string symbol1,
+      string symbol2,
+      uint32_t bucket,
+      fc::time_point_sec start,
+      fc::time_point_sec end )const
 {
    return my->_remote_hist->get_market_history( get_asset_id(symbol1), get_asset_id(symbol2), bucket, start, end );
 }
 
-vector<limit_order_object> wallet_api::get_account_limit_orders( const string& name_or_id,
-                                                                const string &base,
-                                                                const string &quote,
-                                                                uint32_t limit,
-                                                                optional<limit_order_id_type> ostart_id,
-                                                                optional<price> ostart_price)
+vector<limit_order_object> wallet_api::get_account_limit_orders(
+      const string& name_or_id,
+      const string &base,
+      const string &quote,
+      uint32_t limit,
+      optional<limit_order_id_type> ostart_id,
+      optional<price> ostart_price)
 {
    return my->_remote_db->get_account_limit_orders(name_or_id, base, quote, limit, ostart_id, ostart_price);
 }
@@ -3242,11 +3514,11 @@ signed_transaction wallet_api::propose_builder_transaction(
 }
 
 signed_transaction wallet_api::propose_builder_transaction2(
-   transaction_handle_type handle,
-   string account_name_or_id,
-   time_point_sec expiration,
-   uint32_t review_period_seconds,
-   bool broadcast)
+      transaction_handle_type handle,
+      string account_name_or_id,
+      time_point_sec expiration,
+      uint32_t review_period_seconds,
+      bool broadcast)
 {
    return my->propose_builder_transaction2(handle, account_name_or_id, expiration, review_period_seconds, broadcast);
 }
@@ -3293,12 +3565,17 @@ bool wallet_api::import_key(string account_name_or_id, string wif_key)
    if (!optional_private_key)
       FC_THROW("Invalid private key");
    string shorthash = detail::address_to_shorthash(optional_private_key->get_public_key());
-   copy_wallet_file( "before-import-key-" + shorthash );
+
+   fc::path src_path = get_wallet_filename();
+   fc::path src_parent = fc::absolute(src_path).parent_path();
+   std::string src_parent_path = src_parent.to_native_ansi_path();
+
+   copy_wallet_file( src_parent_path + "/before-import-key-" + shorthash );
 
    if( my->import_key(account_name_or_id, wif_key) )
    {
       save_wallet_file();
-      copy_wallet_file( "after-import-key-" + shorthash );
+      copy_wallet_file( src_parent_path + "/after-import-key-" + shorthash );
       return true;
    }
    return false;

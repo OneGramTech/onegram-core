@@ -2162,9 +2162,7 @@ namespace graphene { namespace net { namespace detail {
 
           // append the remaining items to the peer's list
           boost::push_back(originating_peer->ids_of_items_to_get, item_hashes_received);
-
-          originating_peer->number_of_unfetched_item_ids = blockchain_item_ids_inventory_message_received.total_remaining_item_count;
-
+          
           uint32_t new_number_of_unfetched_items = calculate_unsynced_block_count_from_all_peers();
           if (new_number_of_unfetched_items != _total_number_of_unfetched_items)
             _delegate->sync_status(blockchain_item_ids_inventory_message_received.item_type,
@@ -3784,7 +3782,7 @@ namespace graphene { namespace net { namespace detail {
       shared_secret_encoder.write(shared_secret.data(), sizeof(shared_secret));
       fc::ecc::compact_signature signature = _node_configuration.private_key.sign_compact(shared_secret_encoder.result());
 
-      // in the hello messsage, we send three things:
+      // in the hello message, we send three things:
       //  ip address
       //  outbound port
       //  inbound port
@@ -3915,7 +3913,6 @@ namespace graphene { namespace net { namespace detail {
         // connection was successful and we want to stay connected
         fc::ip::endpoint local_endpoint = new_peer->get_local_endpoint();
         new_peer->inbound_address = local_endpoint.get_address();
-        new_peer->inbound_port = _node_configuration.accept_incoming_connections ? _actual_listening_endpoint.port() : 0;
         new_peer->outbound_port = local_endpoint.port();
 
         new_peer->our_state = peer_connection::our_connection_state::just_connected;
@@ -4145,6 +4142,17 @@ namespace graphene { namespace net { namespace detail {
       trigger_p2p_network_connect_loop();
     }
 
+    bool node_impl::cap_seed_nodes(size_t nodes_max_count)
+    {
+      if (nodes_max_count < _add_once_node_list.size())
+      {
+        _add_once_node_list.resize(nodes_max_count);
+        return true;
+      }
+
+      return false;
+    }
+
     void node_impl::initiate_connect_to(const peer_connection_ptr& new_peer)
     {
       new_peer->get_socket().open();
@@ -4331,6 +4339,11 @@ namespace graphene { namespace net { namespace detail {
       _node_configuration.listen_endpoint = ep;
       _node_configuration.wait_if_endpoint_is_busy = wait_if_not_available;
       save_node_configuration();
+    }
+
+    void node_impl::peer_database_as_whitelisted(bool whitelisted)
+    {
+      _potential_peer_db.peer_database_as_whitelisted(whitelisted);
     }
 
     void node_impl::accept_incoming_connections(bool accept)
@@ -4683,6 +4696,11 @@ namespace graphene { namespace net { namespace detail {
     INVOKE_IN_IMPL(add_node, ep);
   }
 
+  bool node::cap_seed_nodes(size_t nodes_max_count)
+  {
+    INVOKE_IN_IMPL(cap_seed_nodes, nodes_max_count);
+  }
+
   void node::connect_to_endpoint( const fc::ip::endpoint& remote_endpoint )
   {
     INVOKE_IN_IMPL(connect_to_endpoint, remote_endpoint);
@@ -4691,6 +4709,11 @@ namespace graphene { namespace net { namespace detail {
   void node::listen_on_endpoint(const fc::ip::endpoint& ep , bool wait_if_not_available)
   {
     INVOKE_IN_IMPL(listen_on_endpoint, ep, wait_if_not_available);
+  }
+
+  void node::peer_database_as_whitelisted(bool whitelisted)
+  {
+    INVOKE_IN_IMPL(peer_database_as_whitelisted, whitelisted);
   }
 
   void node::accept_incoming_connections(bool accept)
@@ -4913,7 +4936,8 @@ namespace graphene { namespace net { namespace detail {
 #  define INVOKE_AND_COLLECT_STATISTICS(method_name, ...) \
     try \
     { \
-      call_statistics_collector statistics_collector(#method_name, \
+      std::shared_ptr<call_statistics_collector> statistics_collector = std::make_shared<call_statistics_collector>( \
+                                                     #method_name, \
                                                      &_ ## method_name ## _execution_accumulator, \
                                                      &_ ## method_name ## _delay_before_accumulator, \
                                                      &_ ## method_name ## _delay_after_accumulator); \
@@ -4945,7 +4969,8 @@ namespace graphene { namespace net { namespace detail {
     }
 #else
 #  define INVOKE_AND_COLLECT_STATISTICS(method_name, ...) \
-    call_statistics_collector statistics_collector(#method_name, \
+    std::shared_ptr<call_statistics_collector> statistics_collector = std::make_shared<call_statistics_collector>( \
+                                                   #method_name, \
                                                    &_ ## method_name ## _execution_accumulator, \
                                                    &_ ## method_name ## _delay_before_accumulator, \
                                                    &_ ## method_name ## _delay_after_accumulator); \

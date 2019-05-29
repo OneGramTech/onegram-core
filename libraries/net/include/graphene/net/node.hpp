@@ -212,6 +212,11 @@ namespace graphene { namespace net {
         void      add_node( const fc::ip::endpoint& ep );
 
         /**
+         *  Limit the number of initial seed nodes
+         */
+        bool      cap_seed_nodes(size_t nodes_max_count);
+
+        /**
          *  Attempt to connect to the specified endpoint immediately.
          */
         virtual void connect_to_endpoint( const fc::ip::endpoint& ep );
@@ -221,6 +226,12 @@ namespace graphene { namespace net {
          *  connections should be accepted.
          */
         void      listen_on_endpoint( const fc::ip::endpoint& ep, bool wait_if_not_available );
+
+        /**
+         *  Controls the peer database whitelisting functionality
+         *   - if set to true, the peer database cannot grow new entries
+         */
+        void      peer_database_as_whitelisted(bool whitelisted);
 
         /**
          *  Call with true to enable listening for incoming connections
