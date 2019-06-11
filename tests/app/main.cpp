@@ -34,6 +34,11 @@
 #include <graphene/witness/witness.hpp>
 #include <graphene/grouped_orders/grouped_orders_plugin.hpp>
 
+#ifdef _WIN32
+#include <winsock2.h>
+#include <windows.h>
+#endif
+
 #include <fc/thread/thread.hpp>
 #include <fc/log/appender.hpp>
 #include <fc/log/logger.hpp>
