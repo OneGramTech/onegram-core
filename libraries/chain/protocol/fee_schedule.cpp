@@ -24,7 +24,6 @@
 #include <algorithm>
 #include <graphene/chain/protocol/fee_schedule.hpp>
 #include <graphene/chain/protocol/operations_permissions.hpp>
-#include <fc/smart_ref_impl.hpp>
 
 namespace fc
 {
@@ -39,10 +38,6 @@ namespace fc
 #define MAX_FEE_STABILIZATION_ITERATION 4
 
 namespace graphene { namespace chain {
-
-   typedef fc::smart_ref<fee_schedule> smart_fee_schedule;
-
-   static smart_fee_schedule tmp;
 
    fee_schedule::fee_schedule()
    {
@@ -147,25 +142,32 @@ namespace graphene { namespace chain {
       this->scale = 0;
    }
 
-   asset fee_schedule::calculate_fee( const operation& op, const price& core_exchange_rate, const optional<feeless_account_ids_type>& feeless_account_ids )const
+   asset fee_schedule::calculate_fee( const operation& op )const
+   {
+      return calculate_fee(op, optional<feeless_account_ids_type>());
+   }
+
+   asset fee_schedule::calculate_fee( const operation& op, const optional<feeless_account_ids_type>& feeless_account_ids )const
    {
       if (feeless_account_ids.valid() && op.visit( feeless_payer_visitor( *feeless_account_ids ) )) {
          return asset(); // zero fee
       }
-      auto base_value = op.visit( calc_fee_visitor( *this, op ) );
-      auto scaled = fc::uint128(base_value) * scale;
-      scaled /= GRAPHENE_100_PERCENT;
-      FC_ASSERT( scaled <= GRAPHENE_MAX_SHARE_SUPPLY );
-      //idump( (base_value)(scaled)(core_exchange_rate) );
-      auto result = asset( scaled.to_uint64(), asset_id_type(0) ) * core_exchange_rate;
-      //FC_ASSERT( result * core_exchange_rate >= asset( scaled.to_uint64()) );
 
-      // round up fee after conversion. see discussion: https://gitlab.com/cryptohouse/OneGramDev/issues/31
-      while( result * core_exchange_rate < asset( scaled.to_uint64()) )
-        result.amount++;
+      uint64_t required_fee = op.visit( calc_fee_visitor( *this, op ) );
+      if( scale != GRAPHENE_100_PERCENT )
+      {
+         auto scaled = fc::uint128(required_fee) * scale;
+         scaled /= GRAPHENE_100_PERCENT;
+         FC_ASSERT( scaled <= GRAPHENE_MAX_SHARE_SUPPLY,
+                    "Required fee after scaling would exceed maximum possible supply" );
+         required_fee = scaled.to_uint64();
+      }
+      return asset( required_fee );
+   }
 
-      FC_ASSERT( result.amount <= GRAPHENE_MAX_SHARE_SUPPLY );
-      return result;
+   asset fee_schedule::calculate_fee( const operation& op, const price& core_exchange_rate, const optional<feeless_account_ids_type>& feeless_account_ids )const
+   {
+       return calculate_fee( op, feeless_account_ids ).multiply_and_round_up( core_exchange_rate );
    }
 
    asset fee_schedule::set_fee( operation& op, const price& core_exchange_rate, const optional<feeless_account_ids_type>& feeless_account_ids )const
@@ -196,8 +198,8 @@ namespace graphene { namespace chain {
 
    void chain_parameters::validate()const
    {
-      current_fees->validate();
-      current_operations_permissions->validate();
+      get_current_fees().validate();
+      get_current_operations_permissions().validate();
       FC_ASSERT( reserve_percent_of_fee <= GRAPHENE_100_PERCENT );
       FC_ASSERT( network_percent_of_fee <= GRAPHENE_100_PERCENT );
       FC_ASSERT( lifetime_referrer_percent_of_fee <= GRAPHENE_100_PERCENT );

@@ -46,6 +46,7 @@
 #include <graphene/chain/witness_object.hpp>
 #include <graphene/chain/witness_schedule_object.hpp>
 #include <graphene/chain/worker_object.hpp>
+#include <graphene/chain/htlc_object.hpp>
 
 #include <graphene/chain/account_evaluator.hpp>
 #include <graphene/chain/asset_evaluator.hpp>
@@ -61,6 +62,7 @@
 #include <graphene/chain/withdraw_permission_evaluator.hpp>
 #include <graphene/chain/witness_evaluator.hpp>
 #include <graphene/chain/worker_evaluator.hpp>
+#include <graphene/chain/htlc_evaluator.hpp>
 
 #include <graphene/chain/protocol/fee_schedule.hpp>
 #include <graphene/chain/protocol/operations_permissions.hpp>
@@ -68,7 +70,6 @@
 #include <graphene/chain/feeless_accounts.hpp>
 
 #include <fc/platform_independence.hpp>
-#include <fc/smart_ref_impl.hpp>
 #include <fc/uint128.hpp>
 #include <fc/crypto/digest.hpp>
 
@@ -77,155 +78,164 @@
 
 namespace graphene { namespace chain {
 
-      // C++ requires that static class variables declared and initialized
-      // in headers must also have a definition in a single source file,
-      // else linker errors will occur [1].
-      //
-      // The purpose of this source file is to collect such definitions in
-      // a single place.
-      //
-      // [1] http://stackoverflow.com/questions/8016780/undefined-reference-to-static-constexpr-char
+// C++ requires that static class variables declared and initialized
+// in headers must also have a definition in a single source file,
+// else linker errors will occur [1].
+//
+// The purpose of this source file is to collect such definitions in
+// a single place.
+//
+// [1] http://stackoverflow.com/questions/8016780/undefined-reference-to-static-constexpr-char
 
-      const uint8_t account_object::space_id;
-      const uint8_t account_object::type_id;
+const uint8_t account_object::space_id;
+const uint8_t account_object::type_id;
 
-      const uint8_t asset_object::space_id;
-      const uint8_t asset_object::type_id;
+const uint8_t asset_object::space_id;
+const uint8_t asset_object::type_id;
 
-      const uint8_t block_summary_object::space_id;
-      const uint8_t block_summary_object::type_id;
+const uint8_t block_summary_object::space_id;
+const uint8_t block_summary_object::type_id;
 
-      const uint8_t call_order_object::space_id;
-      const uint8_t call_order_object::type_id;
+const uint8_t call_order_object::space_id;
+const uint8_t call_order_object::type_id;
 
-      const uint8_t committee_member_object::space_id;
-      const uint8_t committee_member_object::type_id;
+const uint8_t committee_member_object::space_id;
+const uint8_t committee_member_object::type_id;
 
-      const uint8_t force_settlement_object::space_id;
-      const uint8_t force_settlement_object::type_id;
+const uint8_t force_settlement_object::space_id;
+const uint8_t force_settlement_object::type_id;
 
-      const uint8_t global_property_object::space_id;
-      const uint8_t global_property_object::type_id;
+const uint8_t global_property_object::space_id;
+const uint8_t global_property_object::type_id;
 
-      const uint8_t limit_order_object::space_id;
-      const uint8_t limit_order_object::type_id;
+const uint8_t limit_order_object::space_id;
+const uint8_t limit_order_object::type_id;
 
-      const uint8_t operation_history_object::space_id;
-      const uint8_t operation_history_object::type_id;
+const uint8_t operation_history_object::space_id;
+const uint8_t operation_history_object::type_id;
 
-      const uint8_t proposal_object::space_id;
-      const uint8_t proposal_object::type_id;
+const uint8_t proposal_object::space_id;
+const uint8_t proposal_object::type_id;
 
-      const uint8_t transaction_object::space_id;
-      const uint8_t transaction_object::type_id;
+const uint8_t transaction_object::space_id;
+const uint8_t transaction_object::type_id;
 
-      const uint8_t vesting_balance_object::space_id;
-      const uint8_t vesting_balance_object::type_id;
+const uint8_t vesting_balance_object::space_id;
+const uint8_t vesting_balance_object::type_id;
 
-      const uint8_t withdraw_permission_object::space_id;
-      const uint8_t withdraw_permission_object::type_id;
+const uint8_t withdraw_permission_object::space_id;
+const uint8_t withdraw_permission_object::type_id;
 
-      const uint8_t witness_object::space_id;
-      const uint8_t witness_object::type_id;
+const uint8_t witness_object::space_id;
+const uint8_t witness_object::type_id;
 
-      const uint8_t worker_object::space_id;
-      const uint8_t worker_object::type_id;
+const uint8_t worker_object::space_id;
+const uint8_t worker_object::type_id;
+
+const uint8_t htlc_object::space_id;
+const uint8_t htlc_object::type_id;
 
 
-      void database::initialize_evaluators()
-      {
-         _operation_evaluators.resize(255);
-         register_evaluator<account_create_evaluator>();
-         register_evaluator<account_update_evaluator>();
-         register_evaluator<account_upgrade_evaluator>();
-         register_evaluator<account_whitelist_evaluator>();
-         register_evaluator<committee_member_create_evaluator>();
-         register_evaluator<committee_member_update_evaluator>();
-         register_evaluator<committee_member_update_global_parameters_evaluator>();
-         register_evaluator<custom_evaluator>();
-         register_evaluator<asset_create_evaluator>();
-         register_evaluator<asset_issue_evaluator>();
-         register_evaluator<asset_reserve_evaluator>();
-         register_evaluator<asset_update_evaluator>();
-         register_evaluator<asset_update_bitasset_evaluator>();
-         register_evaluator<asset_update_feed_producers_evaluator>();
-         register_evaluator<asset_settle_evaluator>();
-         register_evaluator<asset_global_settle_evaluator>();
-         register_evaluator<assert_evaluator>();
-         register_evaluator<limit_order_create_evaluator>();
-         register_evaluator<limit_order_cancel_evaluator>();
-         register_evaluator<call_order_update_evaluator>();
-         register_evaluator<bid_collateral_evaluator>();
-         register_evaluator<transfer_evaluator>();
-         register_evaluator<override_transfer_evaluator>();
-         register_evaluator<asset_fund_fee_pool_evaluator>();
-         register_evaluator<asset_publish_feeds_evaluator>();
-         register_evaluator<proposal_create_evaluator>();
-         register_evaluator<proposal_update_evaluator>();
-         register_evaluator<proposal_delete_evaluator>();
-         register_evaluator<vesting_balance_create_evaluator>();
-         register_evaluator<vesting_balance_withdraw_evaluator>();
-         register_evaluator<witness_create_evaluator>();
-         register_evaluator<witness_update_evaluator>();
-         register_evaluator<withdraw_permission_create_evaluator>();
-         register_evaluator<withdraw_permission_claim_evaluator>();
-         register_evaluator<withdraw_permission_update_evaluator>();
-         register_evaluator<withdraw_permission_delete_evaluator>();
-         register_evaluator<worker_create_evaluator>();
-         register_evaluator<balance_claim_evaluator>();
-         register_evaluator<transfer_to_blind_evaluator>();
-         register_evaluator<transfer_from_blind_evaluator>();
-         register_evaluator<blind_transfer_evaluator>();
-         register_evaluator<asset_claim_fees_evaluator>();
-         register_evaluator<asset_update_issuer_evaluator>();
-         register_evaluator<asset_claim_pool_evaluator>();
-      }
+void database::initialize_evaluators()
+{
+   _operation_evaluators.resize(255);
+   register_evaluator<account_create_evaluator>();
+   register_evaluator<account_update_evaluator>();
+   register_evaluator<account_upgrade_evaluator>();
+   register_evaluator<account_whitelist_evaluator>();
+   register_evaluator<committee_member_create_evaluator>();
+   register_evaluator<committee_member_update_evaluator>();
+   register_evaluator<committee_member_update_global_parameters_evaluator>();
+   register_evaluator<custom_evaluator>();
+   register_evaluator<asset_create_evaluator>();
+   register_evaluator<asset_issue_evaluator>();
+   register_evaluator<asset_reserve_evaluator>();
+   register_evaluator<asset_update_evaluator>();
+   register_evaluator<asset_update_bitasset_evaluator>();
+   register_evaluator<asset_update_feed_producers_evaluator>();
+   register_evaluator<asset_settle_evaluator>();
+   register_evaluator<asset_global_settle_evaluator>();
+   register_evaluator<assert_evaluator>();
+   register_evaluator<limit_order_create_evaluator>();
+   register_evaluator<limit_order_cancel_evaluator>();
+   register_evaluator<call_order_update_evaluator>();
+   register_evaluator<bid_collateral_evaluator>();
+   register_evaluator<transfer_evaluator>();
+   register_evaluator<override_transfer_evaluator>();
+   register_evaluator<asset_fund_fee_pool_evaluator>();
+   register_evaluator<asset_publish_feeds_evaluator>();
+   register_evaluator<proposal_create_evaluator>();
+   register_evaluator<proposal_update_evaluator>();
+   register_evaluator<proposal_delete_evaluator>();
+   register_evaluator<vesting_balance_create_evaluator>();
+   register_evaluator<vesting_balance_withdraw_evaluator>();
+   register_evaluator<witness_create_evaluator>();
+   register_evaluator<witness_update_evaluator>();
+   register_evaluator<withdraw_permission_create_evaluator>();
+   register_evaluator<withdraw_permission_claim_evaluator>();
+   register_evaluator<withdraw_permission_update_evaluator>();
+   register_evaluator<withdraw_permission_delete_evaluator>();
+   register_evaluator<worker_create_evaluator>();
+   register_evaluator<balance_claim_evaluator>();
+   register_evaluator<transfer_to_blind_evaluator>();
+   register_evaluator<transfer_from_blind_evaluator>();
+   register_evaluator<blind_transfer_evaluator>();
+   register_evaluator<asset_claim_fees_evaluator>();
+   register_evaluator<asset_update_issuer_evaluator>();
+   register_evaluator<asset_claim_pool_evaluator>();
+   register_evaluator<htlc_create_evaluator>();
+   register_evaluator<htlc_redeem_evaluator>();
+   register_evaluator<htlc_extend_evaluator>();
+}
 
-      void database::initialize_indexes()
-      {
-         reset_indexes();
-         _undo_db.set_max_size(GRAPHENE_MIN_UNDO_HISTORY);
+void database::initialize_indexes()
+{
+   reset_indexes();
+   _undo_db.set_max_size( GRAPHENE_MIN_UNDO_HISTORY );
 
-         //Protocol object indexes
-         add_index< primary_index<asset_index> >();
-         add_index< primary_index<force_settlement_index> >();
+   //Protocol object indexes
+   add_index< primary_index<asset_index, 13> >(); // 8192 assets per chunk
+   add_index< primary_index<force_settlement_index> >();
 
-         auto acnt_index = add_index< primary_index<account_index> >();
-         acnt_index->add_secondary_index<account_member_index>();
-         acnt_index->add_secondary_index<account_referrer_index>();
+   auto acnt_index = add_index< primary_index<account_index, 20> >(); // ~1 million accounts per chunk
+   acnt_index->add_secondary_index<account_member_index>();
+   acnt_index->add_secondary_index<account_referrer_index>();
 
-         add_index< primary_index<committee_member_index> >();
-         add_index< primary_index<witness_index> >();
-         add_index< primary_index<limit_order_index > >();
-         add_index< primary_index<call_order_index > >();
+   add_index< primary_index<committee_member_index, 8> >(); // 256 members per chunk
+   add_index< primary_index<witness_index, 10> >(); // 1024 witnesses per chunk
+   add_index< primary_index<limit_order_index > >();
+   add_index< primary_index<call_order_index > >();
 
-         auto prop_index = add_index< primary_index<proposal_index > >();
-         prop_index->add_secondary_index<required_approval_index>();
+   auto prop_index = add_index< primary_index<proposal_index > >();
+   prop_index->add_secondary_index<required_approval_index>();
 
-         add_index< primary_index<withdraw_permission_index > >();
-         add_index< primary_index<vesting_balance_index> >();
-         add_index< primary_index<worker_index> >();
-         add_index< primary_index<balance_index> >();
-         add_index< primary_index<blinded_balance_index> >();
+   add_index< primary_index<withdraw_permission_index > >();
+   add_index< primary_index<vesting_balance_index> >();
+   add_index< primary_index<worker_index> >();
+   add_index< primary_index<balance_index> >();
+   add_index< primary_index<blinded_balance_index> >();
+   add_index< primary_index< htlc_index> >();
 
-         //Implementation object indexes
-         add_index< primary_index<transaction_index                             > >();
-         add_index< primary_index<account_balance_index                         > >();
-         add_index< primary_index<asset_bitasset_data_index                     > >();
-         add_index< primary_index<simple_index<global_property_object          >> >();
-         add_index< primary_index<simple_index<dynamic_global_property_object  >> >();
-   add_index< primary_index<account_stats_index                           > >();
-         add_index< primary_index<simple_index<asset_dynamic_data_object       >> >();
-         add_index< primary_index<simple_index<block_summary_object            >> >();
-         add_index< primary_index<simple_index<chain_property_object          > > >();
-         add_index< primary_index<simple_index<witness_schedule_object        > > >();
-         add_index< primary_index<simple_index<budget_record_object           > > >();
-         add_index< primary_index< special_authority_index                      > >();
-         add_index< primary_index< buyback_index                                > >();
-         add_index< primary_index<collateral_bid_index                          > >();
+   //Implementation object indexes
+   add_index< primary_index<transaction_index                             > >();
 
-         add_index< primary_index< simple_index< fba_accumulator_object       > > >();
-      }
+   auto bal_idx = add_index< primary_index<account_balance_index          > >();
+   bal_idx->add_secondary_index<balances_by_account_index>();
+
+   add_index< primary_index<asset_bitasset_data_index,                 13 > >(); // 8192
+   add_index< primary_index<simple_index<global_property_object          >> >();
+   add_index< primary_index<simple_index<dynamic_global_property_object  >> >();
+   add_index< primary_index<account_stats_index,                       20 > >(); // 1 Mi
+   add_index< primary_index<simple_index<asset_dynamic_data_object       >> >();
+   add_index< primary_index<simple_index<block_summary_object            >> >();
+   add_index< primary_index<simple_index<chain_property_object          > > >();
+   add_index< primary_index<simple_index<witness_schedule_object        > > >();
+   add_index< primary_index<simple_index<budget_record_object           > > >();
+   add_index< primary_index< special_authority_index                      > >();
+   add_index< primary_index< buyback_index                                > >();
+   add_index< primary_index<collateral_bid_index                          > >();
+   add_index< primary_index< simple_index< fba_accumulator_object       > > >();
+}
 
 void database::create_initial_assets(const genesis_state_type &genesis_state,
          transaction_evaluation_state& genesis_eval_state,
@@ -677,7 +687,7 @@ void database::initialize_enforce_lifetime_referrer(const genesis_state_type &ge
             _undo_db.disable();
             struct auth_inhibitor {
          auth_inhibitor(database& db) : db(db), old_flags(db.node_properties().skip_flags)
-         { db.node_properties().skip_flags |= skip_authority_check; }
+         { db.node_properties().skip_flags |= skip_transaction_signatures; }
                ~auth_inhibitor()
          { db.node_properties().skip_flags = old_flags; }
             private:
@@ -692,8 +702,8 @@ void database::initialize_enforce_lifetime_referrer(const genesis_state_type &ge
                p.parameters = genesis_state.initial_parameters;
                // Set fees to zero initially, so that genesis initialization needs not pay them
                // We'll fix it at the end of the function
-               p.parameters.current_fees->zero_all_fees();
-               p.parameters.current_operations_permissions->enable_all_operations();
+               p.parameters.get_mutable_fees().zero_all_fees();
+               p.parameters.get_mutable_operations_permissions().enable_all_operations();
             });
 
             // Create dynamic global properties
@@ -832,8 +842,8 @@ void database::initialize_enforce_lifetime_referrer(const genesis_state_type &ge
 
             // Enable fees and set operations permissions
       modify(get_global_properties(), [&genesis_state](global_property_object &p) {
-                  p.parameters.current_fees = genesis_state.initial_parameters.current_fees;
-                  p.parameters.current_operations_permissions = genesis_state.initial_parameters.current_operations_permissions;
+                  p.parameters.get_mutable_fees() = genesis_state.initial_parameters.get_current_fees();
+                  p.parameters.get_mutable_operations_permissions() = genesis_state.initial_parameters.get_current_operations_permissions();
                });
 
             // Create witness scheduler

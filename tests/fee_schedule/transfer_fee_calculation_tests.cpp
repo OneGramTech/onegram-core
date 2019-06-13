@@ -7,8 +7,6 @@
 #include <graphene/chain/protocol/fee_schedule.hpp>
 #include <graphene/chain/protocol/operations_permissions.hpp>
 
-#include <fc/smart_ref_impl.hpp>
-
 using namespace graphene::chain;
 
 BOOST_AUTO_TEST_SUITE(transfer_fee_calculation_tests)

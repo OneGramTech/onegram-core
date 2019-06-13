@@ -39,10 +39,10 @@ BOOST_AUTO_TEST_CASE(when_transfer_percentage_fee_is_set_the_from_account_balanc
         // overwrite default fee parameters
         db.modify(global_property_id_type()(db), [&](global_property_object& gpo)
         {
-            gpo.parameters.current_fees = fee_schedule::get_default();
-            gpo.parameters.current_fees->get<transfer_operation>().fee = min_fee_amount;
-            gpo.parameters.current_fees->get<transfer_operation>().percentage = percentage_fee;
-            gpo.parameters.current_fees->get<transfer_operation>().percentage_max_fee = max_fee_amount;
+            gpo.parameters.get_mutable_fees() = fee_schedule::get_default();
+            gpo.parameters.get_mutable_fees().get<transfer_operation>().fee = min_fee_amount;
+            gpo.parameters.get_mutable_fees().get<transfer_operation>().percentage = percentage_fee;
+            gpo.parameters.get_mutable_fees().get<transfer_operation>().percentage_max_fee = max_fee_amount;
         });
 
         // transfer an amount from committee account to nathan

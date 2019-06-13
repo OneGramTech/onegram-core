@@ -28,8 +28,6 @@
 #include <graphene/chain/chain_property_object.hpp>
 #include <graphene/chain/global_property_object.hpp>
 
-#include <fc/smart_ref_impl.hpp>
-
 namespace graphene { namespace chain {
 
 const asset_object& database::get_core_asset() const
@@ -59,12 +57,12 @@ const dynamic_global_property_object& database::get_dynamic_global_properties() 
 
 const fee_schedule&  database::current_fee_schedule()const
 {
-   return get_global_properties().parameters.current_fees;
+   return get_global_properties().parameters.get_current_fees();
 }
 
 const operations_permissions&  database::current_operations_permissions()const
 {
-   return get_global_properties().parameters.current_operations_permissions;
+   return get_global_properties().parameters.get_current_operations_permissions();
 }
 
 time_point_sec database::head_block_time()const

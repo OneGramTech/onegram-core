@@ -64,8 +64,6 @@ namespace graphene { namespace chain {
    {
       public:
          typedef vector<item_ptr> branch_type;
-         /// The maximum number of blocks that may be skipped in an out-of-order push
-         const static int MAX_BLOCK_REORDERING = 1024;
 
          fork_database();
          void reset();
@@ -93,12 +91,10 @@ namespace graphene { namespace chain {
 
          struct block_id;
          struct block_num;
-         struct by_previous;
          typedef multi_index_container<
             item_ptr,
             indexed_by<
                hashed_unique<tag<block_id>, member<fork_item, block_id_type, &fork_item::id>, std::hash<fc::ripemd160>>,
-               hashed_non_unique<tag<by_previous>, const_mem_fun<fork_item, block_id_type, &fork_item::previous_id>, std::hash<fc::ripemd160>>,
                ordered_non_unique<tag<block_num>, member<fork_item,uint32_t,&fork_item::num>>
             >
          > fork_multi_index_type;
@@ -112,7 +108,6 @@ namespace graphene { namespace chain {
 
          uint32_t                 _max_size = 1024;
 
-         fork_multi_index_type    _unlinked_index;
          fork_multi_index_type    _index;
          shared_ptr<fork_item>    _head;
    };
