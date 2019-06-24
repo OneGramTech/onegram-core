@@ -196,8 +196,17 @@ namespace graphene { namespace app {
 
    /* HELPERS end */
 
-   const uint64_t archive_api::QueryResultLimit = 50;
-   const uint64_t archive_api::QueryInspectLimit = 5 * QueryResultLimit;
+   const uint64_t archive_api::QueryLimitBase = 10;
+
+   const struct archive_api::parameters archive_api::params = {
+      .QueryResultLimit  =  5 * archive_api::QueryLimitBase,
+      .QueryInspectLimit = 25 * archive_api::QueryLimitBase,
+   };
+
+   archive_api::parameters archive_api::get_archive_api_parameters() const
+   {
+      return params;
+   }
 
    archive_api::query_result archive_api::get_archived_operations(uint64_t last,
                                                                   uint64_t count,
@@ -233,7 +242,7 @@ namespace graphene { namespace app {
       return my_get_archived_operations_by_time(&account_id, inclusive_from, exclusive_until, skip_count, operation_id_filter);
    }
 
-uint64_t archive_api::get_archived_account_operation_count(const std::string account_id_or_name) const
+   uint64_t archive_api::get_archived_account_operation_count(const std::string account_id_or_name) const
    {
       const auto db = _app.chain_database();
 
@@ -262,12 +271,12 @@ uint64_t archive_api::get_archived_account_operation_count(const std::string acc
          return result; // account created in genesis without any operations yet
 
       size_t num_operations = account_operations->operations.size();
-      if (!check_query_index_input(num_operations, last, count, archive_api::QueryInspectLimit))
+      if (!check_query_index_input(num_operations, last, count, params.QueryInspectLimit))
          return result;
 
       // inspect archived operations
       num_operations = last + 1; // number of operations left to query
-      count = std::min(count, archive_api::QueryInspectLimit);
+      count = std::min(count, params.QueryInspectLimit);
       while (num_operations-- && count--) {
          result.num_processed++;
          const auto oao_id = get_archived_operation_id(account_operations, &account_id, num_operations);
@@ -315,7 +324,7 @@ uint64_t archive_api::get_archived_account_operation_count(const std::string acc
          last_op_id = 0;
 
       // inspect operations inside the time window
-      while ((last_op_id > first_op_id) && (result.num_processed < QueryInspectLimit)) {
+      while ((last_op_id > first_op_id) && (result.num_processed < params.QueryInspectLimit)) {
          result.num_processed++;
          const auto oao_id = get_archived_operation_id(account_operations, &account_id, last_op_id - 1);
          const auto oao = static_cast<const operation_archive_object&>(operation_archive.get(oao_id));
@@ -352,7 +361,7 @@ uint64_t archive_api::get_archived_account_operation_count(const std::string acc
       } else {
          num_operations = operation_archive.size();
       }
-      if (!check_query_index_input(num_operations, last, count, archive_api::QueryResultLimit))
+      if (!check_query_index_input(num_operations, last, count, params.QueryResultLimit))
          return result;
 
       const auto filter_end = operation_id_filter.end();
@@ -362,7 +371,7 @@ uint64_t archive_api::get_archived_account_operation_count(const std::string acc
 
       // inspect archived operations
       num_operations = last + 1; // number of operations left to query
-      while (num_operations && count && (result.num_processed < QueryInspectLimit)) {
+      while (num_operations && count && (result.num_processed < params.QueryInspectLimit)) {
          result.num_processed++;
          const auto oa_id = get_archived_operation_id(account_operations, account_id, num_operations - 1);
          const auto oao = static_cast<const operation_archive_object&>(operation_archive.get(oa_id));
@@ -422,10 +431,10 @@ uint64_t archive_api::get_archived_account_operation_count(const std::string acc
       else
          last_op_id = 0;
 
-      result.operations.reserve(QueryResultLimit);
+      result.operations.reserve(params.QueryResultLimit);
 
       // inspect operations inside the time window
-      while ((last_op_id > first_op_id) && (result.num_processed < QueryInspectLimit)) {
+      while ((last_op_id > first_op_id) && (result.num_processed < params.QueryInspectLimit)) {
          const auto oa_id = get_archived_operation_id(account_operations, account_id, last_op_id - 1);
          const auto oao = static_cast<const operation_archive_object&>(operation_archive.get(oa_id));
          result.num_processed++;
@@ -435,7 +444,7 @@ uint64_t archive_api::get_archived_account_operation_count(const std::string acc
                FC_ASSERT((int64_t)oho->op.which() == (int64_t)oao.operation_id);
                oho->id = operation_history_id_type(oa_id.instance());
                result.operations.push_back(*oho);
-               if (result.operations.size() == QueryResultLimit)
+               if (result.operations.size() == params.QueryResultLimit)
                   break;
             }
          }
