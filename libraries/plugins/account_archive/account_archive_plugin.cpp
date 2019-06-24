@@ -35,6 +35,8 @@
 #include <graphene/chain/operation_history_object.hpp>
 #include <graphene/chain/transaction_evaluation_state.hpp>
 
+#include <boost/filesystem.hpp>
+#include <fc/filesystem.hpp>
 #include <fc/thread/thread.hpp>
 
 namespace graphene { namespace account_archive {
@@ -54,7 +56,12 @@ namespace detail {
 
          account_archive_plugin& _self;
 
+         void                     init(const boost::program_options::variables_map& options);
+         operation_history_object load(uint32_t index) const;
+
       private:
+         operation_database _operation_db;
+
          flat_set<account_id_type> get_impacted_accounts(const operation_history_object& op, const object_database& db);
    };
 
@@ -65,25 +72,33 @@ namespace detail {
       auto& db = database();
       auto& account_archives = db.get_index_type<account_archive_index>().indices().get<by_id>();
 
+      // comply with undo if applied
+      _operation_db.truncate(b.block_num());
+
       // index enchained operations
+      const auto numtrxs = static_cast<uint16_t>(b.transactions.size());
       const auto& operations = db.get_applied_operations();
       for (const auto& op : operations) {
          if (!op.valid())
             continue;
 
-         // TODO: virtual operations have to be stored in a separate database; for now, do not index them;
-         if (((*op).op.which() == operation::tag<fill_order_operation>::value)
-           ||((*op).op.which() == operation::tag<asset_settle_cancel_operation>::value)
-           ||((*op).op.which() == operation::tag<fba_distribute_operation>::value)
-           ||((*op).op.which() == operation::tag<execute_bid_operation>::value)) {
-              continue;
+         uint32_t virtual_op_db_index = 0;
+         const bool op_is_virtual = ((*op).trx_in_block == numtrxs) || ((*op).virtual_op);
+
+         // store virtual operation in custom database
+         if (op_is_virtual) {
+            virtual_op_db_index = _operation_db.store((*op).op);
          }
 
          // index in operation archive
          auto initialize_operation = [&](operation_archive_object& o) {
             o.block_num = op->block_num;
-            o.trx_in_block = op->trx_in_block;
-            o.op_in_trx = op->op_in_trx;
+            if (op_is_virtual) {
+               o.set_virtual_op_db_index(virtual_op_db_index);
+            } else {
+               o.trx_in_block = op->trx_in_block;
+               o.op_in_trx = op->op_in_trx;
+            }
             o.virtual_op = op->virtual_op;
             o.operation_id = static_cast<uint16_t>(op->op.which());
          };
@@ -104,6 +119,29 @@ namespace detail {
             db.modify(*archive, append_operation);
          }
       }
+
+      // flush all virtual operations at once
+      _operation_db.flush();
+   }
+
+   void account_archive_plugin_impl::init(const boost::program_options::variables_map& options)
+   {
+      fc::path data_dir;
+      if (options.count("data-dir"))
+      {
+         data_dir = options["data-dir"].as<boost::filesystem::path>();
+         if(data_dir.is_relative())
+            data_dir = fc::current_path() / data_dir;
+      }
+
+      if (options.count("resync-blockchain") || options.count("replay-blockchain") || options.count("revalidate-blockchain"))
+         _operation_db.wipe(data_dir);
+      _operation_db.open(data_dir);
+   }
+
+   operation_history_object account_archive_plugin_impl::load(uint32_t index) const
+   {
+      return _operation_db.load(index);
    }
 
    flat_set<account_id_type> account_archive_plugin_impl::get_impacted_accounts(const operation_history_object& op, const object_database& db)
@@ -125,11 +163,11 @@ namespace detail {
       return impacted;
    }
 
-} // graphene::account_history::detail
+} // graphene::account_archive::detail
 
    account_archive_plugin::account_archive_plugin()
    {
-      impl = unique_ptr<detail::account_archive_plugin_impl>{ new detail::account_archive_plugin_impl(*this)};
+      impl = unique_ptr<detail::account_archive_plugin_impl>{ new detail::account_archive_plugin_impl(*this) };
    }
 
    account_archive_plugin::~account_archive_plugin()
@@ -146,6 +184,8 @@ namespace detail {
       database().add_index<primary_index<account_archive_index>>();
       database().add_index<primary_index<operation_archive_index>>();
       database().applied_block.connect( [&](const signed_block& b){ impl->process_block(b); } );
+
+      impl->init(options);
    }
 
    void account_archive_plugin::plugin_startup()
@@ -158,4 +198,9 @@ namespace detail {
    {
    }
 
-} } // graphene::account_history
+   operation_history_object account_archive_plugin::load(uint32_t index) const
+   {
+      return impl->load(index);
+   }
+
+} } // graphene::account_archive

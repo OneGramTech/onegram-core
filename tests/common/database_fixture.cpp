@@ -24,6 +24,7 @@
 #include <boost/test/unit_test.hpp>
 #include <boost/program_options.hpp>
 #include <boost/range/algorithm.hpp>
+#include <boost/filesystem.hpp>
 
 #include <graphene/account_archive/account_archive_plugin.hpp>
 #include <graphene/account_history/account_history_plugin.hpp>
@@ -117,6 +118,7 @@ database_fixture::database_fixture(const fc::time_point_sec &initial_timestamp)
    genesis_state.initial_assets.push_back( init_mpa1 );
 
    open_database();
+   options.insert(std::make_pair("data-dir", boost::program_options::variable_value(boost::filesystem::path((*data_dir).path().generic_string()), false)));
 
    /**
     * Test specific settings
@@ -194,6 +196,7 @@ database_fixture::database_fixture(const fc::time_point_sec &initial_timestamp)
       aaplugin->plugin_set_app(&app);
       aaplugin->plugin_initialize(options);
       aaplugin->plugin_startup();
+      app.enable_plugin(aaplugin->plugin_name());
    }
 
    if(current_test_name == "elasticsearch_account_history" || current_test_name == "elasticsearch_suite") {

@@ -37,6 +37,7 @@
 #include <graphene/net/node.hpp>
 
 #include <graphene/account_archive/account_summary.hpp>
+#include <graphene/account_archive/account_archive_plugin.hpp>
 
 #include <fc/api.hpp>
 #include <fc/optional.hpp>

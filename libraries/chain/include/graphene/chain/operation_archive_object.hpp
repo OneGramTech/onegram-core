@@ -50,11 +50,20 @@ class operation_archive_object : public abstract_object<operation_archive_object
       static const uint8_t space_id = implementation_ids;
       static const uint8_t type_id = impl_operation_archive_object_type;
 
-      uint32_t block_num = 0;
-      uint16_t trx_in_block = 0;
-      uint16_t op_in_trx = 0;
-      uint16_t virtual_op = 0;
-      uint16_t operation_id = 0;
+      inline void     set_virtual_op_db_index(uint32_t index) { db_index = -(1 + static_cast<int32_t>(index)); }
+      inline bool     has_virtual_op() const                  { return db_index < 0; }
+      inline uint32_t get_virtual_op_db_index() const         { return static_cast<uint32_t>(-(db_index + 1)); }
+
+            uint32_t block_num = 0;
+      union {
+         struct {
+            uint16_t trx_in_block;
+            uint16_t op_in_trx;
+         };
+            int32_t  db_index = 0;
+      };
+            uint16_t virtual_op = 0;
+            uint16_t operation_id = 0;
 };
 
 typedef simple_index<operation_archive_object> operation_archive_index;
