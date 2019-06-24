@@ -2,6 +2,7 @@ file(GLOB HEADERS "include/graphene/account_archive/*.hpp")
 
 add_library( graphene_account_archive 
              account_archive_plugin.cpp
+             operation_database.cpp
            )
 
 target_link_libraries( graphene_account_archive graphene_chain graphene_app )

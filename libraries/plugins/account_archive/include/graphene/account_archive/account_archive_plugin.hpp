@@ -27,6 +27,7 @@
 #include <graphene/chain/database.hpp>
 
 #include <graphene/chain/operation_archive_object.hpp>
+#include <graphene/account_archive/operation_database.hpp>
 
 #include <fc/thread/future.hpp>
 
@@ -65,8 +66,10 @@ namespace detail
             boost::program_options::options_description& cli,
             boost::program_options::options_description& cfg) override;
 
+         operation_history_object load(uint32_t index) const;
+
          friend class detail::account_archive_plugin_impl;
          std::unique_ptr<detail::account_archive_plugin_impl> impl;
    };
 
-} } // graphene::account_history
+} } // graphene::account_archive

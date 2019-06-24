@@ -50,34 +50,42 @@ namespace graphene { namespace app {
       return header.valid() ? header->timestamp : time_point_sec::min();
    }
 
-   optional<operation> get_archived_operation(const database& db, const operation_archive_object& oao)
+   optional<operation> get_archived_operation(const database& db, const account_archive::account_archive_plugin& ap, const operation_archive_object& oao)
    {
-      const auto& block = db.fetch_block_by_number(oao.block_num);
-      if (block.valid() && ((size_t)oao.trx_in_block < block->transactions.size())) {
-         const auto& trx = block->transactions[oao.trx_in_block];
-         if ((size_t)oao.op_in_trx < trx.operations.size())
-            return trx.operations[oao.op_in_trx];
-      }
-      return optional<operation>();
-   }
-
-   optional<operation_history_object> get_oho_without_id(const database& db, const operation_archive_object& oao)
-   {
-      const auto& block = db.fetch_block_by_number(oao.block_num);
-      if (block.valid() && ((size_t)oao.trx_in_block < block->transactions.size())) {
-         const auto& trx = block->transactions[oao.trx_in_block];
-         if ((size_t)oao.op_in_trx < trx.operations.size()) {
-            auto oho = operation_history_object();
-            oho.op = trx.operations[oao.op_in_trx];
-            oho.result = trx.operation_results[oao.op_in_trx];
-            oho.block_num = oao.block_num;
-            oho.trx_in_block = oao.trx_in_block;
-            oho.op_in_trx = oao.op_in_trx;
-            oho.virtual_op = oao.virtual_op;
-            return oho;
+      auto op = operation();
+      if (oao.has_virtual_op()) {
+         op = (ap.load(oao.get_virtual_op_db_index())).op;
+      } else {
+         const auto& block = db.fetch_block_by_number(oao.block_num);
+         if (block.valid() && ((size_t)oao.trx_in_block < block->transactions.size())) {
+            const auto& trx = block->transactions[oao.trx_in_block];
+            if ((size_t)oao.op_in_trx < trx.operations.size())
+               op = trx.operations[oao.op_in_trx];
          }
       }
-      return optional<operation_history_object>();
+      return op;
+   }
+
+   optional<operation_history_object> get_oho_without_id(const database& db, const account_archive::account_archive_plugin& ap, const operation_archive_object& oao)
+   {
+      auto oho = operation_history_object();
+      if (oao.has_virtual_op()) {
+         oho = ap.load(oao.get_virtual_op_db_index());
+      } else {
+         const auto& block = db.fetch_block_by_number(oao.block_num);
+         if (block.valid() && ((size_t)oao.trx_in_block < block->transactions.size())) {
+            const auto& trx = block->transactions[oao.trx_in_block];
+            if ((size_t)oao.op_in_trx < trx.operations.size()) {
+               oho.op = trx.operations[oao.op_in_trx];
+               oho.result = trx.operation_results[oao.op_in_trx];
+               oho.block_num = oao.block_num;
+               oho.trx_in_block = oao.trx_in_block;
+               oho.op_in_trx = oao.op_in_trx;
+               oho.virtual_op = oao.virtual_op;
+            }
+         }
+      }
+      return oho;
    }
 
    bool check_query_index_input(size_t num_ops, size_t last, size_t count, size_t count_limit)
@@ -228,7 +236,6 @@ namespace graphene { namespace app {
 uint64_t archive_api::get_archived_account_operation_count(const std::string account_id_or_name) const
    {
       const auto db = _app.chain_database();
-      FC_ASSERT(db != nullptr);
 
       const auto acc_id = database_api.get_account_id_from_string(account_id_or_name);
       const auto aao_id = account_archive_id_type(acc_id.instance);
@@ -245,7 +252,7 @@ uint64_t archive_api::get_archived_account_operation_count(const std::string acc
       auto result = archive_api::summary_result();
 
       const auto db = _app.chain_database();
-      FC_ASSERT(db != nullptr);
+      const auto ap = _app.get_plugin<account_archive::account_archive_plugin>("account_archive");
 
       const auto asset_id = get_asset_id(database_api, asset_id_or_name);
       const auto account_id = database_api.get_account_id_from_string(account_id_or_name);
@@ -265,7 +272,7 @@ uint64_t archive_api::get_archived_account_operation_count(const std::string acc
          result.num_processed++;
          const auto oao_id = get_archived_operation_id(account_operations, &account_id, num_operations);
          const auto oao = static_cast<const operation_archive_object&>(operation_archive.get(oao_id));
-         const auto op = get_archived_operation(*db, oao);
+         const auto op = get_archived_operation(*db, *ap, oao);
          if (op.valid()) {
             FC_ASSERT((int64_t)(*op).which() == (int64_t)oao.operation_id);
             update_summary(*db.get(), account_id, asset_id, *op, result.summary);
@@ -284,7 +291,7 @@ uint64_t archive_api::get_archived_account_operation_count(const std::string acc
       auto result = archive_api::summary_result();
 
       const auto db = _app.chain_database();
-      FC_ASSERT(db != nullptr);
+      const auto ap = _app.get_plugin<account_archive::account_archive_plugin>("account_archive");
 
       const auto asset_id = get_asset_id(database_api, asset_id_or_name);
       const auto account_id = database_api.get_account_id_from_string(account_id_or_name);
@@ -312,7 +319,7 @@ uint64_t archive_api::get_archived_account_operation_count(const std::string acc
          result.num_processed++;
          const auto oao_id = get_archived_operation_id(account_operations, &account_id, last_op_id - 1);
          const auto oao = static_cast<const operation_archive_object&>(operation_archive.get(oao_id));
-         const auto op = get_archived_operation(*db, oao);
+         const auto op = get_archived_operation(*db, *ap, oao);
          if (op.valid()) {
             FC_ASSERT((int64_t)(*op).which() == (int64_t)oao.operation_id);
             update_summary(*db.get(), account_id, asset_id, *op, result.summary);
@@ -331,7 +338,7 @@ uint64_t archive_api::get_archived_account_operation_count(const std::string acc
       auto result = archive_api::query_result();
 
       const auto db = _app.chain_database();
-      FC_ASSERT(db != nullptr);
+      const auto ap = _app.get_plugin<account_archive::account_archive_plugin>("account_archive");
 
       const auto& operation_archive = db->get_index_type<operation_archive_index>();
       const account_archive_object* account_operations = nullptr;
@@ -360,7 +367,7 @@ uint64_t archive_api::get_archived_account_operation_count(const std::string acc
          const auto oa_id = get_archived_operation_id(account_operations, account_id, num_operations - 1);
          const auto oao = static_cast<const operation_archive_object&>(operation_archive.get(oa_id));
          if (!filter || (operation_id_filter.find((int)oao.operation_id) != filter_end)) {
-            auto oho = get_oho_without_id(*db, oao);
+            auto oho = get_oho_without_id(*db, *ap, oao);
             if (oho.valid()) {
                FC_ASSERT((int64_t)oho->op.which() == (int64_t)oao.operation_id);
                oho->id = operation_history_id_type(oa_id.instance());
@@ -386,7 +393,7 @@ uint64_t archive_api::get_archived_account_operation_count(const std::string acc
          return result;
 
       const auto db = _app.chain_database();
-      FC_ASSERT(db != nullptr);
+      const auto ap = _app.get_plugin<account_archive::account_archive_plugin>("account_archive");
 
       const auto& operation_archive = db->get_index_type<operation_archive_index>();
       const account_archive_object* account_operations = nullptr;
@@ -423,7 +430,7 @@ uint64_t archive_api::get_archived_account_operation_count(const std::string acc
          const auto oao = static_cast<const operation_archive_object&>(operation_archive.get(oa_id));
          result.num_processed++;
          if (!filter || (operation_id_filter.find((int)oao.operation_id) != filter_end)) {
-            auto oho = get_oho_without_id(*db, oao);
+            auto oho = get_oho_without_id(*db, *ap, oao);
             if (oho.valid()) {
                FC_ASSERT((int64_t)oho->op.which() == (int64_t)oao.operation_id);
                oho->id = operation_history_id_type(oa_id.instance());
@@ -497,8 +504,9 @@ uint64_t archive_api::get_archived_account_operation_count(const std::string acc
          {
             const auto& o = op.get<fill_order_operation>();
             FC_ASSERT(o.account_id == account_id);
-            if (o.pays.asset_id == asset_id)
-               sum.debits += o.pays.amount;
+            // seems to be accounted in the limit_order_create_operation
+            //if (o.pays.asset_id == asset_id)
+            //   sum.debits += o.pays.amount;
             if (o.receives.asset_id == asset_id)
                sum.credits += o.receives.amount;
             break;

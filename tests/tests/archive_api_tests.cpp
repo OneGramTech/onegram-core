@@ -42,6 +42,11 @@ const int asset_issue_op_id = operation::tag<asset_issue_operation>::value;
 const int account_create_op_id = operation::tag<account_create_operation>::value;
 const int transfer_op_id = operation::tag<transfer_operation>::value;
 const int balance_claim_op_id = operation::tag<balance_claim_operation>::value;
+const int publish_feed_op_id = operation::tag<asset_publish_feed_operation>::value;
+const int update_feed_producers_op_id = operation::tag<asset_update_feed_producers_operation>::value;
+const int update_call_order_op_id = operation::tag<call_order_update_operation>::value;
+const int create_limit_order_op_id = operation::tag<limit_order_create_operation>::value;
+const int fill_order_op_id = operation::tag<fill_order_operation>::value;
 
 BOOST_AUTO_TEST_CASE(get_archived_operations) {
     try {
@@ -1096,7 +1101,7 @@ BOOST_AUTO_TEST_CASE(get_account_summary) {
 
         //
 
-        const auto time_0 = db.head_block_time();
+        const auto time_1 = db.head_block_time();
 
         const auto eur = create_user_issued_asset("EUR");
         assert_summary(db_api, arch_api, cmmtt, assets);
@@ -1141,14 +1146,14 @@ BOOST_AUTO_TEST_CASE(get_account_summary) {
         assert_summary(db_api, arch_api, mario, assets);
         assert_summary(db_api, arch_api, marek, assets);
 
-        const auto time_1 = db.head_block_time();
+        const auto time_2 = db.head_block_time();
 
         // check the _by_time variant
         {
             const size_t nops = arch_api.get_archived_account_operation_count(mario.name);
 
             const auto result_by_index = arch_api.get_account_summary(mario.name, usd.symbol, nops - 1u, nops);
-            const auto result_by_time = arch_api.get_account_summary_by_time(mario.name, usd.symbol, time_0, time_1 + 1u, 0u);
+            const auto result_by_time = arch_api.get_account_summary_by_time(mario.name, usd.symbol, time_1, time_2 + 1u, 0u);
 
             BOOST_CHECK_EQUAL(result_by_index.summary.credits.value, result_by_time.summary.credits.value);
             BOOST_CHECK_EQUAL(result_by_index.summary.debits.value, result_by_time.summary.debits.value);
@@ -1158,7 +1163,7 @@ BOOST_AUTO_TEST_CASE(get_account_summary) {
             const size_t nops = arch_api.get_archived_account_operation_count(mario.name);
 
             const auto result_by_index = arch_api.get_account_summary(mario.name, usd.symbol, nops - 2u, nops - 1u);
-            const auto result_by_time = arch_api.get_account_summary_by_time(mario.name, usd.symbol, time_0, time_1 + 1u, 1u);
+            const auto result_by_time = arch_api.get_account_summary_by_time(mario.name, usd.symbol, time_1, time_2 + 1u, 1u);
 
             BOOST_CHECK_EQUAL(result_by_index.summary.credits.value, result_by_time.summary.credits.value);
             BOOST_CHECK_EQUAL(result_by_index.summary.debits.value, result_by_time.summary.debits.value);
@@ -1168,7 +1173,287 @@ BOOST_AUTO_TEST_CASE(get_account_summary) {
             const size_t nops = arch_api.get_archived_account_operation_count(marek.name);
 
             const auto result_by_index = arch_api.get_account_summary(marek.name, usd.symbol, nops - 2u, nops - 1u);
-            const auto result_by_time = arch_api.get_account_summary_by_time(marek.name, usd.symbol, time_0, time_1, 0u);
+            const auto result_by_time = arch_api.get_account_summary_by_time(marek.name, usd.symbol, time_1, time_2, 0u);
+
+            BOOST_CHECK_EQUAL(result_by_index.summary.credits.value, result_by_time.summary.credits.value);
+            BOOST_CHECK_EQUAL(result_by_index.summary.debits.value, result_by_time.summary.debits.value);
+            BOOST_CHECK_EQUAL(result_by_index.summary.fees.value, result_by_time.summary.fees.value);
+        }
+
+    } catch (fc::exception &e) {
+        edump((e.to_detail_string()));
+        throw;
+    }
+}
+
+BOOST_AUTO_TEST_CASE(including_virtual_operations) {
+    try {
+        graphene::app::database_api db_api(db);
+        graphene::app::archive_api arch_api(app);
+
+        auto opid_filter = flat_set<int>();
+        auto result = archive_api::query_result();
+        auto& archived = result.operations;
+        auto& nprocessed = result.num_processed;
+
+        //
+
+        const auto time_1 = db.head_block_time();
+
+        const auto franz = create_account("franz"); // op 0
+        const auto mario = create_account("mario"); // op 1
+        const auto marek = create_account("marek"); // op 2
+        generate_block();
+
+        const auto cra = asset_id_type()(db); // core asset
+        const auto eur = create_bitasset("EUR", franz.id); // op 3
+        fund(mario, cra.amount(10000)); // op 4
+        fund(marek, cra.amount(10000)); // op 5
+        generate_block();
+
+        price_feed feed;
+        feed.settlement_price = eur.amount(10) / cra.amount(1);
+        feed.maintenance_collateral_ratio = 2000;
+        update_feed_producers(eur, {franz.id}); // op 6
+        publish_feed(eur, franz, feed); // op 7
+        generate_block();
+
+        const auto time_2 = db.head_block_time();
+
+        borrow(mario, eur.amount(2), cra.amount(4)); // op 8
+        create_sell_order(mario, eur.amount(1), cra.amount(1)); // op 9
+        create_sell_order(marek, cra.amount(1), eur.amount(1)); // op 10
+        generate_block(); // ops 11 + 12
+
+        fund(franz, cra.amount(1)); // op 13
+        transfer(mario, franz, cra.amount(1)); // op 14
+        generate_block();
+
+        const auto time_3 = db.head_block_time();
+
+        BOOST_CHECK_EQUAL(db.get_balance(franz, cra).amount.value, 2);
+        BOOST_CHECK_EQUAL(db.get_balance(mario, cra).amount.value, 9996);
+        BOOST_CHECK_EQUAL(db.get_balance(marek, cra).amount.value, 9999);
+        BOOST_CHECK_EQUAL(db.get_balance(mario, eur).amount.value, 1);
+        BOOST_CHECK_EQUAL(db.get_balance(marek, eur).amount.value, 1);
+
+        /* Check generic query. */
+
+        // all at once
+
+        result = arch_api.get_archived_operations(14u, 15u);
+        BOOST_CHECK_EQUAL(nprocessed, 15u);
+        BOOST_CHECK_EQUAL(archived.size(), 15u);
+        BOOST_CHECK_EQUAL(archived[ 0].id.instance(), 14u);
+        BOOST_CHECK_EQUAL(archived[ 1].id.instance(), 13u);
+        BOOST_CHECK_EQUAL(archived[ 2].id.instance(), 12u);
+        BOOST_CHECK_EQUAL(archived[ 3].id.instance(), 11u);
+        BOOST_CHECK_EQUAL(archived[ 4].id.instance(), 10u);
+        BOOST_CHECK_EQUAL(archived[ 5].id.instance(),  9u);
+        BOOST_CHECK_EQUAL(archived[ 6].id.instance(),  8u);
+        BOOST_CHECK_EQUAL(archived[ 7].id.instance(),  7u);
+        BOOST_CHECK_EQUAL(archived[ 8].id.instance(),  6u);
+        BOOST_CHECK_EQUAL(archived[ 9].id.instance(),  5u);
+        BOOST_CHECK_EQUAL(archived[10].id.instance(),  4u);
+        BOOST_CHECK_EQUAL(archived[11].id.instance(),  3u);
+        BOOST_CHECK_EQUAL(archived[12].id.instance(),  2u);
+        BOOST_CHECK_EQUAL(archived[13].id.instance(),  1u);
+        BOOST_CHECK_EQUAL(archived[14].id.instance(),  0u);
+        BOOST_CHECK_EQUAL(archived[ 0].op.which(), transfer_op_id);
+        BOOST_CHECK_EQUAL(archived[ 1].op.which(), transfer_op_id);
+        BOOST_CHECK_EQUAL(archived[ 2].op.which(), fill_order_op_id);
+        BOOST_CHECK_EQUAL(archived[ 3].op.which(), fill_order_op_id);
+        BOOST_CHECK_EQUAL(archived[ 4].op.which(), create_limit_order_op_id);
+        BOOST_CHECK_EQUAL(archived[ 5].op.which(), create_limit_order_op_id);
+        BOOST_CHECK_EQUAL(archived[ 6].op.which(), update_call_order_op_id);
+        BOOST_CHECK_EQUAL(archived[ 7].op.which(), publish_feed_op_id);
+        BOOST_CHECK_EQUAL(archived[ 8].op.which(), update_feed_producers_op_id);
+        BOOST_CHECK_EQUAL(archived[ 9].op.which(), transfer_op_id);
+        BOOST_CHECK_EQUAL(archived[10].op.which(), transfer_op_id);
+        BOOST_CHECK_EQUAL(archived[11].op.which(), asset_create_op_id);
+        BOOST_CHECK_EQUAL(archived[12].op.which(), account_create_op_id);
+        BOOST_CHECK_EQUAL(archived[13].op.which(), account_create_op_id);
+        BOOST_CHECK_EQUAL(archived[14].op.which(), account_create_op_id);
+
+        // just some
+
+        result = arch_api.get_archived_operations(11u, 2u);
+        BOOST_CHECK_EQUAL(nprocessed, 2u);
+        BOOST_CHECK_EQUAL(archived.size(), 2u);
+        BOOST_CHECK_EQUAL(archived[ 0].id.instance(), 11u);
+        BOOST_CHECK_EQUAL(archived[ 1].id.instance(), 10u);
+        BOOST_CHECK_EQUAL(archived[ 0].op.which(), fill_order_op_id);
+        BOOST_CHECK_EQUAL(archived[ 1].op.which(), create_limit_order_op_id);
+
+        /* Check by account query. */
+
+        BOOST_CHECK_EQUAL(arch_api.get_archived_account_operation_count(mario.name), 6u);
+
+        // all at once
+
+        result = arch_api.get_archived_account_operations(mario.name, 5u, 6u);
+        BOOST_CHECK_EQUAL(nprocessed, 6u);
+        BOOST_CHECK_EQUAL(archived.size(), 6u);
+        BOOST_CHECK_EQUAL(archived[ 0].id.instance(), 14u);
+        BOOST_CHECK_EQUAL(archived[ 1].id.instance(), 12u);
+        BOOST_CHECK_EQUAL(archived[ 2].id.instance(),  9u);
+        BOOST_CHECK_EQUAL(archived[ 3].id.instance(),  8u);
+        BOOST_CHECK_EQUAL(archived[ 4].id.instance(),  4u);
+        BOOST_CHECK_EQUAL(archived[ 5].id.instance(),  1u);
+        BOOST_CHECK_EQUAL(archived[ 0].op.which(), transfer_op_id);
+        BOOST_CHECK_EQUAL(archived[ 1].op.which(), fill_order_op_id);
+        BOOST_CHECK_EQUAL(archived[ 2].op.which(), create_limit_order_op_id);
+        BOOST_CHECK_EQUAL(archived[ 3].op.which(), update_call_order_op_id);
+        BOOST_CHECK_EQUAL(archived[ 4].op.which(), transfer_op_id);
+        BOOST_CHECK_EQUAL(archived[ 5].op.which(), account_create_op_id);
+
+        // just some
+
+        result = arch_api.get_archived_account_operations(mario.name, 4u, 2u);
+        BOOST_CHECK_EQUAL(nprocessed, 2u);
+        BOOST_CHECK_EQUAL(archived.size(), 2u);
+        BOOST_CHECK_EQUAL(archived[ 0].id.instance(), 12u);
+        BOOST_CHECK_EQUAL(archived[ 1].id.instance(),  9u);
+        BOOST_CHECK_EQUAL(archived[ 0].op.which(), fill_order_op_id);
+        BOOST_CHECK_EQUAL(archived[ 1].op.which(), create_limit_order_op_id);
+
+        /* Check by time query. */
+
+        // full time window
+
+        result = arch_api.get_archived_operations_by_time(time_1, time_3 + 1, 0u);
+        BOOST_CHECK_EQUAL(nprocessed, 15u);
+        BOOST_CHECK_EQUAL(archived.size(), 15u);
+        BOOST_CHECK_EQUAL(archived[ 0].id.instance(), 14u);
+        BOOST_CHECK_EQUAL(archived[ 1].id.instance(), 13u);
+        BOOST_CHECK_EQUAL(archived[ 2].id.instance(), 12u);
+        BOOST_CHECK_EQUAL(archived[ 3].id.instance(), 11u);
+        BOOST_CHECK_EQUAL(archived[ 4].id.instance(), 10u);
+        BOOST_CHECK_EQUAL(archived[ 5].id.instance(),  9u);
+        BOOST_CHECK_EQUAL(archived[ 6].id.instance(),  8u);
+        BOOST_CHECK_EQUAL(archived[ 7].id.instance(),  7u);
+        BOOST_CHECK_EQUAL(archived[ 8].id.instance(),  6u);
+        BOOST_CHECK_EQUAL(archived[ 9].id.instance(),  5u);
+        BOOST_CHECK_EQUAL(archived[10].id.instance(),  4u);
+        BOOST_CHECK_EQUAL(archived[11].id.instance(),  3u);
+        BOOST_CHECK_EQUAL(archived[12].id.instance(),  2u);
+        BOOST_CHECK_EQUAL(archived[13].id.instance(),  1u);
+        BOOST_CHECK_EQUAL(archived[14].id.instance(),  0u);
+        BOOST_CHECK_EQUAL(archived[ 0].op.which(), transfer_op_id);
+        BOOST_CHECK_EQUAL(archived[ 1].op.which(), transfer_op_id);
+        BOOST_CHECK_EQUAL(archived[ 2].op.which(), fill_order_op_id);
+        BOOST_CHECK_EQUAL(archived[ 3].op.which(), fill_order_op_id);
+        BOOST_CHECK_EQUAL(archived[ 4].op.which(), create_limit_order_op_id);
+        BOOST_CHECK_EQUAL(archived[ 5].op.which(), create_limit_order_op_id);
+        BOOST_CHECK_EQUAL(archived[ 6].op.which(), update_call_order_op_id);
+        BOOST_CHECK_EQUAL(archived[ 7].op.which(), publish_feed_op_id);
+        BOOST_CHECK_EQUAL(archived[ 8].op.which(), update_feed_producers_op_id);
+        BOOST_CHECK_EQUAL(archived[ 9].op.which(), transfer_op_id);
+        BOOST_CHECK_EQUAL(archived[10].op.which(), transfer_op_id);
+        BOOST_CHECK_EQUAL(archived[11].op.which(), asset_create_op_id);
+        BOOST_CHECK_EQUAL(archived[12].op.which(), account_create_op_id);
+        BOOST_CHECK_EQUAL(archived[13].op.which(), account_create_op_id);
+        BOOST_CHECK_EQUAL(archived[14].op.which(), account_create_op_id);
+
+        // partial time window
+
+        result = arch_api.get_archived_operations_by_time(time_2, time_3 + 1, 0u);
+        BOOST_CHECK_EQUAL(nprocessed, 9u);
+        BOOST_CHECK_EQUAL(archived.size(), 9u);
+        BOOST_CHECK_EQUAL(archived[ 0].id.instance(), 14u);
+        BOOST_CHECK_EQUAL(archived[ 1].id.instance(), 13u);
+        BOOST_CHECK_EQUAL(archived[ 2].id.instance(), 12u);
+        BOOST_CHECK_EQUAL(archived[ 3].id.instance(), 11u);
+        BOOST_CHECK_EQUAL(archived[ 4].id.instance(), 10u);
+        BOOST_CHECK_EQUAL(archived[ 5].id.instance(),  9u);
+        BOOST_CHECK_EQUAL(archived[ 6].id.instance(),  8u);
+        BOOST_CHECK_EQUAL(archived[ 7].id.instance(),  7u);
+        BOOST_CHECK_EQUAL(archived[ 8].id.instance(),  6u);
+        BOOST_CHECK_EQUAL(archived[ 0].op.which(), transfer_op_id);
+        BOOST_CHECK_EQUAL(archived[ 1].op.which(), transfer_op_id);
+        BOOST_CHECK_EQUAL(archived[ 2].op.which(), fill_order_op_id);
+        BOOST_CHECK_EQUAL(archived[ 3].op.which(), fill_order_op_id);
+        BOOST_CHECK_EQUAL(archived[ 4].op.which(), create_limit_order_op_id);
+        BOOST_CHECK_EQUAL(archived[ 5].op.which(), create_limit_order_op_id);
+        BOOST_CHECK_EQUAL(archived[ 6].op.which(), update_call_order_op_id);
+        BOOST_CHECK_EQUAL(archived[ 7].op.which(), publish_feed_op_id);
+        BOOST_CHECK_EQUAL(archived[ 8].op.which(), update_feed_producers_op_id);
+
+        /* Check by account and by time query. */
+
+        BOOST_CHECK_EQUAL(arch_api.get_archived_account_operation_count(marek.name), 4u);
+
+        // full time window
+
+        result = arch_api.get_archived_account_operations_by_time(marek.name, time_1, time_3 + 1u, 0u);
+        BOOST_CHECK_EQUAL(nprocessed, 4u);
+        BOOST_CHECK_EQUAL(archived.size(), 4u);
+        BOOST_CHECK_EQUAL(archived[ 0].id.instance(), 11u);
+        BOOST_CHECK_EQUAL(archived[ 1].id.instance(), 10u);
+        BOOST_CHECK_EQUAL(archived[ 2].id.instance(),  5u);
+        BOOST_CHECK_EQUAL(archived[ 3].id.instance(),  2u);
+        BOOST_CHECK_EQUAL(archived[ 0].op.which(), fill_order_op_id);
+        BOOST_CHECK_EQUAL(archived[ 1].op.which(), create_limit_order_op_id);
+        BOOST_CHECK_EQUAL(archived[ 2].op.which(), transfer_op_id);
+        BOOST_CHECK_EQUAL(archived[ 3].op.which(), account_create_op_id);
+
+        // partial time window
+
+        result = arch_api.get_archived_account_operations_by_time(marek.name, time_2, time_3 + 1u, 0u);
+        BOOST_CHECK_EQUAL(nprocessed, 2u);
+        BOOST_CHECK_EQUAL(archived.size(), 2u);
+        BOOST_CHECK_EQUAL(archived[ 0].id.instance(), 11u);
+        BOOST_CHECK_EQUAL(archived[ 1].id.instance(), 10u);
+        BOOST_CHECK_EQUAL(archived[ 0].op.which(), fill_order_op_id);
+        BOOST_CHECK_EQUAL(archived[ 1].op.which(), create_limit_order_op_id);
+
+        /* Check account summary query. */
+
+        auto assets = vector<const asset_object*>();
+        assets.push_back(&cra);
+        assets.push_back(&eur);
+
+        // full raw check
+
+        assert_summary(db_api, arch_api, mario, assets);
+        assert_summary(db_api, arch_api, marek, assets);
+
+        // by time check
+        {
+            const size_t nops = arch_api.get_archived_account_operation_count(mario.name);
+
+            const auto result_by_index = arch_api.get_account_summary(mario.name, cra.symbol, nops - 1u, nops);
+            const auto result_by_time = arch_api.get_account_summary_by_time(mario.name, cra.symbol, time_1, time_3 + 1u, 0u);
+
+            BOOST_CHECK_EQUAL(result_by_index.summary.credits.value, result_by_time.summary.credits.value);
+            BOOST_CHECK_EQUAL(result_by_index.summary.debits.value, result_by_time.summary.debits.value);
+            BOOST_CHECK_EQUAL(result_by_index.summary.fees.value, result_by_time.summary.fees.value);
+        }
+        {
+            const size_t nops = arch_api.get_archived_account_operation_count(mario.name);
+
+            const auto result_by_index = arch_api.get_account_summary(mario.name, eur.symbol, nops - 1u, nops);
+            const auto result_by_time = arch_api.get_account_summary_by_time(mario.name, eur.symbol, time_2, time_3 + 1u, 0u);
+
+            BOOST_CHECK_EQUAL(result_by_index.summary.credits.value, result_by_time.summary.credits.value);
+            BOOST_CHECK_EQUAL(result_by_index.summary.debits.value, result_by_time.summary.debits.value);
+            BOOST_CHECK_EQUAL(result_by_index.summary.fees.value, result_by_time.summary.fees.value);
+        }
+        {
+            const size_t nops = arch_api.get_archived_account_operation_count(marek.name);
+
+            const auto result_by_index = arch_api.get_account_summary(marek.name, cra.symbol, nops - 1u, nops);
+            const auto result_by_time = arch_api.get_account_summary_by_time(marek.name, cra.symbol, time_1, time_3 + 1u, 0u);
+
+            BOOST_CHECK_EQUAL(result_by_index.summary.credits.value, result_by_time.summary.credits.value);
+            BOOST_CHECK_EQUAL(result_by_index.summary.debits.value, result_by_time.summary.debits.value);
+            BOOST_CHECK_EQUAL(result_by_index.summary.fees.value, result_by_time.summary.fees.value);
+        }
+        {
+            const size_t nops = arch_api.get_archived_account_operation_count(marek.name);
+
+            const auto result_by_index = arch_api.get_account_summary(marek.name, eur.symbol, nops - 1u, nops);
+            const auto result_by_time = arch_api.get_account_summary_by_time(marek.name, eur.symbol, time_2, time_3 + 1u, 0u);
 
             BOOST_CHECK_EQUAL(result_by_index.summary.credits.value, result_by_time.summary.credits.value);
             BOOST_CHECK_EQUAL(result_by_index.summary.debits.value, result_by_time.summary.debits.value);
