@@ -224,14 +224,14 @@ BOOST_AUTO_TEST_CASE(get_archived_operations) {
 
         /* Extend environment for more complex tests. */
 
-        fund(mario, eur.amount(archive_api::QueryResultLimit + archive_api::QueryInspectLimit + 1u)); // op 6
+        fund(mario, eur.amount(archive_api::params.QueryResultLimit + archive_api::params.QueryInspectLimit + 1u)); // op 6
         generate_block();
 
         size_t last_op_index = 6; // can't use last id from global table because of the fixture
 
         /* Test queries with incorrect parameters. */
         {
-            const auto n = archive_api::QueryResultLimit;
+            const auto n = archive_api::params.QueryResultLimit;
 
             GRAPHENE_REQUIRE_THROW(arch_api.get_archived_operations(last_op_index + 1u, 1u), fc::exception);
             GRAPHENE_REQUIRE_THROW(arch_api.get_archived_operations(last_op_index, last_op_index + 2u), fc::exception);
@@ -250,7 +250,7 @@ BOOST_AUTO_TEST_CASE(get_archived_operations) {
 
         /* Test query requiring to inspect more operations than the inspect limit per call. */
         {
-            const auto n = archive_api::QueryInspectLimit;
+            const auto n = archive_api::params.QueryInspectLimit;
 
             for (size_t i = 0; i < n; i++)
                 transfer(mario, marek, eur.amount(1));
@@ -260,7 +260,7 @@ BOOST_AUTO_TEST_CASE(get_archived_operations) {
             opid_filter.insert(asset_create_op_id);
 
             result = arch_api.get_archived_operations(last_op_index + n, 1u, opid_filter);
-            BOOST_CHECK_EQUAL(nprocessed, archive_api::QueryInspectLimit);
+            BOOST_CHECK_EQUAL(nprocessed, archive_api::params.QueryInspectLimit);
             BOOST_CHECK_EQUAL(archived.size(), 0u);
             result = arch_api.get_archived_operations(last_op_index + n - nprocessed, 1u, opid_filter);
             BOOST_CHECK_EQUAL(nprocessed, last_op_index + 1);
@@ -412,9 +412,9 @@ BOOST_AUTO_TEST_CASE(get_archived_account_operations) {
         const auto jozef = create_account("jozef"); // op 8, jozef 0
         const auto franz = create_account("franz"); // op 9, franz 0
         generate_block();
-        fund(mario, eur.amount(archive_api::QueryResultLimit + archive_api::QueryInspectLimit + 1u)); // op 10, mario 5
-        fund(marek, eur.amount(archive_api::QueryResultLimit + archive_api::QueryInspectLimit + 1u)); // op 11
-        fund(franz, eur.amount(archive_api::QueryResultLimit + archive_api::QueryInspectLimit + 1u)); // op 12, franz 1
+        fund(mario, eur.amount(archive_api::params.QueryResultLimit + archive_api::params.QueryInspectLimit + 1u)); // op 10, mario 5
+        fund(marek, eur.amount(archive_api::params.QueryResultLimit + archive_api::params.QueryInspectLimit + 1u)); // op 11
+        fund(franz, eur.amount(archive_api::params.QueryResultLimit + archive_api::params.QueryInspectLimit + 1u)); // op 12, franz 1
         generate_block();
 
         const size_t franz_create_index = 9;
@@ -423,7 +423,7 @@ BOOST_AUTO_TEST_CASE(get_archived_account_operations) {
         /* Test queries with incorrect parameters. */
         {
             const auto anonym = std::string("anonym");
-            const auto n = archive_api::QueryResultLimit;
+            const auto n = archive_api::params.QueryResultLimit;
             const size_t base_index_franz = arch_api.get_archived_account_operation_count(franz.name) - 1u;
 
             GRAPHENE_REQUIRE_THROW(arch_api.get_archived_account_operations(anonym, 0u, 1u), fc::exception);
@@ -444,7 +444,7 @@ BOOST_AUTO_TEST_CASE(get_archived_account_operations) {
 
         /* Test query requiring to inspect more operations than the inspect limit per call. */
         {
-            const auto n = archive_api::QueryInspectLimit;
+            const auto n = archive_api::params.QueryInspectLimit;
 
             const size_t base_index_franz = arch_api.get_archived_account_operation_count(franz.name) - 1u;
 
@@ -456,7 +456,7 @@ BOOST_AUTO_TEST_CASE(get_archived_account_operations) {
             opid_filter.insert(account_create_op_id);
 
             result = arch_api.get_archived_account_operations(franz.name, base_index_franz + n, 1u, opid_filter);
-            BOOST_CHECK_EQUAL(nprocessed, archive_api::QueryInspectLimit);
+            BOOST_CHECK_EQUAL(nprocessed, archive_api::params.QueryInspectLimit);
             BOOST_CHECK_EQUAL(archived.size(), 0u);
             result = arch_api.get_archived_account_operations(franz.name, base_index_franz + n - nprocessed, 1u, opid_filter);
             BOOST_CHECK_EQUAL(nprocessed, base_index_franz + 1);
@@ -716,14 +716,14 @@ BOOST_AUTO_TEST_CASE(get_archived_operations_by_time) {
 
         /* Extend environment for more complex tests. */
 
-        fund(mario, eur.amount(archive_api::QueryResultLimit + archive_api::QueryInspectLimit + 1u)); // op 8, mario 5
+        fund(mario, eur.amount(archive_api::params.QueryResultLimit + archive_api::params.QueryInspectLimit + 1u)); // op 8, mario 5
         generate_block();
 
         size_t last_op_index = 8; // can't use last id from global table because of the fixture
 
         /* Test query requiring to inspect more operations than the inspect limit per call. */
         {
-            const auto n = archive_api::QueryInspectLimit;
+            const auto n = archive_api::params.QueryInspectLimit;
 
             for (size_t i = 0; i < n; i++)
                 transfer(mario, marek, eur.amount(1));
@@ -736,7 +736,7 @@ BOOST_AUTO_TEST_CASE(get_archived_operations_by_time) {
             opid_filter.insert(asset_create_op_id);
 
             result = arch_api.get_archived_operations_by_time(time_a, time_b, 0u, opid_filter);
-            BOOST_CHECK_EQUAL(nprocessed, archive_api::QueryInspectLimit);
+            BOOST_CHECK_EQUAL(nprocessed, archive_api::params.QueryInspectLimit);
             BOOST_CHECK_EQUAL(archived.size(), 0u);
             result = arch_api.get_archived_operations_by_time(time_a, time_b, nprocessed, opid_filter);
             BOOST_CHECK_EQUAL(nprocessed, last_op_index + 1);
@@ -967,9 +967,9 @@ BOOST_AUTO_TEST_CASE(get_archived_account_operations_by_time) {
         const auto jozef = create_account("jozef"); // op 8, jozef 0
         const auto franz = create_account("franz"); // op 9, franz 0
         generate_block();
-        fund(mario, eur.amount(archive_api::QueryResultLimit + archive_api::QueryInspectLimit + 1u)); // op 10, mario 5
-        fund(marek, eur.amount(archive_api::QueryResultLimit + archive_api::QueryInspectLimit + 1u)); // op 11
-        fund(franz, eur.amount(archive_api::QueryResultLimit + archive_api::QueryInspectLimit + 1u)); // op 12, franz 1
+        fund(mario, eur.amount(archive_api::params.QueryResultLimit + archive_api::params.QueryInspectLimit + 1u)); // op 10, mario 5
+        fund(marek, eur.amount(archive_api::params.QueryResultLimit + archive_api::params.QueryInspectLimit + 1u)); // op 11
+        fund(franz, eur.amount(archive_api::params.QueryResultLimit + archive_api::params.QueryInspectLimit + 1u)); // op 12, franz 1
         generate_block();
 
         const size_t franz_create_index = 9;
@@ -983,7 +983,7 @@ BOOST_AUTO_TEST_CASE(get_archived_account_operations_by_time) {
 
         /* Test query requiring to inspect more operations than the inspect limit per call. */
         {
-            const auto n = archive_api::QueryInspectLimit;
+            const auto n = archive_api::params.QueryInspectLimit;
 
             const size_t base_index_franz = arch_api.get_archived_account_operation_count(franz.name) - 1u;
 
@@ -998,7 +998,7 @@ BOOST_AUTO_TEST_CASE(get_archived_account_operations_by_time) {
             opid_filter.insert(account_create_op_id);
 
             result = arch_api.get_archived_account_operations_by_time(franz.name, time_a, time_b, 0u, opid_filter);
-            BOOST_CHECK_EQUAL(nprocessed, archive_api::QueryInspectLimit);
+            BOOST_CHECK_EQUAL(nprocessed, archive_api::params.QueryInspectLimit);
             BOOST_CHECK_EQUAL(archived.size(), 0u);
             result = arch_api.get_archived_account_operations_by_time(franz.name, time_a, time_b, nprocessed, opid_filter);
             BOOST_CHECK_EQUAL(nprocessed, base_index_franz + 1);

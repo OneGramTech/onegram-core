@@ -3288,6 +3288,12 @@ uint64_t wallet_api::get_asset_count()const
    return my->_remote_db->get_asset_count();
 }
 
+archive_api::parameters wallet_api::get_archive_api_parameters() const
+{
+   check_remote_arch_api();
+   return (*my->_remote_arch)->get_archive_api_parameters();
+}
+
 vector<operation_detail> wallet_api::get_archived_operations(uint64_t last,
                                                              uint64_t count,
                                                              flat_set<int> operation_id_filter) const
@@ -3333,6 +3339,8 @@ account_archive::account_summary wallet_api::get_account_summary(const std::stri
    FC_ASSERT(account_id_or_name.size(), "account id or name is required");
    FC_ASSERT(asset_id_or_symbol.size(), "asset id or symbol is required");
 
+   const archive_api::parameters api_params = (*my->_remote_arch)->get_archive_api_parameters();
+
    const uint64_t op_count = (*my->_remote_arch)->get_archived_account_operation_count(account_id_or_name);
    FC_ASSERT(last < op_count, "last does not index an existing operation");
    FC_ASSERT(count <= op_count, "count exceeds the account operation count");
@@ -3342,7 +3350,7 @@ account_archive::account_summary wallet_api::get_account_summary(const std::stri
    count = std::min(last + 1, count);
 
    do {
-      const auto batch_size = std::min(count, archive_api::QueryInspectLimit);
+      const auto batch_size = std::min(count, api_params.QueryInspectLimit);
       answer = (*my->_remote_arch)->get_account_summary(account_id_or_name, asset_id_or_symbol, last, batch_size);
       FC_ASSERT(batch_size == answer.num_processed);
 

@@ -151,10 +151,18 @@ namespace graphene { namespace app {
    class archive_api
    {
       public:
-         /** @brief Maximal number of operations returned by get_archived calls per query. */
-         static const uint64_t QueryResultLimit;
-         /** @brief Maximal number of operations inspected by get_archived calls per query. */
-         static const uint64_t QueryInspectLimit;
+         /** @brief Common base for easier configuration of QueryLimits. */
+         static const uint64_t QueryLimitBase;
+
+         /// Archive api parameter aggregator.
+         struct parameters {
+            /** @brief Maximal number of operations returned by get_archived calls per query. */
+            uint64_t QueryResultLimit;
+            /** @brief Maximal number of operations inspected by get_archived calls per query. */
+            uint64_t QueryInspectLimit;
+         };
+
+         static const parameters params;
 
          /// Result aggregator for get_archived calls.
          struct query_result {
@@ -170,6 +178,11 @@ namespace graphene { namespace app {
 
          archive_api(application& app)
             : _app(app), database_api(std::ref(*app.chain_database()), &(app.get_options())) {}
+         /**
+          * @brief Get the values of archive api parameters.
+          * @return The values of the archive api parameters.
+          */
+         parameters get_archive_api_parameters() const;
          /**
           * @brief Get a subset of the performed operations queried by index and traversed from recent to older.
           * @param last Index of the last acceptable operation.
@@ -748,6 +761,8 @@ namespace graphene { namespace app {
 
 }}  // graphene::app
 
+FC_REFLECT( graphene::app::archive_api::parameters,
+        (QueryResultLimit)(QueryInspectLimit) )
 FC_REFLECT( graphene::app::archive_api::query_result,
         (num_processed)(operations) )
 FC_REFLECT( graphene::app::archive_api::summary_result,
@@ -769,6 +784,7 @@ FC_REFLECT( graphene::app::account_asset_balance, (name)(account_id)(amount) );
 FC_REFLECT( graphene::app::asset_holders, (asset_id)(count) );
 
 FC_API(graphene::app::archive_api,
+       (get_archive_api_parameters)
        (get_archived_operations)
        (get_archived_operations_by_time)
        (get_archived_account_operations)

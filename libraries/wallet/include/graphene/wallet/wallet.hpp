@@ -373,6 +373,8 @@ class wallet_api
        */
       uint64_t get_asset_count()const;
 
+      ///// @see graphene::app::archive_api::get_archive_api_parameters
+      archive_api::parameters get_archive_api_parameters() const;
       /// @see graphene::app::archive_api::get_archived_operations
       vector<operation_detail> get_archived_operations(uint64_t last,
                                                        uint64_t count,
@@ -1944,6 +1946,7 @@ FC_API( graphene::wallet::wallet_api,
         (get_account_id)
         (get_block)
         (get_account_count)
+        (get_archive_api_parameters)
         (get_archived_operations)
         (get_archived_operations_by_time)
         (get_archived_account_operations)
