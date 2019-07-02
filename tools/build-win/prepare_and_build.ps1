@@ -2,6 +2,7 @@
 
 # TODO: Error handling
 # TODO: OneGramDev string const
+# TODO: OpenSSL tar.gz fails to extract ( maybe problem with symbolic links )
 
 function Expand-Archive($archive, $dest) {
 
@@ -37,8 +38,9 @@ if ( !($BUILD_ROOT -eq $GUESS_BUILD_ROOT) ) {
 $BOOST_VERSION = "1.65.1"
 $OPENSSL_VERSION = "1.1.1b"
 #$OPENSSL_VERSION = "1.1.0j"
-$CURL_VERSION = "7.64.0"
+$CURL_VERSION = "7.64.1"
 $CMAKE_VERSION = "3.10.3"
+$CMAKE_SHORT_VERSION = "3.10"
 $NASM_VERSION = "2.14.02"
 
 $DLPREFIX = "Downloads"
@@ -51,7 +53,7 @@ $CURL_NAME = "curl-$CURL_VERSION"
 $CMAKE_NAME = "cmake-$CMAKE_VERSION-win32-x86"
 $NASM_NAME = "nasm-$NASM_VERSION"
 
-$BOOST_FILENAME = "$BOOST_NAME.zip"
+$BOOST_FILENAME = "$BOOST_NAME.7z"
 $OPENSSL_FILENAME = "$OPENSSL_NAME.tar.gz"
 $CURL_FILENAME = "$CURL_NAME.zip"
 $CMAKE_FILENAME = "$CMAKE_NAME.zip"
@@ -62,11 +64,11 @@ $NASM_FILENAME = "$NASM_NAME-win64.zip"
 # https://curl.haxx.se/download/curl-7.61.0.zip
 # https://cmake.org/files/v3.1/cmake-3.1.3-win32-x86.zip
 
-$BOOST_URL = "https://sourceforge.net/projects/boost/files/boost/$BOOST_VERSION/boost_$BOOST_VERSION_US.7z/download"
+$BOOST_URL = "https://sourceforge.net/projects/boost/files/boost/$BOOST_VERSION/$BOOST_FILENAME/download"
 $OPENNSL_URL = "https://www.openssl.org/source/$OPENSSL_FILENAME"
 $CURL_URL = "https://curl.haxx.se/download/$CURL_FILENAME"
-$CMAKE_URL = "https://cmake.org/files/v3.1/$CMAKE_FILENAME"
-$NASM_URL = "https://www.nasm.us/pub/nasm/releasebuilds/$NASM_VERSION/win64/nasm-$NASM_VERSION-win64.zip"
+$CMAKE_URL = "https://cmake.org/files/v$CMAKE_SHORT_VERSION/$CMAKE_FILENAME"
+$NASM_URL = "https://www.nasm.us/pub/nasm/releasebuilds/$NASM_VERSION/win64/$NASM_FILENAME"
 
 $BOOST_FILEDEST = "$BUILD_ROOT\$DLPREFIX\$BOOST_FILENAME"
 $OPENSSL_FILEDEST = "$BUILD_ROOT\$DLPREFIX\$OPENSSL_FILENAME"
@@ -126,6 +128,7 @@ $ENV:PATH = "$BUILD_ROOT\$CMAKE_NAME\bin;$BUILD_ROOT\$NASM_NAME\;" + $ENV:PATH
 $ENV:BOOST_ROOT = Resolve-Path -Path "$BUILD_ROOT\$BOOST_NAME"
 $ENV:OPENSSL_ROOT = Resolve-Path -Path "$BUILD_ROOT\$OPENSSL_NAME"
 $ENV:CURL_ROOT = Resolve-Path -Path "$BUILD_ROOT\$CURL_NAME"
+#$ENV:CURL_BUILD_WITH_SSPI = "TRUE"
 
 # store directory info
 "@echo off`r`n`r`n" | Out-File _directories.bat -encoding ascii
