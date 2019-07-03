@@ -1,3 +1,4 @@
+
 add_library( graphene_egenesis_none
    egenesis_none.cpp
    include/graphene/egenesis/egenesis.hpp
@@ -7,7 +8,7 @@ target_link_libraries( graphene_egenesis_none graphene_chain fc )
 target_include_directories( graphene_egenesis_none
    PUBLIC "${CMAKE_CURRENT_SOURCE_DIR}/include" )
 
-FIND_PACKAGE(Python 3.6 COMPONENTS Interpreter)
+FIND_PACKAGE(Python 3.2 COMPONENTS Interpreter)
 
 set( embed_genesis_args
    -t "${CMAKE_CURRENT_SOURCE_DIR}/egenesis_brief.cpp.tmpl---${CMAKE_CURRENT_BINARY_DIR}/egenesis_brief.cpp"
@@ -19,7 +20,7 @@ if( GRAPHENE_EGENESIS_JSON )
 endif( GRAPHENE_EGENESIS_JSON )
 
 if ( GENERATING_HELPERS_USE_PYTHON )
-   MESSAGE( STATUS "embed_genesis: using Python to generate genesis header files")
+   MESSAGE( STATUS "embed_genesis: using Python to generate genesis header files" )
 
    SET( EMBED_GENESIS_TARGET_NAME embed_genesis_cpp )
 
@@ -37,7 +38,7 @@ if ( GENERATING_HELPERS_USE_PYTHON )
          "${CMAKE_CURRENT_SOURCE_DIR}/egenesis_full.cpp.tmpl"
       embed_genesis )
 else()
-   MESSAGE( STATUS "embed_genesis: using C++ to generate genesis header files")
+   MESSAGE( STATUS "embed_genesis: using C++ to generate genesis header files" )
 
    SET( EMBED_GENESIS_TARGET_NAME embed_genesis )
 

@@ -1,10 +1,19 @@
-FIND_PACKAGE(Python 3.6 COMPONENTS Interpreter)
+FIND_PACKAGE(Python 3.2 COMPONENTS Interpreter)
 
 get_target_property(GRAPHENE_CHAIN_SOURCE graphene_chain SOURCE_DIR)
 get_target_property(GRAPHENE_CHAIN_BIN graphene_chain BINARY_DIR)
 
+# This is here only to support CMake < 3.4
+if (NOT GRAPHENE_CHAIN_SOURCE)
+  set(GRAPHENE_CHAIN_SOURCE ${GRAPHENE_CHAIN_SOURCE_LEGACY})
+endif()
+# This is here only to support CMake < 3.4
+if (NOT GRAPHENE_CHAIN_BIN)
+  set(GRAPHENE_CHAIN_BIN ${GRAPHENE_CHAIN_BIN_LEGACY})
+endif()
+
 if ( GENERATING_HELPERS_USE_PYTHON )
-  MESSAGE( STATUS "cat-parts: using Python to generate hardfork header file")
+  MESSAGE( STATUS "cat-parts: using Python to generate hardfork header file" )
   SET( CAT_PARTS_TARGET_NAME cat-parts-cpp )
 
   add_custom_target(cat-parts)

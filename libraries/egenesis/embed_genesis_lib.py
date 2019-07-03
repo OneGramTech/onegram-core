@@ -23,51 +23,61 @@ GENESIS_FILE_BANNER = "" \
 GENESIS_ARRAY_WIDTH = 40
 
 
+def c_ify(byte_array):
+    byte_data = bytearray()
+    for b in byte_array:
+        if b in b"\' !#$%&()*+,-./" or b in b":;<=>@[]^_`{|}~" or \
+                b in range(ord("a"), ord("z") + 1) or b in range(ord("A"), ord("Z") + 1) or \
+                b in range(ord("0"), ord("9") + 1):
+            byte_data.append(b)
+        elif b in b"\"":
+            byte_data += b"\\\""
+        elif b in b"?":
+            # see https://en.cppreference.com/w/cpp/language/escape
+            # and https://en.cppreference.com/w/cpp/language/operator_alternative
+            byte_data += b"\\?"
+        elif b in b"\\":
+            byte_data += b"\\\\"
+        elif b in b"\a":
+            byte_data += b"\\a"
+        elif b in b"\b":
+            byte_data += b"\\b"
+        elif b in b"\f":
+            byte_data += b"\\f"
+        elif b in b"\n":
+            byte_data += b"\\n"
+        elif b in b"\r":
+            byte_data += b"\\r"
+        elif b in b"\t":
+            byte_data += b"\\t"
+        elif b in b"\v":
+            byte_data += b"\\v"
+        else:
+            byte_data += b"\\%o" % b
+
+    return b"\"" + byte_data + b"\""
+
+
 def convert_to_c_array(genesis_json):
-    def c_ify(byte_array):
-        byte_data = bytearray()
-        for b in byte_array:
-            if b in b"\"":
-                byte_data += b"\\\""
-            elif b in b"?":
-                # see https://en.cppreference.com/w/cpp/language/escape
-                # and https://en.cppreference.com/w/cpp/language/operator_alternative
-                byte_data += b"\\?"
-            elif b in b"\\":
-                byte_data += b"\\\\"
-            elif b in b"\a":
-                byte_data += b"\\a"
-            elif b in b"\b":
-                byte_data += b"\\b"
-            elif b in b"\f":
-                byte_data += b"\\f"
-            elif b in b"\n":
-                byte_data += b"\\n"
-            elif b in b"\r":
-                byte_data += b"\\r"
-            elif b in b"\t":
-                byte_data += b"\\t"
-            elif b in b"\v":
-                byte_data += b"\\v"
-            elif b in b"\' !#$%&()*+,-./" or b in b":;<=>@[]^_`{|}~" or\
-                    b in range(ord("a"), ord("z")+1) or b in range(ord("A"), ord("Z")+1) or \
-                    b in range(ord("0"), ord("9")+1):
-                byte_data.append(b)
-            else:
-                byte_data += b"\\%o" % b
-
-        return byte_data
-
     genesis_lines = b",\n".join([
-        b"\"" +
-        c_ify(genesis_json[i:i + GENESIS_ARRAY_WIDTH]) +
-        b"\"" for i in range(0, len(genesis_json), GENESIS_ARRAY_WIDTH)])
+        c_ify(genesis_json[i:i + GENESIS_ARRAY_WIDTH])
+        for i in range(0, len(genesis_json), GENESIS_ARRAY_WIDTH)])
 
     return genesis_lines
 
 
+def convert_to_c_array_parallel(genesis_json):
+    from multiprocessing import Pool, cpu_count
+
+    p = Pool(cpu_count())
+
+    return b",\n".join(p.map(c_ify, (genesis_json[i:i + GENESIS_ARRAY_WIDTH]
+                                     for i in range(0, len(genesis_json), GENESIS_ARRAY_WIDTH))))
+
+
 def read_file_data(file_path):
-    buf_size = 65536
+    # 64KB cache performs way slower
+    buf_size = 1048576
 
     sha256 = hashlib.sha256()
 
