@@ -199,8 +199,8 @@ namespace graphene { namespace app {
    const uint64_t archive_api::QueryLimitBase = 10;
 
    const struct archive_api::parameters archive_api::params = {
-      .QueryResultLimit  =  5 * archive_api::QueryLimitBase,
-      .QueryInspectLimit = 25 * archive_api::QueryLimitBase,
+      5 * archive_api::QueryLimitBase,
+      25 * archive_api::QueryLimitBase,
    };
 
    archive_api::parameters archive_api::get_archive_api_parameters() const

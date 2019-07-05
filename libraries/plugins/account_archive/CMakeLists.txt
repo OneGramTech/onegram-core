@@ -10,7 +10,7 @@ target_include_directories( graphene_account_archive
                             PUBLIC "${CMAKE_CURRENT_SOURCE_DIR}/include" )
 
 if(MSVC)
-  set_source_files_properties( account_archive_plugin.cpp PROPERTIES COMPILE_FLAGS "/bigobj" )
+  set_source_files_properties( account_archive_plugin.cpp operation_database.cpp PROPERTIES COMPILE_FLAGS "/bigobj" )
 endif(MSVC)
 
 install( TARGETS

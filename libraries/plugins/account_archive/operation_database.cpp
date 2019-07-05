@@ -46,9 +46,9 @@ struct index_entry
 
 const struct index_entry stop_entry =
 {
-    .offset = 0xffffffffffffffff,
-    .nbytes = 0xf0f0f0f0,
-    .block_num = 0xffff0000,
+    0xffffffffffffffff,
+    0xf0f0f0f0,
+    0xffff0000,
 };
 
 operation_database::operation_database()
