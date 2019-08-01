@@ -4,7 +4,7 @@
 
 #pragma once
 
-#include <graphene/chain/protocol/types.hpp>
+#include <graphene/protocol/types.hpp>
 #include <fc/reflect/reflect.hpp>
 #include <fc/reflect/variant.hpp>
 #include <fc/optional.hpp>
@@ -12,6 +12,8 @@
 #include <set>
 
 namespace graphene { namespace chain {
+
+using graphene::protocol::account_id_type;
 
 struct feeless_accounts_type {
    typedef std::string account_name_type;

@@ -18,9 +18,9 @@
  * ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  *
  */
-#include <graphene/chain/protocol/block.hpp>
-#include <graphene/chain/protocol/fee_schedule.hpp>
-#include <graphene/chain/protocol/operations_permissions.hpp>
+#include <graphene/protocol/block.hpp>
+#include <graphene/protocol/fee_schedule.hpp>
+#include <graphene/protocol/operations_permissions.hpp>
 #include <graphene/chain/vesting_balance_object.hpp>
 #include <graphene/chain/withdraw_permission_object.hpp>
 #include <graphene/chain/proposal_object.hpp>

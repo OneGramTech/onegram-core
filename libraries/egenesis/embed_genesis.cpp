@@ -34,11 +34,11 @@
 #include <fc/io/fstream.hpp>
 #include <fc/io/json.hpp>
 #include <graphene/chain/genesis_state.hpp>
-#include <graphene/chain/protocol/types.hpp>
+#include <graphene/protocol/types.hpp>
 
 // we need to include the world in order to serialize fee_parameters
-#include <graphene/chain/protocol/fee_schedule.hpp>
-#include <graphene/chain/protocol/operations_permissions.hpp>
+#include <graphene/protocol/fee_schedule.hpp>
+#include <graphene/protocol/operations_permissions.hpp>
 
 using namespace graphene::chain;
 

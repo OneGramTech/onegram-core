@@ -25,8 +25,8 @@
 
 #include <graphene/app/database_api.hpp>
 
-#include <graphene/chain/protocol/types.hpp>
-#include <graphene/chain/protocol/confidential.hpp>
+#include <graphene/protocol/types.hpp>
+#include <graphene/protocol/confidential.hpp>
 
 #include <graphene/market_history/market_history_plugin.hpp>
 
@@ -56,7 +56,9 @@ namespace graphene { namespace app {
    using namespace graphene::market_history;
    using namespace graphene::grouped_orders;
    using namespace fc::ecc;
-   using namespace std;
+   using std::string;
+   using std::vector;
+   using std::map;
 
    class application;
 
@@ -546,7 +548,7 @@ namespace graphene { namespace app {
    {
       public:
          crypto_api();
-
+         
          /**
           * @brief Generates a pedersen commitment: *commit = blind * G + value * G2.
           * The commitment is 33 bytes, the blinding factor is 32 bytes.
@@ -699,7 +701,18 @@ namespace graphene { namespace app {
          application& _app;
          graphene::app::database_api database_api;
    };
+} } // graphene::app
 
+extern template class fc::api<graphene::app::block_api>;
+extern template class fc::api<graphene::app::network_broadcast_api>;
+extern template class fc::api<graphene::app::network_node_api>;
+extern template class fc::api<graphene::app::history_api>;
+extern template class fc::api<graphene::app::crypto_api>;
+extern template class fc::api<graphene::app::asset_api>;
+extern template class fc::api<graphene::app::orders_api>;
+extern template class fc::api<graphene::debug_witness::debug_api>;
+
+namespace graphene { namespace app {
    /**
     * @brief The login_api class implements the bottom layer of the RPC API
     *
@@ -760,6 +773,8 @@ namespace graphene { namespace app {
    };
 
 }}  // graphene::app
+
+extern template class fc::api<graphene::app::login_api>;
 
 FC_REFLECT( graphene::app::archive_api::parameters,
         (QueryResultLimit)(QueryInspectLimit) )

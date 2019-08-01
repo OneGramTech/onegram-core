@@ -22,11 +22,23 @@
  * THE SOFTWARE.
  */
 #pragma once
-#include <graphene/chain/protocol/operations.hpp>
+
+#include <graphene/chain/types.hpp>
+#include <graphene/protocol/operations.hpp>
 #include <graphene/db/object.hpp>
+#include <graphene/db/generic_index.hpp>
+
 #include <boost/multi_index/composite_key.hpp>
 
 namespace graphene { namespace chain {
+
+    using graphene::db::abstract_object;
+    using graphene::protocol::reserved_spaces::protocol_ids;
+    using graphene::protocol::object_type::operation_history_object_type;
+    using graphene::protocol::operation;
+    using graphene::protocol::operation_result;
+
+    using graphene::protocol::reserved_spaces::implementation_ids;
 
    /**
     * @brief tracks the history of all logical operations on blockchain state
@@ -64,6 +76,8 @@ namespace graphene { namespace chain {
          uint32_t          virtual_op = 0;
    };
 
+   using graphene::chain::impl_object_type::impl_account_transaction_history_object_type;
+
    /**
     *  @brief a node in a linked list of operation_history_objects
     *  @ingroup implementation
@@ -94,12 +108,7 @@ namespace graphene { namespace chain {
          operation_history_id_type            operation_id;
          uint64_t                             sequence = 0; /// the operation position within the given account
          account_transaction_history_id_type  next;
-
-         //std::pair<account_id_type,operation_history_id_type>  account_op()const  { return std::tie( account, operation_id ); }
-         //std::pair<account_id_type,uint32_t>                   account_seq()const { return std::tie( account, sequence );     }
    };
-
-   struct by_id;
 
    typedef multi_index_container<
       operation_history_object,
@@ -141,8 +150,11 @@ namespace graphene { namespace chain {
 
 } } // graphene::chain
 
-FC_REFLECT_DERIVED( graphene::chain::operation_history_object, (graphene::chain::object),
-                    (op)(result)(block_num)(trx_in_block)(op_in_trx)(virtual_op) )
+MAP_OBJECT_ID_TO_TYPE(graphene::chain::operation_history_object)
+MAP_OBJECT_ID_TO_TYPE(graphene::chain::account_transaction_history_object)
 
-FC_REFLECT_DERIVED( graphene::chain::account_transaction_history_object, (graphene::chain::object),
-                    (account)(operation_id)(sequence)(next) )
+FC_REFLECT_TYPENAME( graphene::chain::operation_history_object )
+FC_REFLECT_TYPENAME( graphene::chain::account_transaction_history_object )
+
+GRAPHENE_DECLARE_EXTERNAL_SERIALIZATION( graphene::chain::operation_history_object )
+GRAPHENE_DECLARE_EXTERNAL_SERIALIZATION( graphene::chain::account_transaction_history_object )
