@@ -23,9 +23,10 @@
  */
 #pragma once
 
-#include <graphene/chain/protocol/operations.hpp>
+#include <graphene/protocol/operations.hpp>
 #include <graphene/db/object.hpp> 
 #include <graphene/db/simple_index.hpp>
+
 #include <boost/multi_index/composite_key.hpp>
 
 namespace graphene { namespace chain {
@@ -114,8 +115,6 @@ inline account_id_type account_archive_object::get_owner_account() const
    return account_id_type() + (int64_t)id.instance();
 }
 
-struct by_id;
-
 typedef multi_index_container<
    account_archive_object,
    indexed_by<
@@ -127,8 +126,11 @@ typedef generic_index<account_archive_object, account_archive_multi_index_type> 
 
 } } // graphene::chain
 
-FC_REFLECT_DERIVED(graphene::chain::operation_archive_object, (graphene::db::object),
-                   (block_num)(trx_in_block)(op_in_trx)(virtual_op)(operation_id))
+MAP_OBJECT_ID_TO_TYPE(graphene::chain::operation_archive_object)
+MAP_OBJECT_ID_TO_TYPE(graphene::chain::account_archive_object)
 
-FC_REFLECT_DERIVED(graphene::chain::account_archive_object, (graphene::db::object),
-                   (operations))
+FC_REFLECT_TYPENAME( graphene::chain::operation_archive_object )
+FC_REFLECT_TYPENAME( graphene::chain::account_archive_object )
+
+GRAPHENE_DECLARE_EXTERNAL_SERIALIZATION( graphene::chain::operation_archive_object )
+GRAPHENE_DECLARE_EXTERNAL_SERIALIZATION( graphene::chain::account_archive_object )

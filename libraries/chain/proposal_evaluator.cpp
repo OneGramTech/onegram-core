@@ -26,8 +26,8 @@
 #include <graphene/chain/proposal_object.hpp>
 #include <graphene/chain/hardfork.hpp>
 #include <graphene/chain/account_object.hpp>
-#include <graphene/chain/protocol/fee_schedule.hpp>
-#include <graphene/chain/protocol/operations_permissions.hpp>
+#include <graphene/protocol/fee_schedule.hpp>
+#include <graphene/protocol/operations_permissions.hpp>
 #include <graphene/chain/exceptions.hpp>
 
 namespace graphene { namespace chain {
@@ -122,7 +122,7 @@ struct proposal_operation_hardfork_visitor
       {
          op.op.visit(*this);
          // Do not allow more than 1 proposal_update in a proposal
-         if ( op.op.which() == operation::tag<proposal_update_operation>().value )
+         if ( op.op.is_type<proposal_update_operation>() )
          {
             FC_ASSERT( !already_contains_proposal_update, "At most one proposal update can be nested in a proposal!" );
             already_contains_proposal_update = true;
