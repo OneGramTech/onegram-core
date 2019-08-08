@@ -720,7 +720,7 @@ BOOST_AUTO_TEST_CASE(api_limit_get_account_history_operations) {
    // history is set to limit transactions to 125 (see database_fixture.hpp)
    // so asking for more should only return 125 (and not throw exception,
    // see https://github.com/bitshares/bitshares-core/issues/1490
-   GRAPHENE_CHECK_THROW(hist_api.get_account_history_operations("commitee-account", account_create_op_id, operation_history_id_type(),operation_history_id_type(), 301), fc::exception);
+   GRAPHENE_CHECK_THROW(hist_api.get_account_history_operations("committee-account", account_create_op_id, operation_history_id_type(),operation_history_id_type(), 301), fc::exception);
    histories = hist_api.get_account_history_operations("committee-account", account_create_op_id, operation_history_id_type(), operation_history_id_type(), 200);
    BOOST_REQUIRE_EQUAL( histories.size(), 125u );
    }

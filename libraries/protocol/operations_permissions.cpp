@@ -19,7 +19,7 @@ namespace graphene { namespace protocol {
    using chain::worker_index;
    using chain::account_object;
 
-   bool account_has_comittee(const database& db, const account_id_type& account)
+   bool account_has_committee(const database& db, const account_id_type& account)
    {
       const auto& idx = db.get_index_type<committee_member_index>().indices().get<by_account>();
       
@@ -78,7 +78,7 @@ namespace graphene { namespace protocol {
                   return rule.allowed;
                }
 
-               // try to match by object type (witness, comittee, worker)
+               // try to match by object type (witness, committee, worker)
                if (rule.fee_payer_type.valid() &&
                   protocol_ids == account->space_id)
                {
@@ -86,7 +86,7 @@ namespace graphene { namespace protocol {
                   {
                      case committee_member_object_type:
                         {                           
-                           if (account_has_comittee(trx_state->db(), account_id))
+                           if (account_has_committee(trx_state->db(), account_id))
                            {
                               return rule.allowed;
                            }
