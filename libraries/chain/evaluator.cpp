@@ -33,9 +33,9 @@
 #include <graphene/chain/fba_object.hpp>
 #include <graphene/chain/committee_member_object.hpp>
 #include <graphene/chain/market_evaluator.hpp>
-#include <graphene/chain/protocol/fee_schedule.hpp>
 #include <graphene/chain/chain_property_object.hpp>
-#include <graphene/chain/protocol/operations_permissions.hpp>
+#include <graphene/protocol/fee_schedule.hpp>
+#include <graphene/protocol/operations_permissions.hpp>
 
 #include <fc/uint128.hpp>
 

@@ -26,7 +26,8 @@
 #include <fstream>
 #include <fc/filesystem.hpp>
 
-#include <graphene/chain/protocol/operations.hpp>
+#include <graphene/protocol/operations.hpp>
+#include <graphene/chain/operation_history_object.hpp>
 
 namespace graphene { namespace account_archive {
     using namespace chain;

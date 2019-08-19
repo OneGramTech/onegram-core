@@ -3,7 +3,7 @@
  */
 #pragma once
 
-#include <graphene/chain/protocol/types.hpp>
+#include <graphene/protocol/types.hpp>
 #include <fc/reflect/reflect.hpp>
 #include <string>
 #include <set>

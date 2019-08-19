@@ -561,7 +561,7 @@ BOOST_FIXTURE_TEST_CASE( fired_committee_members, database_fixture )
    proposal_id_type pid = prop.id;
    BOOST_CHECK(!pid(db).is_authorized_to_execute(db));
 
-   ilog( "commitee member approves proposal" );
+   ilog( "committee member approves proposal" );
    //committee key approves of the proposal.
    proposal_update_operation uop;
    uop.fee_paying_account = GRAPHENE_TEMP_ACCOUNT;
