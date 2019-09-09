@@ -111,12 +111,14 @@ FC_REFLECT_DERIVED_NO_TYPENAME( graphene::chain::dynamic_global_property_object,
                     (next_maintenance_time)
                     (last_budget_time)
                     (witness_budget)
+                    (witness_pay)
                     (accounts_registered_this_interval)
                     (recently_missed_count)
                     (current_aslot)
                     (recent_slots_filled)
                     (dynamic_flags)
                     (last_irreversible_block_num)
+                    (last_operation_id)
                   )
 
 FC_REFLECT_DERIVED_NO_TYPENAME( graphene::chain::global_property_object, (graphene::db::object),
