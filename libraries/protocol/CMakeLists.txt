@@ -32,7 +32,7 @@ list(APPEND SOURCES account.cpp
 
 add_library( graphene_protocol ${SOURCES} ${HEADERS} )
 target_link_libraries( graphene_protocol fc )
-target_include_directories( graphene_protocol PUBLIC "${CMAKE_CURRENT_SOURCE_DIR}/include" )
+target_include_directories( graphene_protocol PUBLIC "${CMAKE_CURRENT_BINARY_DIR}/include" "${CMAKE_CURRENT_SOURCE_DIR}/include" )
 
 # OneGram specific change
 #  - `operations_permissions` requires graphene_chain, graphene_db
