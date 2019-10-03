@@ -267,7 +267,7 @@ midnight_build_testnet_debug:
     - docker build --build-arg TARGET_ENV=$TARGET_ENV --build-arg BUILD=$BUILD_TARGET --build-arg REVISION_SHA=$CI_COMMIT_SHA -t onegram-test -f Dockerfile.OGC .
     - docker image ls
     - cd ./tests/onegram-integration-tests/tests && python3 -m pytest -s --collect-only .
-    - python3 run.py --silent common_tests blockchain_tests sync_tests
+    - python3 run.py --silent common_tests blockchain_tests sync_tests api_tests
   only:
     - schedules
   stage: build
