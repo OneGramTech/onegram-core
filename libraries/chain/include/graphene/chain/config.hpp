@@ -26,7 +26,7 @@
 #include <graphene/protocol/config.hpp>
 
 #define GRAPHENE_MIN_UNDO_HISTORY 10
-#define GRAPHENE_MAX_UNDO_HISTORY 10000
+#define GRAPHENE_MAX_UNDO_HISTORY 500000
 
 #define GRAPHENE_MAX_NESTED_OBJECTS (200)
 
